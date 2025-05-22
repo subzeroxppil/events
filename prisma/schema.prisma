@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  workId        String   @unique
+  groupNumber   Int?
+  prizeId       Int?     // Nullable until prize is assigned
+  registeredAt  DateTime @default(now())
+
+  prize         Prize?   @relation(fields: [prizeId], references: [id])
+}
+
+model GroupConfig {
+  id         Int      @id
+  groupCount Int
+  createdAt  DateTime @default(now())
+}
+
+model Brand {
+  id    Int     @id @default(autoincrement())
+  name  String
+
+  prizes Prize[]
+}
+
+model Prize {
+  id        Int     @id @default(autoincrement())
+  brandId   Int
+  name      String
+  imageUrl  String
+  quantity  Int     @default(0)
+
+  users     User[]
+  brand     Brand   @relation(fields: [brandId], references: [id])
+}
