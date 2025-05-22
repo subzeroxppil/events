@@ -25,7 +25,7 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning className={`h-full`}>
-      <body className="flex flex-col h-screen">
+      <body className="flex flex-col">
         <div className="flex-col md:flex">
           <div className="border-b">
             <div className="flex items-center pr-4 pl-2">
@@ -40,7 +40,7 @@ export default async function RootLayout({
             </div>
           </div>
         </div>
-        <div className="grow flex flex-col h-0 min-h-0 overflow-auto">
+        <div className="flex flex-col h-full">
           <Suspense>{children}</Suspense>
         </div>
         <Toaster />

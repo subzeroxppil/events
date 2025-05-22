@@ -58,8 +58,8 @@ export default function Page() {
     }
   };
   return (
-    <div className="flex min-h-svh w-full justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm pt-10 pb-32">
+    <div className="flex w-full justify-center p-6 md:p-10 h-full">
+      <div className="w-full max-w-sm">
         <div className="flex flex-col gap-4">
           <Card className="mx-auto w-full max-w-sm p-6">
             <div className="flex flex-col items-center text-center">

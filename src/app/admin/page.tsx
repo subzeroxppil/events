@@ -56,7 +56,7 @@ export default function Page() {
   return (
     <div className="flex min-h-svh w-full justify-center p-6 md:p-10">
       <div className="w-full max-w-sm">
-        <section className={`pt-10 pb-32`}>
+        <section>
           <div className="container">
             <div className="flex flex-col gap-4">
               <Card className="mx-auto w-full max-w-sm p-6">

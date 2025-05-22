@@ -197,7 +197,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-svh w-full justify-center p-6 md:p-10">
-      <div className="w-full pt-10 pb-32">
+      <div className="w-full">
         <div className="flex flex-col gap-4">
           <Card className="mx-auto p-6">
             <Button

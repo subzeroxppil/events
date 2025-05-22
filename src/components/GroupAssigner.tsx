@@ -66,7 +66,7 @@ const GroupAssigner = ({ className }: GroupAssignerProps) => {
   };
 
   return (
-    <section className={`pt-10 pb-32 ${className ?? ""} flex flex-col gap-4`}>
+    <section className={`${className ?? ""} flex flex-col gap-4`}>
       {/* <div className="container">
         <div className="flex flex-col gap-4"> */}
       <Card className="mx-auto w-full max-w-sm p-6">
