@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
@@ -14,16 +14,6 @@ const Wheel = dynamic(
   () => import("react-custom-roulette").then((mod) => mod.Wheel),
   { ssr: false }
 );
-
-// Roulette wheel data
-// const wheelData = [
-//   { option: "0", style: { backgroundColor: "green", textColor: "white" } },
-//   { option: "1", style: { backgroundColor: "red", textColor: "white" } },
-//   { option: "2", style: { backgroundColor: "blue", textColor: "white" } },
-//   { option: "3", style: { backgroundColor: "orange", textColor: "black" } },
-//   { option: "4", style: { backgroundColor: "purple", textColor: "white" } },
-//   { option: "5", style: { backgroundColor: "yellow", textColor: "black" } },
-// ];
 
 const colors = [
   { backgroundColor: "green", textColor: "white" },
@@ -51,19 +41,36 @@ export default function Home() {
   const [wheelData, setWheelData] = useState<WheelItem[]>([]); // brands to display on the wheel
   const [spinComplete, setSpinComplete] = useState(false);
   const [resultPrizeImgSrc, setResultPrizeImgSrc] = useState("");
+  let workId = useRef<string | null>(null);
   const router = useRouter();
   useEffect(() => {
     setIsClient(true);
     setError("");
+    fetchWorkId();
     fetchBrandsForWheel();
-    fetchSpinCompletionStatus();
   }, []);
-  const workId = "hii";
+
+  const fetchWorkId = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/session`
+      );
+      const data = await res.json();
+
+      if (res.ok && data.workId) {
+        workId.current = data.workId;
+        fetchSpinCompletionStatus();
+      } else {
+      }
+    } catch (err) {
+      console.error("Failed to fetch workId:", err);
+    }
+  };
 
   const fetchSpinCompletionStatus = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/spinstatus?workId=${workId}`
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/spinstatus?workId=${workId.current}`
       );
       const result = await res.json();
 
@@ -108,17 +115,18 @@ export default function Home() {
   };
 
   const handleSpinClick = async () => {
-    if (mustSpin || !workId) return;
+    if (mustSpin || !workId.current) return;
 
     setError("");
 
     try {
+      setMustSpin(true);
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/spin`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ workId }),
+          body: JSON.stringify({ workId: workId.current }),
         }
       );
 
@@ -142,11 +150,7 @@ export default function Home() {
         setError("Prize brand not found on the wheel.");
         return;
       }
-      console.log("wheelData", wheelData);
-      console.log("index", index);
-      console.log("result.prize.brand", result.prize.brand);
       setPrizeNumber(index);
-      setMustSpin(true);
     } catch (err) {
       console.error("Spin error:", err);
       setError("Spin failed. Please try again.");
@@ -191,7 +195,6 @@ export default function Home() {
 
   const handleSignOut = async () => {
     await fetch("/api/luckydraw/logout", { method: "POST" });
-    console.log("hi");
     router.push("/luckydraw/login");
   };
 

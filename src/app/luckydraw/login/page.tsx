@@ -46,7 +46,6 @@ export default function Page() {
       const result = await res.json();
 
       if (res.ok) {
-        console.log("successful");
         window.location.href = "/luckydraw";
       } else {
         setError(result.message || "An error occurred, please try again");
