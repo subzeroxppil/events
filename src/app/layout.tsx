@@ -29,7 +29,7 @@ export default async function RootLayout({
         <div className="flex-col md:flex">
           <div className="border-b">
             <div className="flex items-center pr-4 pl-2">
-              <Link className="flex p-1 items-center" href="/">
+              <Link className="flex px-1 py-2 items-center" href="/">
                 <Image
                   src="/impact_day_logo.png"
                   alt="paypal icon"

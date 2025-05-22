@@ -197,86 +197,84 @@ export default function Home() {
 
   return (
     <div className="flex min-h-svh w-full justify-center p-6 md:p-10">
-      <div className="w-full">
-        <div className="flex flex-col gap-4">
-          <Card className="mx-auto p-6">
-            <Button
-              className="cursor-pointer w-[80px]"
-              variant="outline"
-              onClick={handleSignOut}
-            >
-              Sign out
-            </Button>
-            <div className="flex flex-col items-center text-center">
-              <Image
-                src="/paypal_logo.png"
-                width={60}
-                height={60}
-                alt="paypal icon"
-              />
+      <div className="flex flex-col gap-4">
+        <Card className="mx-auto p-6">
+          <Button
+            className="cursor-pointer w-[80px]"
+            variant="outline"
+            onClick={handleSignOut}
+          >
+            Sign out
+          </Button>
+          <div className="flex flex-col items-center text-center">
+            <Image
+              src="/paypal_logo.png"
+              width={60}
+              height={60}
+              alt="paypal icon"
+            />
 
-              <p className="mb-2 text-2xl font-bold">Lucky Draw</p>
-              <p className="text-muted-foreground">
-                Thank you for attending our event!
-              </p>
+            <p className="mb-2 text-2xl font-bold">Lucky Draw</p>
+            <p className="text-muted-foreground">
+              Thank you for attending our event!
+            </p>
+          </div>
+          {loading ? (
+            <div className="flex flex-col items-center self-center">
+              <LoadingSpinner />
             </div>
-            {loading ? (
-              <div className="flex flex-col items-center self-center">
-                <LoadingSpinner />
+          ) : error ? (
+            <p className="text-center text-red-600 dark:text-red-200">
+              {error}
+            </p>
+          ) : isClient ? (
+            <>
+              <div className="w-auto">
+                <Wheel
+                  mustStartSpinning={mustSpin}
+                  prizeNumber={prizeNumber}
+                  data={wheelData}
+                  backgroundColors={["#173066", "#0463ce", "#63cbfb"]}
+                  textColors={["#ffffff"]}
+                  onStopSpinning={handleStopSpinning}
+                  outerBorderColor="#f5f5f5"
+                  radiusLineColor="#f5f5f5"
+                  fontFamily="Arial"
+                  fontSize={16}
+                />
               </div>
-            ) : error ? (
-              <p className="text-center text-red-600 dark:text-red-200">
-                {error}
-              </p>
-            ) : isClient ? (
-              <>
-                <div className="w-auto">
-                  <Wheel
-                    mustStartSpinning={mustSpin}
-                    prizeNumber={prizeNumber}
-                    data={wheelData}
-                    backgroundColors={["#173066", "#0463ce", "#63cbfb"]}
-                    textColors={["#ffffff"]}
-                    onStopSpinning={handleStopSpinning}
-                    outerBorderColor="#f5f5f5"
-                    radiusLineColor="#f5f5f5"
-                    fontFamily="Arial"
-                    fontSize={16}
-                  />
-                </div>
 
-                <div className="flex flex-col items-center gap-4 mt-4">
-                  <Button
-                    className="cursor-pointer"
-                    onClick={handleSpinClick}
-                    disabled={mustSpin || spinComplete}
-                    size={"lg"}
-                  >
-                    SPIN
-                  </Button>
+              <div className="flex flex-col items-center gap-4 mt-4">
+                <Button
+                  className="cursor-pointer"
+                  onClick={handleSpinClick}
+                  disabled={mustSpin || spinComplete}
+                  size={"lg"}
+                >
+                  SPIN
+                </Button>
 
-                  {spinComplete && (
-                    <>
-                      <p className="text-lg font-semibold">
-                        {`You won: ${resultPrizeName} (${resultPrizeBrand})! 🥳`}
-                      </p>
-                      <div>
-                        <Image
-                          src={`/sample/${resultPrizeImgSrc}`}
-                          alt="prize picture"
-                          width={150}
-                          height={150}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              </>
-            ) : (
-              <></>
-            )}
-          </Card>
-        </div>
+                {spinComplete && (
+                  <>
+                    <p className="text-lg font-semibold">
+                      {`You won: ${resultPrizeName} (${resultPrizeBrand})! 🥳`}
+                    </p>
+                    <div>
+                      <Image
+                        src={`/sample/${resultPrizeImgSrc}`}
+                        alt="prize picture"
+                        width={150}
+                        height={150}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <></>
+          )}
+        </Card>
       </div>
     </div>
   );
