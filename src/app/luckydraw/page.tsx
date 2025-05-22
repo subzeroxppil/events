@@ -36,6 +36,10 @@ const colors = [
   { backgroundColor: "teal", textColor: "white" },
 ];
 
+type WheelItem = {
+  option: string;
+};
+
 export default function Home() {
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeNumber, setPrizeNumber] = useState(0);
@@ -44,7 +48,7 @@ export default function Home() {
   const [isClient, setIsClient] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [wheelData, setWheelData] = useState([]); // brands to display on the wheel
+  const [wheelData, setWheelData] = useState<WheelItem[]>([]); // brands to display on the wheel
   const [spinComplete, setSpinComplete] = useState(false);
   const [resultPrizeImgSrc, setResultPrizeImgSrc] = useState("");
   const router = useRouter();
