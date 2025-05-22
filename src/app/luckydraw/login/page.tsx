@@ -7,10 +7,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { CircleAlert } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import onboardingAnimationData from "@/app/assets/handshake-animation.json";
 import { Label } from "@/components/ui/label";
-import Lottie from "lottie-react";
 
 export default function Page() {
   const [workId, setWorkID] = useState("");
@@ -46,7 +43,7 @@ export default function Page() {
       const result = await res.json();
 
       if (res.ok) {
-        window.location.href = "/luckydraw";
+        router.push(`${process.env.NEXT_PUBLIC_BASE_URL}/luckydraw`);
       } else {
         setError(result.message || "An error occurred, please try again");
         setLoading(false);

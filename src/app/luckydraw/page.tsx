@@ -194,8 +194,10 @@ export default function Home() {
   };
 
   const handleSignOut = async () => {
-    await fetch("/api/luckydraw/logout", { method: "POST" });
-    router.push("/luckydraw/login");
+    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/logout`, {
+      method: "POST",
+    });
+    router.push(`${process.env.NEXT_PUBLIC_BASE_URL}/luckydraw/login`);
   };
 
   return (
