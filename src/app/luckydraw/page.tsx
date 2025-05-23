@@ -245,14 +245,14 @@ export default function Home() {
                   backgroundColors={["#173066", "#0463ce", "#63cbfb"]}
                   textColors={["#ffffff"]}
                   onStopSpinning={handleStopSpinning}
-                  outerBorderColor="#f5f5f5"
-                  radiusLineColor="#f5f5f5"
+                  outerBorderColor="#ebebee"
+                  radiusLineColor="#ebebee"
                   fontFamily="Arial"
                   fontSize={16}
                 />
               </div>
 
-              <div className="flex flex-col items-center gap-4 mt-4">
+              <div className="flex flex-col items-center mt-4">
                 <Button
                   onClick={handleSpinClick}
                   disabled={mustSpin || spinComplete || isSpinClicked}
@@ -263,7 +263,7 @@ export default function Home() {
 
                 {spinComplete && (
                   <>
-                    <p className="text-lg font-semibold">
+                    <p className="text-lg font-semibold mt-4">
                       {`You won: ${resultPrizeName} (${resultPrizeBrand})! 🥳`}
                     </p>
                     <div>
