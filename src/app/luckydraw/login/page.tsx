@@ -43,6 +43,7 @@ export default function Page() {
       const result = await res.json();
 
       if (res.ok) {
+        router.refresh();
         router.push(`/luckydraw`);
       } else {
         setError(result.message || "An error occurred, please try again");

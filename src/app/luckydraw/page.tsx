@@ -197,6 +197,7 @@ export default function Home() {
     await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/logout`, {
       method: "POST",
     });
+    router.refresh();
     router.push(`/luckydraw/login`);
   };
 
