@@ -37,7 +37,7 @@ export default function Page() {
                 <Link href="/admin">
                   <Button size={"lg"} className="w-full" variant="outline">
                     <ShieldUser />
-                    <span>Admin portal</span>
+                    <span>Admin Portal</span>
                   </Button>
                 </Link>
               </div>
