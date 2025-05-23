@@ -49,7 +49,12 @@ export default function Page() {
     setError("");
 
     // Input validation
-    const authorizedAdmins = ["joshualai9922@gmail.com", "welai@paypal.com"];
+    const authorizedAdmins = [
+      "joshualai9922@gmail.com",
+      "welai@paypal.com",
+      "jokoh@paypal.com",
+      "rmallan@paypal.com",
+    ];
 
     if (!authorizedAdmins.includes(email.trim())) {
       setError("Email account does not have access to admin portal");
