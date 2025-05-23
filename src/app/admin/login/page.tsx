@@ -9,6 +9,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { signInWithEmail } from "./actions";
+import { signInWithOtp } from "./actions";
 
 export default function Page() {
   const [email, setEmail] = useState("");
@@ -17,9 +18,12 @@ export default function Page() {
   const router = useRouter();
   const [timer, setTimer] = useState(0); // Initial timer value
   const [isActive, setIsActive] = useState(false);
+  const [stage, setStage] = useState<"email" | "otp">("email");
+  const [otp, setOtp] = useState("");
 
   const heading = "Admin Portal Login";
-  const subheading = "We'll send you a link to log in securely.";
+  const subheading =
+    "We'll send you an OTP to log in securely. (Please check your junk mail if needed)";
   const submitText = "Send link";
 
   const startTimer = () => {
@@ -40,7 +44,7 @@ export default function Page() {
     return () => clearInterval(intervalId);
   }, [isActive, timer]); // Dependencies include isActive and timer
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -52,15 +56,29 @@ export default function Page() {
       return;
     }
 
-    setLoading(true);
+    setStage("otp");
     try {
       signInWithEmail(email.trim());
-      startTimer();
     } catch (error) {
       setError("An error occurred, please try again");
-      setLoading(false);
     }
   };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const { session, error } = await signInWithOtp(email.trim(), otp.trim());
+    if (error) {
+      setError("Invalid or expired OTP. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    router.push("/admin");
+  };
+
   return (
     <div className="flex w-full justify-center p-6 md:p-10 h-full">
       <div className="w-full max-w-sm">
@@ -77,17 +95,34 @@ export default function Page() {
               <p className="text-muted-foreground">{subheading}</p>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form
+              onSubmit={stage === "email" ? handleEmailSubmit : handleOtpSubmit}
+            >
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="email">Paypal email</Label>
-                <Input
-                  type="email"
-                  id="email"
-                  placeholder="eg: johndoe"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                {stage === "email" ? (
+                  <>
+                    <Label htmlFor="email">Paypal email</Label>
+                    <Input
+                      type="email"
+                      id="email"
+                      placeholder="eg: johndoe"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Label htmlFor="otp">OTP Code</Label>
+                    <Input
+                      id="otp"
+                      placeholder="6-digit code"
+                      required
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                    />
+                  </>
+                )}
                 {error && (
                   <div className="flex items-center gap-1">
                     <div>
@@ -96,15 +131,27 @@ export default function Page() {
                     <span className="text-sm text-red-500">{error}</span>
                   </div>
                 )}
-                <Button
+                {/* <Button
                   type="submit"
                   className="mt-2 w-full cursor-pointer"
                   disabled={timer > 0}
                 >
-                  {/* {loading ? {`Resend email{timer > 0 && ` in ${timer} seconds`}`} : submitText} */}
                   {timer > 0
                     ? `Resend email${timer > 0 ? ` in ${timer} seconds` : ""}`
                     : submitText}
+                </Button> */}
+                <Button
+                  type="submit"
+                  className="mt-2 w-full"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <LoadingSpinner />
+                  ) : stage === "email" ? (
+                    "Send Code"
+                  ) : (
+                    "Verify Code"
+                  )}
                 </Button>
               </div>
             </form>
