@@ -43,7 +43,7 @@ export default function Page() {
       const result = await res.json();
 
       if (res.ok) {
-        router.push(`${process.env.NEXT_PUBLIC_BASE_URL}/luckydraw`);
+        router.push(`/luckydraw`);
       } else {
         setError(result.message || "An error occurred, please try again");
         setLoading(false);
