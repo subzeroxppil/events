@@ -28,7 +28,6 @@ const GroupAssigner = ({ className }: GroupAssignerProps) => {
   const heading = "Registration";
   const submitText = "Check in";
 
-  const resultHeading = "Welcome to Impact Day! You’re in Group";
   const resultSubheading = "We’re so glad to have you here 🎉";
 
   const handleSubmit = async (e: React.FormEvent) => {
