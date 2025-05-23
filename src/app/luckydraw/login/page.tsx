@@ -43,8 +43,7 @@ export default function Page() {
       const result = await res.json();
 
       if (res.ok) {
-        router.push(`/luckydraw`);
-        router.refresh();
+        window.location.href = "/luckydraw";
       } else {
         setError(result.message || "An error occurred, please try again");
         setLoading(false);
