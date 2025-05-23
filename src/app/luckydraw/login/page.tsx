@@ -16,7 +16,8 @@ export default function Page() {
   const router = useRouter();
 
   const heading = "Lucky Draw";
-  const subheading = "Get a free gift if you've attended our event!";
+  const subheading =
+    "Thank you for spending your time at Impact Day 2025 — enjoy a free gift as our token of appreciation! 🎁";
   const submitText = "Login";
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -92,7 +92,16 @@ export default function Page() {
                 alt="paypal icon"
               />
               <p className="mb-2 text-2xl font-bold">{heading}</p>
-              <p className="text-muted-foreground">{subheading}</p>
+              <p className="text-muted-foreground">
+                {stage === "email" ? (
+                  "We'll send you an OTP to log in securely."
+                ) : (
+                  <>
+                    OTP has been sent to your email. <br />
+                    (Please check your junk mail if needed)
+                  </>
+                )}
+              </p>
             </div>
 
             <form

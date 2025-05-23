@@ -26,11 +26,10 @@ const GroupAssigner = ({ className }: GroupAssignerProps) => {
   const router = useRouter();
 
   const heading = "Registration";
-  const subheading = "Welcome! Register to get assigned a group";
   const submitText = "Check in";
 
-  const resultHeading = "Welcome! You are in Group";
-  const resultSubheading = "Please have a seat 😊";
+  const resultHeading = "Welcome to Impact Day! You’re in Group";
+  const resultSubheading = "We’re so glad to have you here 🎉";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,10 +84,24 @@ const GroupAssigner = ({ className }: GroupAssignerProps) => {
             />
           )}
           <p className="mb-2 text-2xl font-bold">
-            {showResult ? `${resultHeading} ${groupNumber}` : heading}
+            {showResult ? (
+              <>
+                Welcome to Impact Day! <br />
+                You’re in Group {groupNumber}
+              </>
+            ) : (
+              heading
+            )}
           </p>
           <p className="text-muted-foreground">
-            {showResult ? resultSubheading : subheading}
+            {showResult ? (
+              resultSubheading
+            ) : (
+              <>
+                👋 Welcome to Impact Day 2025! <br />
+                Register now to join a group and get started.
+              </>
+            )}
           </p>
         </div>
         {!showResult ? (
