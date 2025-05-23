@@ -41,6 +41,8 @@ export default function Home() {
   const [wheelData, setWheelData] = useState<WheelItem[]>([]); // brands to display on the wheel
   const [spinComplete, setSpinComplete] = useState(false);
   const [resultPrizeImgSrc, setResultPrizeImgSrc] = useState("");
+  const [isSpinClicked, setIsSpinClicked] = useState(false);
+
   let workId = useRef<string | null>(null);
   const router = useRouter();
   useEffect(() => {
@@ -116,12 +118,11 @@ export default function Home() {
   };
 
   const handleSpinClick = async () => {
-    if (mustSpin || !workId.current) return;
-
+    if (mustSpin || !workId.current || isSpinClicked) return;
+    setIsSpinClicked(true);
     setError("");
 
     try {
-      setMustSpin(true);
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/spin`,
         {
@@ -152,6 +153,7 @@ export default function Home() {
         return;
       }
       setPrizeNumber(index);
+      setMustSpin(true);
     } catch (err) {
       console.error("Spin error:", err);
       setError("Spin failed. Please try again.");
@@ -222,7 +224,7 @@ export default function Home() {
 
             <p className="mb-2 text-2xl font-bold">Lucky Draw</p>
             <p className="text-muted-foreground">
-              Thank you for attending our event!
+              Thanks for being part of Impact Day 2025!
             </p>
           </div>
           {loading ? (
@@ -252,9 +254,8 @@ export default function Home() {
 
               <div className="flex flex-col items-center gap-4 mt-4">
                 <Button
-                  className="cursor-pointer"
                   onClick={handleSpinClick}
-                  disabled={mustSpin || spinComplete}
+                  disabled={mustSpin || spinComplete || isSpinClicked}
                   size={"lg"}
                 >
                   SPIN
