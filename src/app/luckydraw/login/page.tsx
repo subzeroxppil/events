@@ -24,7 +24,7 @@ export default function Page() {
     setError("");
 
     // Input validation
-    if (workId.includes("@")) {
+    if (workId.trim().includes("@")) {
       setError("Please enter your Corp Pass ID before the '@'");
       return;
     }
@@ -36,7 +36,7 @@ export default function Page() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ workId }),
+          body: JSON.stringify({ workId: workId.trim() }),
         }
       );
 

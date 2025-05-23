@@ -45,14 +45,16 @@ export default function Page() {
     setError("");
 
     // Input validation
-    if (!email.includes("joshualai9922@gmail.com")) {
-      setError("Email account does not have access");
+    const authorizedAdmins = ["joshualai9922@gmail.com", "welai@paypal.com"];
+
+    if (!authorizedAdmins.includes(email.trim())) {
+      setError("Email account does not have access to admin portal");
       return;
     }
 
     setLoading(true);
     try {
-      signInWithEmail(email);
+      signInWithEmail(email.trim());
       startTimer();
     } catch (error) {
       setError("An error occurred, please try again");
