@@ -61,6 +61,7 @@ export default function Home() {
         workId.current = data.workId;
         fetchSpinCompletionStatus();
       } else {
+        router.push("/luckydraw/login");
       }
     } catch (err) {
       console.error("Failed to fetch workId:", err);
@@ -197,7 +198,6 @@ export default function Home() {
     await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/logout`, {
       method: "POST",
     });
-    router.refresh();
     router.push(`/luckydraw/login`);
   };
 
