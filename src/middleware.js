@@ -9,6 +9,7 @@ export default async function middleware(req) {
     req.nextUrl.pathname.startsWith("/luckydraw/login");
   const isAdminPage = req.nextUrl.pathname.startsWith("/admin");
   const isAdminLoginPage = req.nextUrl.pathname.startsWith("/admin/login");
+  const isAuthCallback = req.nextUrl.pathname.startsWith("/auth/confirm");
 
   const cookieStore = await cookies();
   const luckyDrawSession = cookieStore.get("luckyDrawSession")?.value;
@@ -17,7 +18,7 @@ export default async function middleware(req) {
     return NextResponse.redirect(new URL("/luckydraw/login", req.url));
   }
 
-  if (isAdminPage && !isAdminLoginPage) {
+  if (isAdminPage && !isAdminLoginPage && !isAuthCallback) {
     return await updateSession(req);
   }
 
