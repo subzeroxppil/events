@@ -76,7 +76,7 @@ export default function Page() {
       return;
     }
 
-    router.push("/admin");
+    window.location.href = "/admin";
   };
 
   return (
