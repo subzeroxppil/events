@@ -26,5 +26,12 @@ export default async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/luckydraw/:path*", "/admin/:path*", "/api/admin/:path*"],
+  matcher: [
+    "/luckydraw/:path*",
+    "/luckydraw",
+    "/admin/:path*",
+    "/admin",
+    "/api/admin/:path*",
+    "/api/admin",
+  ],
 };
