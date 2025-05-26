@@ -14,6 +14,9 @@ import {
 import Image from "next/image";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 type UserData = {
   workId: string;
@@ -26,7 +29,8 @@ export default function Page() {
   const [data, setData] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
+  const router = useRouter();
+  const supabase = createClient();
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -52,10 +56,29 @@ export default function Page() {
     fetchData();
   }, []);
 
+  async function handleSignOut() {
+    try {
+      const { error } = await supabase.auth.signOut();
+      router.push("/admin/login");
+      if (error) {
+        setErrorMessage(error.message || "Failed to sign out");
+      }
+    } catch (err) {
+      setErrorMessage("An unexpected error occurred during sign out.");
+    }
+  }
+
   return (
     <div className="flex w-full justify-center px-6 pt-6 pb-10 md:p-10">
       <div className="flex flex-col gap-4 w-full max-w-xl">
         <Card className="mx-auto w-full p-6">
+          <Button
+            className="cursor-pointer w-[80px]"
+            variant="outline"
+            onClick={handleSignOut}
+          >
+            Sign out
+          </Button>
           <div className="flex flex-col items-center text-center">
             <Image
               src="/paypal_logo.png"
