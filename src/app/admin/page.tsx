@@ -25,6 +25,8 @@ type UserData = {
   brandName: string | null;
 };
 
+export const dynamic = "force-dynamic";
+
 export default function Page() {
   const [data, setData] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
