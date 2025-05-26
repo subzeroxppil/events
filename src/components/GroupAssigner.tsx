@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "./ui/card";
 import { LoadingSpinner } from "./LoadingSpinner";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, LogIn } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -127,7 +127,14 @@ const GroupAssigner = ({ className }: GroupAssignerProps) => {
                 className="mt-2 w-full cursor-pointer"
                 disabled={loading}
               >
-                {loading ? <LoadingSpinner /> : submitText}
+                {loading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <LogIn />
+                    <span>{submitText}</span>
+                  </>
+                )}
               </Button>
             </div>
           </form>
