@@ -65,7 +65,11 @@ export default function Page() {
             />
 
             <p className="mb-2 text-2xl font-bold">Admin Portal</p>
-            <p className="text-muted-foreground">Impact Day Attendees</p>
+            {!loading && !errorMessage && (
+              <p className="text-muted-foreground">
+                Impact Day Attendees: {data.length}
+              </p>
+            )}
           </div>
 
           {loading ? (
