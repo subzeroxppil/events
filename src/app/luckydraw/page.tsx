@@ -42,6 +42,9 @@ export default function Home() {
   const [spinComplete, setSpinComplete] = useState(false);
   const [resultPrizeImgSrc, setResultPrizeImgSrc] = useState("");
   const [isSpinClicked, setIsSpinClicked] = useState(false);
+  const [startingIndex, setStartingIndex] = useState<number | undefined>(
+    undefined
+  );
 
   let workId = useRef<string | null>(null);
   const router = useRouter();
@@ -51,6 +54,17 @@ export default function Home() {
     fetchWorkId();
     fetchItemsForWheel();
   }, []);
+
+  useEffect(() => {
+    if (spinComplete && resultPrizeName && wheelData.length > 0) {
+      const index = wheelData.findIndex(
+        (item) => item.option === resultPrizeName
+      );
+      if (index !== -1) {
+        setStartingIndex(index);
+      }
+    }
+  }, [spinComplete, resultPrizeName, wheelData]);
 
   const fetchWorkId = async () => {
     try {
@@ -252,6 +266,7 @@ export default function Home() {
                   radiusLineColor="#ebebee"
                   fontFamily="Arial"
                   fontSize={16}
+                  startingOptionIndex={startingIndex}
                 />
               </div>
 
