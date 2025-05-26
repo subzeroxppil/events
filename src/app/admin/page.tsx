@@ -25,8 +25,6 @@ type UserData = {
   brandName: string | null;
 };
 
-export const dynamic = "force-dynamic";
-
 export default function Page() {
   const [data, setData] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +34,11 @@ export default function Page() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+          if (!user) {
+            router.push("/admin/login");
+          }
+        });
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin`
         );
