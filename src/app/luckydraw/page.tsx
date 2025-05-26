@@ -164,6 +164,9 @@ export default function Home() {
     setMustSpin(false);
     setSpinComplete(true);
     triggerConfetti();
+    setTimeout(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    }, 200);
   };
 
   const triggerConfetti = () => {
