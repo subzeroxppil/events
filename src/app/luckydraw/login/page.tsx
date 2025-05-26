@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, LogIn } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
@@ -93,7 +93,14 @@ export default function Page() {
                   className="mt-2 w-full cursor-pointer"
                   disabled={loading}
                 >
-                  {loading ? <LoadingSpinner /> : submitText}
+                  {loading ? (
+                    <LoadingSpinner />
+                  ) : (
+                    <>
+                      <LogIn />
+                      <span>{submitText}</span>
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
