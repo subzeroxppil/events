@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   try {
-    const brands = await prisma.brand.findMany({
+    const prizes = await prisma.prize.findMany({
       select: {
         name: true,
       },
@@ -12,13 +12,13 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const formatted = brands.map((brand) => ({
-      brand: brand.name,
+    const formatted = prizes.map((prize) => ({
+      prize: prize.name,
     }));
 
     return NextResponse.json(formatted, { status: 200 });
   } catch (error) {
-    console.error("Error fetching brands:", error);
+    console.error("Error fetching prizes:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }

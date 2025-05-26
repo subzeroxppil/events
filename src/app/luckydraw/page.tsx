@@ -38,7 +38,7 @@ export default function Home() {
   const [isClient, setIsClient] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [wheelData, setWheelData] = useState<WheelItem[]>([]); // brands to display on the wheel
+  const [wheelData, setWheelData] = useState<WheelItem[]>([]);
   const [spinComplete, setSpinComplete] = useState(false);
   const [resultPrizeImgSrc, setResultPrizeImgSrc] = useState("");
   const [isSpinClicked, setIsSpinClicked] = useState(false);
@@ -49,7 +49,7 @@ export default function Home() {
     setIsClient(true);
     setError("");
     fetchWorkId();
-    fetchBrandsForWheel();
+    fetchItemsForWheel();
   }, []);
 
   const fetchWorkId = async () => {
@@ -93,24 +93,24 @@ export default function Home() {
     }
   };
 
-  const fetchBrandsForWheel = async () => {
+  const fetchItemsForWheel = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/brands`
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/prizes`
       );
 
       const result = await res.json();
 
       if (res.ok) {
-        const brands = result.map((item: { brand: any }, index: any) => ({
-          option: item.brand,
+        const prizes = result.map((item: { prize: any }, index: any) => ({
+          option: item.prize,
         }));
-        setWheelData(brands);
+        setWheelData(prizes);
       } else {
-        setError(result.message || "Failed to fetch brands data");
+        setError(result.message || "Failed to fetch wheel prizes data");
       }
     } catch (err) {
-      console.error("Error fetching brands data:", err);
+      console.error("Error fetching wheel prizes data:", err);
       setError("An error occurred, please try again");
     } finally {
       setLoading(false);
@@ -146,10 +146,10 @@ export default function Home() {
 
       // Spin the wheel to that brand
       const index = wheelData.findIndex(
-        (item) => item.option === result.prize.brand
+        (item) => item.option === result.prize.name
       );
       if (index === -1) {
-        setError("Prize brand not found on the wheel.");
+        setError("Prize not found on the wheel.");
         return;
       }
       setPrizeNumber(index);
@@ -264,7 +264,7 @@ export default function Home() {
                 {spinComplete && (
                   <>
                     <p className="text-lg font-semibold mt-4">
-                      {`You won: ${resultPrizeName} (${resultPrizeBrand})! 🥳`}
+                      {`You won: ${resultPrizeName} (${resultPrizeBrand})! 🎉`}
                     </p>
                     <div>
                       <Image
