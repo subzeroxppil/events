@@ -119,7 +119,7 @@ export default function Page() {
                     <Input
                       type="email"
                       id="email"
-                      placeholder="eg: johndoe"
+                      placeholder="eg: johndoe@paypal.com"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
