@@ -263,16 +263,18 @@ export default function Home() {
 
                 {spinComplete && (
                   <>
-                    <p className="text-lg font-semibold mt-4">
-                      {`You won: ${resultPrizeName} (${resultPrizeBrand})! 🎉`}
-                    </p>
-                    <div>
-                      <Image
-                        src={`/sample/${resultPrizeImgSrc}`}
-                        alt="prize picture"
-                        width={150}
-                        height={150}
-                      />
+                    <div className="flex flex-col items-center text-center p-2 mt-2 gap-2">
+                      <p className="text-lg font-semibold">
+                        {`🎉 You won: ${resultPrizeName} (${resultPrizeBrand})!`}
+                      </p>
+                      <div>
+                        <Image
+                          src={`/sample/${resultPrizeImgSrc}`}
+                          alt="prize picture"
+                          width={150}
+                          height={150}
+                        />
+                      </div>
                     </div>
                   </>
                 )}
