@@ -15,17 +15,6 @@ const Wheel = dynamic(
   { ssr: false }
 );
 
-const colors = [
-  { backgroundColor: "green", textColor: "white" },
-  { backgroundColor: "red", textColor: "white" },
-  { backgroundColor: "blue", textColor: "white" },
-  { backgroundColor: "orange", textColor: "black" },
-  { backgroundColor: "purple", textColor: "white" },
-  { backgroundColor: "yellow", textColor: "black" },
-  { backgroundColor: "pink", textColor: "black" },
-  { backgroundColor: "teal", textColor: "white" },
-];
-
 type WheelItem = {
   option: string;
 };
