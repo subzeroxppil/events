@@ -5,12 +5,11 @@ import Link from "next/link";
 import { Toaster } from "@/components/ui/sonner";
 import Image from "next/image";
 import { Suspense } from "react";
+import localFont from "next/font/local";
 
-// const inter = Inter({
-//   subsets: ["latin"],
-//   variable: "--font-inter",
-//   display: "swap",
-// });
+const paypalOpen = localFont({
+  src: "../fonts/PayPalOpen-Regular.woff2",
+});
 
 export const metadata: Metadata = {
   title: "Impact Day",
@@ -24,7 +23,11 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`h-full`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`h-full ${paypalOpen.className}`}
+    >
       <body className="flex flex-col">
         <div className="flex-col md:flex">
           <div className="border-b">
