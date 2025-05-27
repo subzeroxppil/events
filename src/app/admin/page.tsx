@@ -1,11 +1,9 @@
 "use client";
 
-import { GroupAssigner } from "@/components/GroupAssigner";
 import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -24,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Download } from "lucide-react";
 
 type UserData = {
   registeredAt: Date;
@@ -110,7 +109,7 @@ export default function Page() {
       <div className="flex flex-col gap-4 w-full max-w-xl">
         <Card className="mx-auto w-full p-4 gap-0">
           <Button
-            className="cursor-pointer w-[80px]"
+            className="w-[80px]"
             variant="outline"
             onClick={handleSignOut}
           >
@@ -144,7 +143,10 @@ export default function Page() {
                   {data.filter((user) => user.prizeName !== null).length}
                 </p>
                 <div className="flex justify-between mt-6 mb-2 w-full gap-2">
-                  <Button variant="outline">Export</Button>
+                  <Button variant="outline">
+                    <Download />
+                    Export
+                  </Button>
                   <div className="flex items-center gap-2">
                     <Select value={sortBy} onValueChange={setSortBy}>
                       <SelectTrigger>
