@@ -47,9 +47,24 @@ export async function GET(req: NextRequest) {
       orderBy: orderByClause,
     });
 
+    function formatDateTime(input: string | Date): string {
+      const date = typeof input === "string" ? new Date(input) : input;
+
+      const options: Intl.DateTimeFormatOptions = {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      };
+
+      return date.toLocaleString("en-SG", options);
+    }
+
     // Format prize name as string or null
     const formattedUsers = users.map((user: any) => ({
-      registeredAt: user.registeredAt,
+      registeredAt: formatDateTime(user.registeredAt),
       workId: user.workId,
       groupNumber: user.groupNumber,
       prizeName: user.prize?.name ?? null,

@@ -1,5 +1,5 @@
 "use client";
-
+import * as XLSX from "xlsx";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -25,7 +25,7 @@ import {
 import { Download } from "lucide-react";
 
 type UserData = {
-  registeredAt: Date;
+  registeredAt: string;
   workId: string;
   groupNumber: number;
   prizeName: string | null;
@@ -77,20 +77,23 @@ export default function Page() {
     fetchData();
   }, [sortBy]);
 
-  function formatDateTime(input: string | Date): string {
-    const date = typeof input === "string" ? new Date(input) : input;
+  const handleExport = () => {
+    const exportData = data.map((user) => ({
+      "Registration Time": user.registeredAt,
+      "Corp Pass ID": user.workId,
+      "Group Number": user.groupNumber,
+      "Prize Details":
+        user.prizeName && user.brandName
+          ? `${user.brandName} | ${user.prizeName}`
+          : "-", // Combine prize name and brand name or show "-" if not available
+    }));
 
-    const options: Intl.DateTimeFormatOptions = {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    };
+    const worksheet = XLSX.utils.json_to_sheet(data); // `data` is your JSON array
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendees");
 
-    return date.toLocaleString("en-SG", options);
-  }
+    XLSX.writeFile(workbook, "impact_day_2025_attendees.xlsx");
+  };
 
   async function handleSignOut() {
     try {
@@ -103,6 +106,8 @@ export default function Page() {
       setErrorMessage("An unexpected error occurred during sign out.");
     }
   }
+
+  const headers = ["Registration Time", "Corp Pass ID", "Group", "Prize"];
 
   return (
     <div className="flex w-full justify-center px-2 pt-6 pb-10 md:p-10">
@@ -143,7 +148,7 @@ export default function Page() {
                   {data.filter((user) => user.prizeName !== null).length}
                 </p>
                 <div className="flex justify-between mt-6 mb-2 w-full gap-2">
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={handleExport}>
                     <Download />
                     Export
                   </Button>
@@ -155,13 +160,13 @@ export default function Page() {
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="registeredAt">
+                          Registration Time
+                        </SelectItem>
                         <SelectItem value="groupNumber">
                           Group Number
                         </SelectItem>
                         <SelectItem value="workId">Corp Pass ID</SelectItem>
-                        <SelectItem value="registeredAt">
-                          Registration Time
-                        </SelectItem>
                         <SelectItem value="prizeName">Prize Name</SelectItem>
                       </SelectContent>
                     </Select>
@@ -171,17 +176,17 @@ export default function Page() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Registration Time</TableHead>
-                    <TableHead>Corp Pass ID</TableHead>
-                    <TableHead>Group</TableHead>
-                    <TableHead>Prize</TableHead>
+                    <TableHead>{headers[0]}</TableHead>
+                    <TableHead>{headers[1]}</TableHead>
+                    <TableHead>{headers[2]}</TableHead>
+                    <TableHead>{headers[3]}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.map((user) => (
                     <TableRow key={user.workId}>
                       <TableCell className="font-medium">
-                        {formatDateTime(user.registeredAt)}
+                        {user.registeredAt}
                       </TableCell>
                       <TableCell className="font-medium">
                         {user.workId}
