@@ -32,11 +32,11 @@ type UserData = {
   brandName: string | null;
 };
 
-const sortLabels: Record<string, string> = {
+const headers: Record<string, string> = {
   groupNumber: "Group Number",
   workId: "Corp Pass ID",
   registeredAt: "Registration Time",
-  prizeName: "Prize Name",
+  prizeName: "Prize",
 };
 
 export default function Page() {
@@ -79,16 +79,16 @@ export default function Page() {
 
   const handleExport = () => {
     const exportData = data.map((user) => ({
-      "Registration Time": user.registeredAt,
-      "Corp Pass ID": user.workId,
-      "Group Number": user.groupNumber,
-      "Prize Details":
+      [headers.registeredAt]: user.registeredAt,
+      [headers.workId]: user.workId,
+      [headers.groupNumber]: user.groupNumber,
+      [headers.prizeName]:
         user.prizeName && user.brandName
           ? `${user.brandName} | ${user.prizeName}`
           : "-", // Combine prize name and brand name or show "-" if not available
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(data); // `data` is your JSON array
+    const worksheet = XLSX.utils.json_to_sheet(exportData); // `data` is your JSON array
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Attendees");
 
@@ -106,8 +106,6 @@ export default function Page() {
       setErrorMessage("An unexpected error occurred during sign out.");
     }
   }
-
-  const headers = ["Registration Time", "Corp Pass ID", "Group", "Prize"];
 
   return (
     <div className="flex w-full justify-center px-2 pt-6 pb-10 md:p-10">
@@ -156,7 +154,7 @@ export default function Page() {
                     <Select value={sortBy} onValueChange={setSortBy}>
                       <SelectTrigger>
                         <SelectValue>
-                          {sortBy ? `Sort by ${sortLabels[sortBy]}` : "Sort by"}
+                          {sortBy ? `Sort by ${headers[sortBy]}` : "Sort by"}
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
@@ -176,10 +174,10 @@ export default function Page() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{headers[0]}</TableHead>
-                    <TableHead>{headers[1]}</TableHead>
-                    <TableHead>{headers[2]}</TableHead>
-                    <TableHead>{headers[3]}</TableHead>
+                    <TableHead>{headers.registeredAt}</TableHead>
+                    <TableHead>{headers.workId}</TableHead>
+                    <TableHead>{headers.groupNumber}</TableHead>
+                    <TableHead>{headers.prizeName}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
