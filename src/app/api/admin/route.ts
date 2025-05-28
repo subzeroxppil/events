@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
       const date = typeof input === "string" ? new Date(input) : input;
 
       const options: Intl.DateTimeFormatOptions = {
+        timeZone: "Asia/Singapore",
         year: "numeric",
         month: "short",
         day: "numeric",
