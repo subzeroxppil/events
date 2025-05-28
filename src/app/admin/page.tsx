@@ -159,13 +159,15 @@ export default function Page() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="registeredAt">
-                          Registration Time
+                          {headers.registeredAt}
                         </SelectItem>
                         <SelectItem value="groupNumber">
-                          Group Number
+                          {headers.groupNumber}
                         </SelectItem>
-                        <SelectItem value="workId">Corp Pass ID</SelectItem>
-                        <SelectItem value="prizeName">Prize Name</SelectItem>
+                        <SelectItem value="workId">{headers.workId}</SelectItem>
+                        <SelectItem value="prizeName">
+                          {headers.prizeName}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
