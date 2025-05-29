@@ -26,7 +26,7 @@ function AdminSearch({ query, setQuery, handleSearch }: AdminSearchProps) {
             placeholder="Search by Title/Country/Location..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full h-10 pr-10 sm:pr-12 md:pr-16 text-xs sm:text-sm bg-background backdrop-blur-xs border-muted rounded-lg"
+            className="w-full h-10 pr-10 sm:pr-12 md:pr-16 text-sm bg-background backdrop-blur-xs border-muted rounded-lg"
           />
           <Button
             type="submit"
