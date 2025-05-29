@@ -102,7 +102,7 @@ export default function Page() {
         <h1 className="text-center text-4xl font-bold sm:text-5xl">
           Impact Day Admin Portal
         </h1>
-        <p className="text-center text-lg text-muted-foreground sm:text-xl mt-3 mb-3">
+        <p className="text-center text-lg text-muted-foreground sm:text-xl mt-3 mb-3 font-bold">
           Organise Events and Track Attendance
         </p>
         <AdminSearch

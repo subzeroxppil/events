@@ -6,10 +6,13 @@ import { Toaster } from "@/components/ui/sonner";
 import Image from "next/image";
 import { Suspense } from "react";
 import localFont from "next/font/local";
+import { Inter } from "next/font/google";
 
 const paypalOpen = localFont({
   src: "../fonts/PayPalOpen-Regular.woff2",
 });
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Impact Day",
@@ -26,7 +29,8 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`h-full ${paypalOpen.className}`}
+      // className={`h-full ${paypalOpen.className}`}
+      className={`h-full ${inter.className}`}
     >
       <body className="flex flex-col">
         <div className="flex-col md:flex">

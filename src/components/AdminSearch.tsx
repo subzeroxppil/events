@@ -23,7 +23,7 @@ function AdminSearch({ query, setQuery, handleSearch }: AdminSearchProps) {
 
         <div className="relative flex items-center font-mono w-full">
           <Input
-            placeholder="Search..."
+            placeholder="Search by Title/Country/Location..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full h-10 sm:h-12 md:h-12 pr-10 sm:pr-12 md:pr-16 text-xs sm:text-sm md:text-base bg-background backdrop-blur-xs border-muted rounded-lg"
