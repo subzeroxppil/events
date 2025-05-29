@@ -9,35 +9,59 @@ datasource db {
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-  workId        String   @unique
-  groupNumber   Int?
-  prizeId       Int?     // Nullable until prize is assigned
-  registeredAt  DateTime @default(now())
+  id          Int          @id @default(autoincrement())
+  workId      String       @unique
 
-  prize         Prize?   @relation(fields: [prizeId], references: [id])
+  attendances Attendance[]
 }
 
-model GroupConfig {
-  id         Int      @id
-  groupCount Int
-  createdAt  DateTime @default(now())
+model Event {
+  id          Int          @id @default(autoincrement())
+  name        String
+  groupCount  Int
+  createdAt   DateTime     @default(now())
+  eventStartTime   DateTime 
+  eventEndTime   DateTime
+  hasLuckyDraw Boolean @default(false)
+  location       String     
+  country        String
+  createdBy      String 
+
+  prizes      Prize[]
+  attendances Attendance[]
+}
+
+model Attendance {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  eventId     Int
+  groupNumber Int?
+  prizeId     Int?
+  registeredAt DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+  event       Event    @relation(fields: [eventId], references: [id])
+  prize       Prize?   @relation(fields: [prizeId], references: [id])
+
+  @@unique([userId, eventId]) // Prevent duplicate attendance
 }
 
 model Brand {
-  id    Int     @id @default(autoincrement())
-  name  String
+  id     Int     @id @default(autoincrement())
+  name   String
 
   prizes Prize[]
 }
 
 model Prize {
-  id        Int     @id @default(autoincrement())
-  brandId   Int
-  name      String
-  imageUrl  String
-  quantity  Int     @default(0)
+  id         Int     @id @default(autoincrement())
+  brandId    Int
+  eventId    Int
+  name       String
+  imageUrl   String
+  quantity   Int     @default(0)
 
-  users     User[]
-  brand     Brand   @relation(fields: [brandId], references: [id])
+  brand      Brand   @relation(fields: [brandId], references: [id])
+  event      Event   @relation(fields: [eventId], references: [id])
+  attendances Attendance[]
 }

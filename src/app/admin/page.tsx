@@ -22,79 +22,64 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download } from "lucide-react";
+import { Download, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import AdminSearch from "@/components/AdminSearch";
+import { CalendarPlus } from "lucide-react";
+import { EventCard } from "@/components/EventCard";
+import Link from "next/link";
 
-type UserData = {
-  registeredAt: string;
-  workId: string;
-  groupNumber: number;
-  prizeName: string | null;
-  brandName: string | null;
-};
-
-const headers: Record<string, string> = {
-  groupNumber: "Group Number",
-  workId: "Corp Pass ID",
-  registeredAt: "Registration Time",
-  prizeName: "Prize",
+type Event = {
+  id: number;
+  title: string;
+  country: string;
+  location: string;
+  attendees: number;
+  eventStartTime: string; // from API, dates are strings
+  createdAt: string;
+  createdBy: string;
 };
 
 export default function Page() {
-  const [data, setData] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState("registeredAt");
   const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [events, setEvents] = useState<Event[]>([]);
+  const [eventCount, setEventCount] = useState(0);
+
   const supabase = createClient();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        supabase.auth.getUser().then(({ data: { user } }) => {
-          if (!user) {
-            router.push("/admin/login");
-          }
-        });
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin?sortBy=${sortBy}`
-        );
-        const result = await res.json();
+    fetchEvents();
+  }, []);
 
-        if (!res.ok) {
-          // Backend error (e.g. 500)
-          setErrorMessage(result.message || "Failed to fetch data");
-          return;
-        }
-
-        setData(result.users);
-      } catch (err: any) {
-        setErrorMessage(err.message || "Failed to fetch data");
-      } finally {
-        setLoading(false);
+  const fetchEvents = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/admin/login");
+        return;
       }
-    };
 
-    fetchData();
-  }, [sortBy]);
+      const res = await fetch(`/api/admin/events`);
+      const result = await res.json();
 
-  const handleExport = () => {
-    const exportData = data.map((user) => ({
-      [headers.registeredAt]: user.registeredAt,
-      [headers.workId]: user.workId,
-      [headers.groupNumber]: user.groupNumber,
-      [headers.prizeName]:
-        user.prizeName && user.brandName
-          ? `${user.brandName} | ${user.prizeName}`
-          : "-", // Combine prize name and brand name or show "-" if not available
-    }));
+      if (!res.ok) {
+        setErrorMessage(result.message || "Failed to fetch events");
+        return;
+      }
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData); // `data` is your JSON array
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendees");
-
-    XLSX.writeFile(workbook, "impact_day_2025_attendees.xlsx");
+      setEvents(result.events);
+      setEventCount(result.eventCount);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to fetch events");
+    } finally {
+      setLoading(false);
+    }
   };
-
   async function handleSignOut() {
     try {
       const { error } = await supabase.auth.signOut();
@@ -107,104 +92,63 @@ export default function Page() {
     }
   }
 
+  const handleSearch = (q: string) => {
+    console.log("Searching for:", q);
+    // Your search logic here
+  };
   return (
-    <div className="flex w-full justify-center px-2 pt-6 pb-10 md:p-10">
-      <div className="flex flex-col gap-4 w-full max-w-xl">
-        <Card className="mx-auto w-full p-4 gap-0">
-          <Button
-            className="w-[80px]"
-            variant="outline"
-            onClick={handleSignOut}
-          >
-            Sign out
-          </Button>
-          <div className="flex flex-col items-center text-center">
-            <Image
-              src="/paypal_logo.png"
-              width={60}
-              height={60}
-              alt="paypal icon"
-            />
-            <p className="text-2xl font-bold">Admin Portal</p>
-          </div>
+    <>
+      <div className="w-full flex flex-col p-8 bg-slate-100 items-center">
+        <h1 className="text-center text-4xl font-bold sm:text-5xl">
+          Impact Day Admin Portal
+        </h1>
+        <p className="text-center text-lg text-muted-foreground sm:text-xl mt-3 mb-3">
+          Organise Events and track attendance
+        </p>
+        <AdminSearch
+          query={query}
+          setQuery={setQuery}
+          handleSearch={handleSearch}
+        />
+      </div>
+      <div className="w-full flex flex-col px-8 py-8 items-center">
+        <div className="flex items-center justify-between p-4 text-xs sm:text-sm md:text-base w-full">
+          <span className="text-muted-foreground text-center text-l">
+            {eventCount} {eventCount === 1 ? "result" : "results"}
+          </span>
+          <Link href="/admin/event/create">
+            <Button>
+              <CalendarPlus />
+              Create Event
+            </Button>
+          </Link>
+        </div>
+        <div className="w-full flex flex-col gap-2">
           {loading ? (
-            <div className="flex flex-col items-center self-center mt-5">
-              <LoadingSpinner />
-            </div>
+            <LoadingSpinner className="my-10 self-center" />
           ) : errorMessage ? (
-            <p className="text-center text-red-500 font-medium mt-4">
-              {errorMessage}
+            <p className="text-red-500 text-sm text-center">{errorMessage}</p>
+          ) : events.length === 0 ? (
+            <p className="text-muted-foreground text-sm text-center">
+              No events found.
             </p>
           ) : (
-            <>
-              <div className="flex flex-col items-center text-center mt-2">
-                <p className="text-muted-foreground">
-                  Impact Day Attendees: {data.length}
-                </p>
-                <p className="text-muted-foreground">
-                  Lucky Draw Completed:{" "}
-                  {data.filter((user) => user.prizeName !== null).length}
-                </p>
-                <div className="flex justify-between mt-6 mb-2 w-full gap-2">
-                  <Button variant="outline" onClick={handleExport}>
-                    <Download />
-                    Export
-                  </Button>
-                  <div className="flex items-center gap-2">
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger>
-                        <SelectValue>
-                          {sortBy ? `Sort by ${headers[sortBy]}` : "Sort by"}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="registeredAt">
-                          {headers.registeredAt}
-                        </SelectItem>
-                        <SelectItem value="groupNumber">
-                          {headers.groupNumber}
-                        </SelectItem>
-                        <SelectItem value="workId">{headers.workId}</SelectItem>
-                        <SelectItem value="prizeName">
-                          {headers.prizeName}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{headers.registeredAt}</TableHead>
-                    <TableHead>{headers.workId}</TableHead>
-                    <TableHead>{headers.groupNumber}</TableHead>
-                    <TableHead>{headers.prizeName}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.map((user) => (
-                    <TableRow key={user.workId}>
-                      <TableCell className="font-medium">
-                        {user.registeredAt}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {user.workId}
-                      </TableCell>
-                      <TableCell>{user.groupNumber}</TableCell>
-                      <TableCell>
-                        {user.prizeName && user.brandName
-                          ? `${user.brandName} | ${user.prizeName}`
-                          : "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </>
+            events.map((event) => (
+              <EventCard
+                key={event.id}
+                id={event.id}
+                title={event.title}
+                country={event.country}
+                location={event.location}
+                attendees={event.attendees}
+                eventStartTime={new Date(event.eventStartTime)}
+                createdAt={new Date(event.createdAt)}
+                createdBy={event.createdBy}
+              />
+            ))
           )}
-        </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
