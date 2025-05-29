@@ -103,7 +103,7 @@ export default function Page() {
           Impact Day Admin Portal
         </h1>
         <p className="text-center text-lg text-muted-foreground sm:text-xl mt-3 mb-3">
-          Organise Events and track attendance
+          Organise Events and Track Attendance
         </p>
         <AdminSearch
           query={query}
