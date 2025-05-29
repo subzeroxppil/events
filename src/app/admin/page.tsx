@@ -100,7 +100,7 @@ export default function Page() {
     <>
       <div className="w-full flex flex-col p-8 bg-slate-100 items-center">
         <h1 className="text-center text-4xl font-bold sm:text-5xl">
-          Impact Day Admin Portal
+          Admin Portal
         </h1>
         <p className="text-center text-lg text-muted-foreground sm:text-xl mt-3 mb-3 font-bold">
           Organise Events and Track Attendance
