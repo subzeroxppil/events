@@ -85,92 +85,90 @@ export default function Page() {
   };
   return (
     <div className="flex w-full justify-center p-6 md:p-10 h-full">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-4">
-          <Card className="mx-auto w-full max-w-sm p-6">
-            <div className="flex flex-col items-center text-center">
-              <Image
-                src="/paypal_logo.png"
-                width={60}
-                height={60}
-                alt="paypal icon"
-              />
-              <p className="mb-2 text-2xl font-bold">{heading}</p>
-              <p className="text-muted-foreground">{subheading}</p>
-            </div>
+      <div className="flex flex-col gap-4 w-full max-w-xl">
+        <Card className="w-full p-6">
+          <div className="flex flex-col items-center text-center">
+            <Image
+              src="/paypal_logo.png"
+              width={60}
+              height={60}
+              alt="paypal icon"
+            />
+            <p className="mb-2 text-2xl font-bold">{heading}</p>
+            <p className="text-muted-foreground">{subheading}</p>
+          </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor="title">Name of Event</Label>
-                  <Input
-                    id="title"
-                    placeholder="eg: Impact Day Wheelchair Building Session"
-                    required
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor="country">Country</Label>
-                  <Input
-                    id="country"
-                    placeholder="eg: Singapore"
-                    required
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    placeholder="eg: Suntec Convention Hall 4"
-                    required
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label>Start Date/TIme</Label>
-                  <DateTimePicker
-                    value={eventStartTime}
-                    onChange={setEventStartTime}
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label>End Date/TIme</Label>
-                  <DateTimePicker
-                    value={eventEndTime}
-                    onChange={setEventEndTime}
-                  />
-                </div>
-                {error && (
-                  <div className="flex items-center gap-1">
-                    <div>
-                      <CircleAlert size="20px" color="#ef4444" />
-                    </div>
-                    <span className="text-sm text-red-500">{error}</span>
-                  </div>
-                )}
-                <Button
-                  type="submit"
-                  className="mt-2 w-full cursor-pointer"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <LoadingSpinner />
-                  ) : (
-                    <>
-                      <CalendarPlus />
-                      <span>Create Event</span>
-                    </>
-                  )}
-                </Button>
+          <form onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="title">Name of Event</Label>
+                <Input
+                  id="title"
+                  placeholder="eg: Impact Day Wheelchair Building Session"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
               </div>
-            </form>
-          </Card>
-        </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="country">Country</Label>
+                <Input
+                  id="country"
+                  placeholder="eg: Singapore"
+                  required
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  placeholder="eg: Suntec Convention Hall 4"
+                  required
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label>Start Date/TIme</Label>
+                <DateTimePicker
+                  value={eventStartTime}
+                  onChange={setEventStartTime}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label>End Date/TIme</Label>
+                <DateTimePicker
+                  value={eventEndTime}
+                  onChange={setEventEndTime}
+                />
+              </div>
+              {error && (
+                <div className="flex items-center gap-1">
+                  <div>
+                    <CircleAlert size="20px" color="#ef4444" />
+                  </div>
+                  <span className="text-sm text-red-500">{error}</span>
+                </div>
+              )}
+              <Button
+                type="submit"
+                className="mt-2 w-full cursor-pointer"
+                disabled={loading}
+              >
+                {loading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <>
+                    <CalendarPlus />
+                    <span>Create Event</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </Card>
       </div>
     </div>
   );
