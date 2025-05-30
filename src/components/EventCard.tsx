@@ -37,9 +37,6 @@ export function EventCard({
     <Link
       href={{
         pathname: `/admin/event/${id}`,
-        query: {
-          title,
-        },
       }}
     >
       <Card className="fade-in hover:bg-slate-100">
@@ -55,7 +52,12 @@ export function EventCard({
             </div>
             <div className="py-1 rounded-lg flex flex-row items-center gap-1">
               <Clock size={14} />
-              <div>{new Date(eventStartTime).toLocaleString()}</div>
+              <div>
+                {new Date(eventStartTime).toLocaleString("en-SG", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </div>
             </div>
             <div className="py-1 rounded-lg flex flex-row items-center gap-1">
               <SquarePen size={14} />

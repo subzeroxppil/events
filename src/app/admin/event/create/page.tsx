@@ -38,7 +38,10 @@ export default function Page() {
     number | undefined
   >(undefined);
 
-  const [hasLuckyDraw, setHasLuckyDraw] = useState(false);
+  const [hasLuckyDraw, setHasLuckyDraw] = useState<boolean | undefined>(
+    undefined
+  );
+
   const [groupingStrategy, setGroupingStrategy] = useState<string>("");
   const [prizes, setPrizes] = useState([
     { brand: "", name: "", image: null as File | null, quantity: 1 },
@@ -133,7 +136,7 @@ export default function Page() {
       }
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/createupdate`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -336,13 +339,24 @@ export default function Page() {
                   </TooltipProvider>
                 </div>
                 <RadioGroup
-                  value={hasLuckyDraw ? "yes" : "no"}
+                  value={
+                    hasLuckyDraw === undefined
+                      ? ""
+                      : hasLuckyDraw
+                      ? "yes"
+                      : "no"
+                  }
                   onValueChange={(value) => {
-                    setHasLuckyDraw(value === "yes");
-                    if (value === "no")
+                    if (value === "yes") {
+                      setHasLuckyDraw(true);
+                    } else if (value === "no") {
+                      setHasLuckyDraw(false);
                       setPrizes([
                         { brand: "", name: "", image: null, quantity: 0 },
                       ]);
+                    } else {
+                      setHasLuckyDraw(undefined);
+                    }
                   }}
                 >
                   <div className="flex items-center space-x-2">
