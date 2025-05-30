@@ -27,7 +27,8 @@ export function UserNav() {
     try {
       const { error } = await supabase.auth.signOut();
       await fetchUser();
-      router.push("/admin/login");
+      window.location.href = "/admin/login";
+
       if (error) {
         toast(error.message || "Failed to sign out");
       }
