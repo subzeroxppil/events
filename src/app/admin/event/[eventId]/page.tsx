@@ -13,7 +13,7 @@ import Image from "next/image";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
+const supabase = createClient();
 import { useRouter } from "next/navigation";
 import {
   Select,
