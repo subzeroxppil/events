@@ -8,6 +8,11 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum GroupingStrategy {
+  numberOfGroups    // round robin
+  maxPerGroup       // fill sequentially
+}
+
 model User {
   id          Int          @id @default(autoincrement())
   workId      String       @unique
@@ -18,12 +23,13 @@ model User {
 model Event {
   id          Int          @id @default(autoincrement())
   name        String
-  groupCount  Int
   createdAt   DateTime     @default(now())
   eventStartTime   DateTime 
   eventEndTime   DateTime
   hasLuckyDraw Boolean @default(false)
-  location       String     
+  location       String
+  groupingStrategy  GroupingStrategy?
+  groupConfigNumber Int?      
   country        String
   createdBy      String 
 
