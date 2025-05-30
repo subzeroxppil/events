@@ -9,8 +9,8 @@ datasource db {
 }
 
 enum GroupingStrategy {
-  numberOfGroups    // round robin
-  maxPerGroup       // fill sequentially
+  roundRobin       // Attendees assigned in order across groups (1,2,3,1,...)
+  maxGroupCapacity // Groups filled up one at a time to max capacity
 }
 
 model User {
@@ -54,7 +54,7 @@ model Attendance {
 
 model Brand {
   id     Int     @id @default(autoincrement())
-  name   String
+  name   String  @unique
 
   prizes Prize[]
 }
@@ -64,7 +64,7 @@ model Prize {
   brandId    Int
   eventId    Int
   name       String
-  imageUrl   String
+  imageBlob   Bytes
   quantity   Int     @default(0)
 
   brand      Brand   @relation(fields: [brandId], references: [id])

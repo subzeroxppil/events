@@ -4,12 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { CalendarPlus, CircleAlert, LogIn } from "lucide-react";
+import {
+  CalendarPlus,
+  CircleAlert,
+  CircleHelp,
+  Info,
+  LogIn,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { DateTimePicker } from "@/components/DateTimePicker";
 import { toast } from "sonner";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function Page() {
   const [title, setTitle] = useState("");
@@ -21,13 +34,50 @@ export default function Page() {
   const [eventEndTime, setEventEndTime] = useState<Date | undefined>(undefined);
   const [country, setCountry] = useState("");
   const [location, setLocation] = useState("");
-  const [groupCount, setGroupCount] = useState(0);
+  const [groupConfigNumber, setGroupConfigNumber] = useState<
+    number | undefined
+  >(undefined);
+
   const [hasLuckyDraw, setHasLuckyDraw] = useState(false);
+  const [groupingStrategy, setGroupingStrategy] = useState<string>("");
+  const [prizes, setPrizes] = useState([
+    { brand: "", name: "", image: null as File | null, quantity: 1 },
+  ]);
+
   const router = useRouter();
 
   const heading = "Create Event";
   const subheading =
     "Once the event is created, you'll be able to generate a QR code for attendees to scan upon arrival, enabling you to track attendance seamlessly.";
+
+  const handlePrizeChange = (
+    index: number,
+    field: "brand" | "name" | "image" | "quantity",
+    value: string | File | number | null
+  ) => {
+    const updated = [...prizes];
+
+    if (field === "brand" || field === "name") {
+      updated[index][field] = value as string;
+    } else if (field === "image") {
+      updated[index][field] = value as File | null;
+    } else if (field === "quantity") {
+      updated[index][field] = value as number;
+    }
+
+    setPrizes(updated);
+  };
+
+  const toUint8Array = (file: File): Promise<Uint8Array> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const arrayBuffer = reader.result as ArrayBuffer;
+        resolve(new Uint8Array(arrayBuffer));
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +85,7 @@ export default function Page() {
 
     // Input validation
     if (!title.trim() || !country.trim() || !location.trim()) {
-      setError("Please fill in all text fields.");
+      setError("Please fill in all fields.");
       return;
     }
 
@@ -51,20 +101,54 @@ export default function Page() {
 
     setLoading(true);
     try {
+      let formattedPrizes: {
+        brand: string;
+        name: string;
+        quantity: number;
+        imageBlob: number[];
+      }[] = [];
+
+      if (hasLuckyDraw && prizes.length > 0) {
+        formattedPrizes = await Promise.all(
+          prizes.map(async (prize, index) => {
+            if (
+              !prize.brand ||
+              !prize.name ||
+              !prize.image ||
+              prize.quantity < 1
+            ) {
+              setError(`Please fill in all fields.`);
+              return;
+            }
+
+            const imageBlob = await toUint8Array(prize.image);
+            return {
+              brand: prize.brand,
+              name: prize.name,
+              quantity: prize.quantity,
+              imageBlob: Array.from(imageBlob),
+            };
+          })
+        );
+      }
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/createupdate`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            eventTitle: title.trim(),
-            groupCount,
+            name: title.trim(),
             country: country.trim(),
             location: location.trim(),
             eventStartTime,
             eventEndTime,
             hasLuckyDraw,
-            // id: 123, // optional, include if editing
+            groupingStrategy:
+              groupingStrategy === "noNeed" ? null : groupingStrategy,
+            groupConfigNumber:
+              groupingStrategy === "noNeed" ? null : groupConfigNumber,
+            prizes: formattedPrizes,
           }),
         }
       );
@@ -72,14 +156,15 @@ export default function Page() {
       const result = await res.json();
 
       if (res.ok) {
-        toast("Event has been created 🙌");
         router.push(`/admin`);
+        toast("Event has been created 🙌");
       } else {
         setError(result.message || "An error occurred, please try again");
-        setLoading(false);
       }
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       setError("An error occurred, please try again");
+    } finally {
       setLoading(false);
     }
   };
@@ -99,7 +184,7 @@ export default function Page() {
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-6">
               <div className="flex flex-col gap-1">
                 <Label htmlFor="title">Name of Event</Label>
                 <Input
@@ -143,6 +228,203 @@ export default function Page() {
                   value={eventEndTime}
                   onChange={setEventEndTime}
                 />
+              </div>
+              <div className="flex flex-col gap-3">
+                <Label>
+                  Do you need your attendees to be assigned into groups upon
+                  arrival?
+                </Label>
+                <RadioGroup
+                  value={groupingStrategy}
+                  onValueChange={(value) => {
+                    setGroupingStrategy(value);
+                    setGroupConfigNumber(undefined);
+                  }}
+                >
+                  <div className="flex items-center">
+                    <RadioGroupItem value="maxGroupCapacity" id="r1" />
+                    <Label htmlFor="r1" className="ml-2">
+                      Yes, using max group capacity method
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild className="ml-1">
+                          <Info size={19} />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            Attendees will be assigned into groups based on the
+                            maximum number of people allowed per group. Once a
+                            group reaches its capacity, the next group starts
+                            filling.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  {groupingStrategy === "maxGroupCapacity" && (
+                    <div className="ml-6 mt-1">
+                      <Input
+                        type="number"
+                        placeholder="Enter max people per group"
+                        onChange={(e) =>
+                          setGroupConfigNumber(parseInt(e.target.value, 10))
+                        }
+                        value={groupConfigNumber}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center">
+                    <RadioGroupItem value="roundRobin" id="r2" />
+                    <Label htmlFor="r2" className="ml-2">
+                      Yes, using round robin method
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild className="ml-1">
+                          <Info size={19} />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            Attendees are assigned one by one into groups in
+                            order (Group 1, 2, 3…), looping back to Group 1
+                            after the last group. This ensures groups are filled
+                            evenly.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  {groupingStrategy === "roundRobin" && (
+                    <div className="ml-6 mt-1">
+                      <Input
+                        type="number"
+                        placeholder="Enter number of groups"
+                        onChange={(e) =>
+                          setGroupConfigNumber(parseInt(e.target.value, 10))
+                        }
+                        value={groupConfigNumber}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="noNeed" id="r3" />
+                    <Label htmlFor="r3">No need</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="flex">
+                  <Label>Does your event require a lucky draw?</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild className="ml-1">
+                        <Info size={19} />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          Each attendee gets one spin to win a prize! After
+                          checking in, they scan a QR code to spin a digital
+                          wheel on their own device. As the admin, you can
+                          pre-set the list of prizes, including quantity and
+                          brand.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <RadioGroup
+                  value={hasLuckyDraw ? "yes" : "no"}
+                  onValueChange={(value) => {
+                    setHasLuckyDraw(value === "yes");
+                    if (value === "no")
+                      setPrizes([
+                        { brand: "", name: "", image: null, quantity: 0 },
+                      ]);
+                  }}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="lucky-yes" />
+                    <Label htmlFor="lucky-yes">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="lucky-no" />
+                    <Label htmlFor="lucky-no">No</Label>
+                  </div>
+                </RadioGroup>
+                {hasLuckyDraw && (
+                  <>
+                    <Label className="mt-2 text-muted-foreground">
+                      Please fill in your lucky draw prizes
+                    </Label>
+                    <div className="flex flex-col gap-4">
+                      {prizes.map((prize, index) => (
+                        <div
+                          key={index}
+                          className="flex flex-col gap-2 border p-3 rounded-md"
+                        >
+                          <Label>Brand of Prize</Label>
+                          <Input
+                            placeholder="eg: Apple"
+                            value={prize.brand}
+                            onChange={(e) =>
+                              handlePrizeChange(index, "brand", e.target.value)
+                            }
+                          />
+                          <Label className="mt-2">Prize Description</Label>
+                          <Input
+                            placeholder="eg: Airpods"
+                            value={prize.name}
+                            onChange={(e) =>
+                              handlePrizeChange(index, "name", e.target.value)
+                            }
+                          />
+                          <Label className="mt-2">Picture of Prize</Label>
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) =>
+                              handlePrizeChange(
+                                index,
+                                "image",
+                                e.target.files?.[0] || null
+                              )
+                            }
+                          />
+                          <Label className="mt-2">Quantity</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            placeholder="eg: 5"
+                            value={prize.quantity}
+                            onChange={(e) =>
+                              handlePrizeChange(
+                                index,
+                                "quantity",
+                                parseInt(e.target.value, 10) || 1
+                              )
+                            }
+                          />
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-[150px]"
+                        onClick={() =>
+                          setPrizes([
+                            ...prizes,
+                            { brand: "", name: "", image: null, quantity: 0 },
+                          ])
+                        }
+                      >
+                        Add More Prizes
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
               {error && (
                 <div className="flex items-center gap-1">

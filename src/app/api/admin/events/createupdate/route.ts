@@ -1,84 +1,79 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
-
-    const {
-      id,
-      eventTitle,
-      groupCount = 0,
-      eventStartTime,
-      eventEndTime,
-      country,
-      location,
-      hasLuckyDraw = false,
-    } = await req.json();
-
-    // Get the authenticated user
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser();
 
-    if (error || !user?.email) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (!user?.email) {
+      return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
     }
 
-    const createdBy = user.email;
+    const body = await req.json();
+    const {
+      name,
+      country,
+      location,
+      eventStartTime,
+      eventEndTime,
+      hasLuckyDraw,
+      groupingStrategy,
+      groupConfigNumber,
+      prizes,
+    } = body;
 
-    // Validate required fields
-    if (
-      !eventTitle ||
-      !eventStartTime ||
-      !eventEndTime ||
-      !country ||
-      !location
-    ) {
+    if (!name || !country || !location || !eventStartTime || !eventEndTime) {
       return NextResponse.json(
-        { message: "Missing required fields" },
+        { message: "Missing required fields." },
         { status: 400 }
       );
     }
 
-    let event;
-    if (id) {
-      // Update existing event
-      event = await prisma.event.update({
-        where: { id },
-        data: {
-          name: eventTitle,
-          groupCount,
-          eventStartTime: new Date(eventStartTime),
-          eventEndTime: new Date(eventEndTime),
-          country,
-          location,
-          hasLuckyDraw,
-        },
-      });
-    } else {
-      // Create new event
-      event = await prisma.event.create({
-        data: {
-          name: eventTitle,
-          groupCount,
-          eventStartTime: new Date(eventStartTime),
-          eventEndTime: new Date(eventEndTime),
-          country,
-          location,
-          hasLuckyDraw,
-          createdBy,
-        },
-      });
+    const createdEvent = await prisma.event.create({
+      data: {
+        name,
+        country,
+        location,
+        eventStartTime: new Date(eventStartTime),
+        eventEndTime: new Date(eventEndTime),
+        hasLuckyDraw,
+        groupingStrategy:
+          groupingStrategy === "noNeed" ? null : groupingStrategy,
+        groupConfigNumber,
+        createdBy: user.email,
+      },
+    });
+
+    if (hasLuckyDraw && prizes?.length > 0) {
+      for (const prize of prizes) {
+        const existingBrand = await prisma.brand.upsert({
+          where: { name: prize.brand },
+          update: {},
+          create: { name: prize.brand },
+        });
+
+        await prisma.prize.create({
+          data: {
+            name: prize.name,
+            quantity: prize.quantity,
+            imageBlob: Buffer.from(prize.imageBlob),
+            brandId: existingBrand.id,
+            eventId: createdEvent.id,
+          },
+        });
+      }
     }
 
-    return NextResponse.json(event, { status: 200 });
-  } catch (err) {
-    console.error("Event create/update error:", err);
+    return NextResponse.json({ message: "Event created successfully." });
+  } catch (error) {
+    console.error("Error creating event:", error);
     return NextResponse.json(
-      { message: "Internal server error" },
+      { message: "Internal server error." },
       { status: 500 }
     );
   }
