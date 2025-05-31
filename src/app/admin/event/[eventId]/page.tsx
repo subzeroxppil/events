@@ -507,7 +507,7 @@ export default function Page() {
                     </Link>
                     <Button variant={"outline"}>QR code for lucky draw</Button>
                     <Button variant={"outline"}>Roulette game</Button>
-                    <Button variant={"outline"}>Delete Event</Button>
+                    <Button variant={"outline"}>Delete event</Button>
                   </div>
                 </div>
               </div>
