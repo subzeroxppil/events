@@ -108,16 +108,7 @@ export default function Page() {
           ) : errorMessage ? (
             <p className="text-red-500 text-sm text-center">{errorMessage}</p>
           ) : events.length === 0 ? (
-            // <p className="text-muted-foreground text-sm text-center">
-            //   No events found.
-            // </p>
-            <div
-              className={`${
-                events.length === 0 && !loading
-                  ? "flex flex-col items-center"
-                  : "hidden"
-              }`}
-            >
+            <div className="flex flex-col items-center">
               <Lottie
                 animationData={searchAnimationData}
                 className="h-[150px]"
