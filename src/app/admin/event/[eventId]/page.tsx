@@ -317,7 +317,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download, Users } from "lucide-react";
+import {
+  Download,
+  LoaderPinwheel,
+  PersonStanding,
+  ReceiptText,
+  Users,
+  UsersRound,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import ghostAnimationData from "@/app/assets/ghost-animation.json";
 
@@ -387,49 +394,71 @@ export default function Page() {
   const router = useRouter();
   const supabase = createClient();
   const params = useParams();
-  const eventId = params?.eventId;
+  const rawEventId = params?.eventId;
+  const eventId = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
+  const [initialLoading, setInitialLoading] = useState(true); // full page
+  const [usersDataLoading, setUsersDataLoading] = useState(false); // sort re-fetch
 
   const strategyMap: Record<string, string> = {
     roundRobin: "Round Robin",
     maxGroupCapacity: "Max Group Capacity",
   };
 
+  const fetchEventDetails = async (eventId: string) => {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/details`
+    );
+    if (!res.ok) throw new Error("Failed to fetch event details");
+    return res.json();
+  };
+
+  const fetchEventUsers = async (eventId: string, sortBy: string) => {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/users?sortBy=${sortBy}`
+    );
+    if (!res.ok) throw new Error("Failed to fetch event users");
+    return res.json();
+  };
+
   useEffect(() => {
     if (!eventId) return;
-    const fetchDetailsAndUsers = async () => {
-      setLoading(true);
+
+    const loadInitialData = async () => {
+      setInitialLoading(true);
       try {
-        const [detailsRes, usersRes] = await Promise.all([
-          fetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/details`
-          ),
-          fetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/users?sortBy=${sortBy}`
-          ),
+        const [detailsJson, usersJson] = await Promise.all([
+          fetchEventDetails(eventId),
+          fetchEventUsers(eventId, sortBy),
         ]);
-
-        const detailsJson = await detailsRes.json();
-        const usersJson = await usersRes.json();
-        console.log("detailsJson", detailsJson);
-        if (!detailsRes.ok || !usersRes.ok) {
-          throw new Error(
-            detailsJson.message || usersJson.message || "Failed to load data"
-          );
-        }
-
-        // You can now store more metadata using useState if needed
         setDetailsData(detailsJson);
         setUsersData(usersJson.users);
-        // e.g. setStats(detailsJson.stats); setEventInfo(detailsJson.event); etc.
       } catch (err: any) {
-        setErrorMessage(err.message || "Failed to fetch data");
+        setErrorMessage(err.message || "Failed to load data");
       } finally {
-        setLoading(false);
+        setInitialLoading(false);
       }
     };
 
-    fetchDetailsAndUsers();
-  }, [eventId, sortBy]);
+    loadInitialData();
+  }, [eventId]);
+
+  useEffect(() => {
+    if (initialLoading || !eventId) return;
+
+    const loadSortedUsers = async () => {
+      setUsersDataLoading(true);
+      try {
+        const usersJson = await fetchEventUsers(eventId, sortBy);
+        setUsersData(usersJson.users);
+      } catch (err: any) {
+        setErrorMessage(err.message || "Failed to load sorted users");
+      } finally {
+        setUsersDataLoading(false);
+      }
+    };
+
+    loadSortedUsers();
+  }, [sortBy]);
 
   const handleExport = () => {
     const exportData = usersData.map((user) => ({
@@ -453,199 +482,224 @@ export default function Page() {
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <div className="px-4 lg:px-6 flex flex-col">
-            <span className="text-4xl font-bold">
-              {detailsData?.event.name}
-            </span>
-            <span className="text-sm text-muted-foreground mt-2">
-              Created by {detailsData?.event.createdBy} at{" "}
-              {new Date(detailsData?.event.createdAt || "").toLocaleString(
-                "en-SG",
-                {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                }
-              )}
-            </span>
-          </div>
-          <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 xl:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
-            {/* <div className="grid gap-4 px-4 lg:px-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]"> */}
-            <Card className="@container/card">
-              <CardHeader>
-                <CardDescription>Event Details</CardDescription>
-                <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                  {(() => {
-                    const datetime = new Date(
-                      detailsData?.event.eventStartTime || ""
-                    );
-                    const formatted = datetime.toLocaleString("en-SG", {
+          {initialLoading ? (
+            <LoadingSpinner className="self-center mt-5" />
+          ) : (
+            <>
+              <div className="px-4 lg:px-6 flex flex-col">
+                <span className="text-4xl font-bold">
+                  {detailsData?.event.name}
+                </span>
+                <span className="text-sm text-muted-foreground mt-2 ">
+                  Created by {detailsData?.event.createdBy} on{" "}
+                  {new Date(detailsData?.event.createdAt || "").toLocaleString(
+                    "en-SG",
+                    {
                       dateStyle: "medium",
                       timeStyle: "short",
-                    });
-                    const [date, time] = formatted.split(", ");
-                    return (
-                      <>
-                        <span>{date},</span>
-                        <br />
-                        <span>{time}</span>
-                      </>
-                    );
-                  })()}
-                </CardTitle>
-              </CardHeader>
-              <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                <div className="line-clamp-1 flex gap-2 font-medium">
-                  {detailsData?.event.country}
-                </div>
-                <div className="text-muted-foreground">
-                  {detailsData?.event.location}
-                </div>
-              </CardFooter>
-            </Card>
-            <Card className="@container/card">
-              <CardHeader>
-                <CardDescription>Attendance</CardDescription>
-                <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                  {detailsData?.stats.totalAttendees}
-                </CardTitle>
-                <CardAction></CardAction>
-              </CardHeader>
-            </Card>
-            {detailsData?.event.hasLuckyDraw ? (
-              <Card className="@container/card">
-                <>
+                    }
+                  )}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-[#f8f8f8] *:data-[slot=card]:border-0 lg:px-6 xl:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
+                {/* <div className="grid gap-4 px-4 lg:px-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]"> */}
+                <Card className="@container/card">
                   <CardHeader>
-                    <CardDescription>Lucky Draw Completions</CardDescription>
+                    <CardDescription className="text-lg flex items-center gap-1">
+                      <ReceiptText size={20} />
+                      Event Details
+                    </CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                      {detailsData?.stats.luckyDrawCompleted}
+                      {(() => {
+                        const datetime = new Date(
+                          detailsData?.event.eventStartTime || ""
+                        );
+                        const formatted = datetime.toLocaleString("en-SG", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        });
+                        const [date, time] = formatted.split(", ");
+                        return (
+                          <>
+                            <span>{date},</span>
+                            <br />
+                            <span>{time}</span>
+                          </>
+                        );
+                      })()}
                     </CardTitle>
-                    <CardAction></CardAction>
                   </CardHeader>
                   <CardFooter className="flex-col items-start gap-1.5 text-sm">
                     <div className="line-clamp-1 flex gap-2 font-medium">
-                      Unredeemed lucky draws:{" "}
-                      {detailsData?.stats.unredeemedLuckyDraws}
+                      {detailsData?.event.country}
                     </div>
                     <div className="text-muted-foreground">
-                      Prizes left: {detailsData?.stats.totalPrizesLeft}
+                      {detailsData?.event.location}
                     </div>
                   </CardFooter>
-                </>
-              </Card>
-            ) : (
-              <></>
-            )}
-            {detailsData?.event.groupingStrategy ? (
-              <Card className="@container/card">
-                <>
+                </Card>
+                <Card className="@container/card">
                   <CardHeader>
-                    <CardDescription>Groups formed</CardDescription>
+                    <CardDescription className="text-lg flex items-center gap-1">
+                      <PersonStanding size={20} />
+                      Attendance
+                    </CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                      {detailsData?.groupCounts.length}
+                      {detailsData?.stats.totalAttendees}
                     </CardTitle>
                     <CardAction></CardAction>
                   </CardHeader>
-                  <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                    <div className="line-clamp-1 flex gap-2 font-medium">
-                      Grouping Strategy:{" "}
-                      {strategyMap[detailsData?.event.groupingStrategy ?? ""] ||
-                        "-"}
-                    </div>
-                  </CardFooter>
-                </>
-              </Card>
-            ) : (
-              <></>
-            )}
-          </div>
-          <div className="px-4 lg:px-6">
-            <Card className="flex-col flex w-full">
-              <div className="px-6">
-                <div className="flex gap-2 items-center">
-                  <Users />
-                  <span className="font-bold text-2xl">Attendance</span>
-                </div>
-                {(detailsData?.stats?.totalAttendees ?? 0) > 0 ? (
-                  <>
-                    <div className="flex flex-col items-center text-center mt-4">
-                      <div className="flex justify-between mb-2 w-full gap-2">
-                        <Button variant="outline" onClick={handleExport}>
-                          <Download />
-                          Export
-                        </Button>
-                        <div className="flex items-center gap-2">
-                          <Select value={sortBy} onValueChange={setSortBy}>
-                            <SelectTrigger>
-                              <SelectValue>
-                                {sortBy
-                                  ? `Sort by ${headers[sortBy]}`
-                                  : "Sort by"}
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="registeredAt">
-                                {headers.registeredAt}
-                              </SelectItem>
-                              <SelectItem value="groupNumber">
-                                {headers.groupNumber}
-                              </SelectItem>
-                              <SelectItem value="workId">
-                                {headers.workId}
-                              </SelectItem>
-                              <SelectItem value="prizeName">
-                                {headers.prizeName}
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
+                </Card>
+                {detailsData?.event.hasLuckyDraw ? (
+                  <Card className="@container/card">
+                    <>
+                      <CardHeader>
+                        <CardDescription className="text-lg flex items-center gap-1">
+                          <LoaderPinwheel size={20} />
+                          Lucky Draw Completions
+                        </CardDescription>
+                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                          {detailsData?.stats.luckyDrawCompleted}
+                        </CardTitle>
+                        <CardAction></CardAction>
+                      </CardHeader>
+                      <CardFooter className="flex-col items-start gap-1.5 text-sm">
+                        <div className="line-clamp-1 flex gap-2 font-medium">
+                          Unredeemed lucky draws:{" "}
+                          {detailsData?.stats.unredeemedLuckyDraws}
                         </div>
-                      </div>
-                    </div>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{headers.registeredAt}</TableHead>
-                          <TableHead>{headers.workId}</TableHead>
-                          <TableHead>{headers.groupNumber}</TableHead>
-                          <TableHead>{headers.prizeName}</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {usersData.map((user) => (
-                          <TableRow key={user.workId}>
-                            <TableCell className="font-medium">
-                              {user.registeredAt}
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              {user.workId}
-                            </TableCell>
-                            <TableCell>{user.groupNumber}</TableCell>
-                            <TableCell>
-                              {user.prizeName && user.brandName
-                                ? `${user.brandName} | ${user.prizeName}`
-                                : "-"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </>
+                        <div className="text-muted-foreground">
+                          Prizes left: {detailsData?.stats.totalPrizesLeft}
+                        </div>
+                      </CardFooter>
+                    </>
+                  </Card>
                 ) : (
-                  <>
-                    {" "}
-                    <div className="w-full py-30 flex flex-col items-center">
-                      <Lottie
-                        animationData={ghostAnimationData}
-                        className="h-[170px]"
-                      />
-                      <span className="text-muted-foreground text-sm">
-                        No attendees have registered for this event yet
-                      </span>
-                    </div>
-                  </>
+                  <></>
+                )}
+                {detailsData?.event.groupingStrategy ? (
+                  <Card className="@container/card">
+                    <>
+                      <CardHeader>
+                        <CardDescription className="text-lg flex items-center gap-1">
+                          <UsersRound size={20} />
+                          Groups formed
+                        </CardDescription>
+                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                          {detailsData?.groupCounts.length}
+                        </CardTitle>
+                        <CardAction></CardAction>
+                      </CardHeader>
+                      <CardFooter className="flex-col items-start gap-1.5 text-sm">
+                        <div className="line-clamp-1 flex gap-2 font-medium">
+                          Grouping Strategy:{" "}
+                          {strategyMap[
+                            detailsData?.event.groupingStrategy ?? ""
+                          ] || "-"}
+                        </div>
+                      </CardFooter>
+                    </>
+                  </Card>
+                ) : (
+                  <></>
                 )}
               </div>
-            </Card>
-          </div>
+              <div className="px-4 lg:px-6">
+                <Card className="flex-col flex w-full bg-[#f8f8f8] border-0">
+                  <div className="px-6">
+                    <div className="flex gap-2 items-center">
+                      <Users />
+                      <span className="font-bold text-2xl">Overview</span>
+                    </div>
+                    {(detailsData?.stats?.totalAttendees ?? 0) > 0 ? (
+                      <>
+                        <div className="flex flex-col items-center text-center mt-4">
+                          <div className="flex justify-between mb-2 w-full gap-2">
+                            <Button variant="outline" onClick={handleExport}>
+                              <Download />
+                              Export
+                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Select value={sortBy} onValueChange={setSortBy}>
+                                <SelectTrigger>
+                                  <SelectValue>
+                                    {sortBy
+                                      ? `Sort by ${headers[sortBy]}`
+                                      : "Sort by"}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="registeredAt">
+                                    {headers.registeredAt}
+                                  </SelectItem>
+                                  <SelectItem value="groupNumber">
+                                    {headers.groupNumber}
+                                  </SelectItem>
+                                  <SelectItem value="workId">
+                                    {headers.workId}
+                                  </SelectItem>
+                                  <SelectItem value="prizeName">
+                                    {headers.prizeName}
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+                        {usersDataLoading ? (
+                          <div className="flex justify-center py-6">
+                            <LoadingSpinner />
+                          </div>
+                        ) : (
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>{headers.registeredAt}</TableHead>
+                                <TableHead>{headers.workId}</TableHead>
+                                <TableHead>{headers.groupNumber}</TableHead>
+                                <TableHead>{headers.prizeName}</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {usersData.map((user) => (
+                                <TableRow key={user.workId}>
+                                  <TableCell className="font-medium">
+                                    {user.registeredAt}
+                                  </TableCell>
+                                  <TableCell className="font-medium">
+                                    {user.workId}
+                                  </TableCell>
+                                  <TableCell>{user.groupNumber}</TableCell>
+                                  <TableCell>
+                                    {user.prizeName && user.brandName
+                                      ? `${user.brandName} | ${user.prizeName}`
+                                      : "-"}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {" "}
+                        <div className="w-full py-30 flex flex-col items-center">
+                          <Lottie
+                            animationData={ghostAnimationData}
+                            className="h-[170px]"
+                          />
+                          <span className="text-muted-foreground text-sm">
+                            No attendees have checked in to this event yet
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </Card>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
