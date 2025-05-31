@@ -592,7 +592,7 @@ export default function Page() {
                       <CardHeader>
                         <CardDescription className="text-lg flex items-center gap-1">
                           <UsersRound size={20} />
-                          Groups formed
+                          Groups Formed
                         </CardDescription>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
                           {detailsData?.groupCounts.length}
