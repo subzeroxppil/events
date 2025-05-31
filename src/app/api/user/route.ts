@@ -3,59 +3,95 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
-    const { workId } = await req.json();
+    let { workId, eventId } = await req.json();
 
-    if (!workId) {
+    workId = workId?.trim();
+    eventId = parseInt(eventId.trim());
+
+    if (!workId || !eventId) {
       return NextResponse.json(
-        { message: "Please fill in your Corp Pass ID" },
+        { message: "Missing workId or eventId" },
         { status: 400 }
       );
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { workId },
+    // Step 1: Get or create the user
+    let user = await prisma.user.findUnique({ where: { workId } });
+
+    if (!user) {
+      user = await prisma.user.create({ data: { workId } });
+    }
+
+    // Step 2: Check if user already checked in
+    const existingAttendance = await prisma.attendance.findUnique({
+      where: {
+        userId_eventId: {
+          userId: user.id,
+          eventId,
+        },
+      },
     });
 
-    if (existingUser) {
+    if (existingAttendance) {
       return NextResponse.json(
-        { groupNumber: existingUser.groupNumber },
+        { groupNumber: existingAttendance.groupNumber },
         { status: 200 }
       );
     }
 
-    // Get group count from config (only one row expected)
-    const config = await prisma.groupConfig.findUnique({ where: { id: 1 } });
-    if (!config) {
-      return NextResponse.json(
-        { message: "Internal Server Error" }, // Group config not found
-        { status: 500 }
-      );
+    // Step 3: Fetch event and related attendances
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { attendances: true },
+    });
+
+    if (!event) {
+      return NextResponse.json({ message: "Event not found" }, { status: 404 });
     }
 
-    const groupCount = config.groupCount;
+    let groupNumber: number | null = null;
 
-    // Count total registered users
-    const totalUsers = await prisma.user.count();
+    if (event.groupingStrategy && event.groupConfigNumber) {
+      const attendances = event.attendances;
 
-    // Round-robin assignment: 1 to groupCount, then cycle back
-    const assignedGroup = (totalUsers % groupCount) + 1;
+      if (event.groupingStrategy === "roundRobin") {
+        const totalGroups = event.groupConfigNumber;
+        groupNumber = (attendances.length % totalGroups) + 1;
+      } else if (event.groupingStrategy === "maxGroupCapacity") {
+        const maxPerGroup = event.groupConfigNumber;
 
-    const newUser = await prisma.user.create({
+        // Count how many people are in each group
+        const groupCounts: Record<number, number> = {};
+        attendances.forEach((a) => {
+          if (a.groupNumber == null) return;
+          groupCounts[a.groupNumber] = (groupCounts[a.groupNumber] || 0) + 1;
+        });
+
+        // Find the first group with less than maxPerGroup
+        for (let i = 1; ; i++) {
+          const count = groupCounts[i] || 0;
+          if (count < maxPerGroup) {
+            groupNumber = i;
+            break;
+          }
+        }
+      }
+    }
+
+    // Step 4: Create attendance
+    await prisma.attendance.create({
       data: {
-        workId,
-        groupNumber: assignedGroup,
+        userId: user.id,
+        eventId,
+        groupNumber,
       },
     });
 
+    return NextResponse.json({ groupNumber }, { status: 200 });
+  } catch (err) {
+    console.error("Failed to register user:", err);
     return NextResponse.json(
-      { groupNumber: newUser.groupNumber },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error("Error creating user:", error);
-    return NextResponse.json(
-      { message: "Internal Server Error" },
+      { message: "Internal server error" },
       { status: 500 }
     );
   }

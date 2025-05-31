@@ -338,6 +338,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Lottie from "lottie-react";
+import Link from "next/link";
 
 const headers: Record<string, string> = {
   groupNumber: "Group Number",
@@ -490,20 +491,28 @@ export default function Page() {
                 <span className="text-4xl font-bold">
                   {detailsData?.event.name}
                 </span>
-                <span className="text-sm text-muted-foreground mt-2 ">
-                  Created by {detailsData?.event.createdBy} on{" "}
-                  {new Date(detailsData?.event.createdAt || "").toLocaleString(
-                    "en-SG",
-                    {
+                <div className="flex flex-col lg:flex-row justify-between lg:items-center mt-2 lg:mt-0">
+                  <span className="text-sm text-muted-foreground">
+                    Created by {detailsData?.event.createdBy} on{" "}
+                    {new Date(
+                      detailsData?.event.createdAt || ""
+                    ).toLocaleString("en-SG", {
                       dateStyle: "medium",
                       timeStyle: "short",
-                    }
-                  )}
-                </span>
+                    })}
+                  </span>
+                  <div className="flex gap-1 mt-2">
+                    <Link href={`/admin/event/${eventId}/checkin`}>
+                      <Button variant={"outline"}>QR code for check in</Button>
+                    </Link>
+                    <Button variant={"outline"}>QR code for lucky draw</Button>
+                    <Button variant={"outline"}>Roulette game</Button>
+                    <Button variant={"outline"}>Delete Event</Button>
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-[#f8f8f8] *:data-[slot=card]:border-0 lg:px-6 xl:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
-                {/* <div className="grid gap-4 px-4 lg:px-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]"> */}
-                <Card className="@container/card">
+                <Card className="@container/card shadow-none">
                   <CardHeader>
                     <CardDescription className="text-lg flex items-center gap-1">
                       <ReceiptText size={20} />
@@ -538,7 +547,7 @@ export default function Page() {
                     </div>
                   </CardFooter>
                 </Card>
-                <Card className="@container/card">
+                <Card className="@container/card shadow-none">
                   <CardHeader>
                     <CardDescription className="text-lg flex items-center gap-1">
                       <PersonStanding size={20} />
@@ -551,7 +560,7 @@ export default function Page() {
                   </CardHeader>
                 </Card>
                 {detailsData?.event.hasLuckyDraw ? (
-                  <Card className="@container/card">
+                  <Card className="@container/card shadow-none">
                     <>
                       <CardHeader>
                         <CardDescription className="text-lg flex items-center gap-1">
@@ -578,7 +587,7 @@ export default function Page() {
                   <></>
                 )}
                 {detailsData?.event.groupingStrategy ? (
-                  <Card className="@container/card">
+                  <Card className="@container/card shadow-none">
                     <>
                       <CardHeader>
                         <CardDescription className="text-lg flex items-center gap-1">
@@ -605,7 +614,7 @@ export default function Page() {
                 )}
               </div>
               <div className="px-4 lg:px-6">
-                <Card className="flex-col flex w-full bg-[#f8f8f8] border-0">
+                <Card className="flex-col flex w-full bg-[#f8f8f8] border-0 shadow-none">
                   <div className="px-6">
                     <div className="flex gap-2 items-center">
                       <Users />
@@ -621,7 +630,7 @@ export default function Page() {
                             </Button>
                             <div className="flex items-center gap-2">
                               <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-background">
                                   <SelectValue>
                                     {sortBy
                                       ? `Sort by ${headers[sortBy]}`
