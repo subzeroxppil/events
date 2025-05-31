@@ -17,8 +17,8 @@ const paypalOpen = localFont({
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Impact Day",
-  description: "Welcome to Paypal Impact Day 2025!",
+  title: "PayPal Events",
+  description: "Organise PayPal Events, Lucky Draws and Track Attendance!",
   icons: {
     icon: "/paypal_logo.png",
   },
