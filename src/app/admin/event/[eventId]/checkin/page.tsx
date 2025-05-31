@@ -90,7 +90,7 @@ export default function Page() {
                   className="h-[100px]"
                 />
                 <span className="text-[60px] font-bold">
-                  Welcome! Scan to check-in
+                  Welcome! Scan to check in
                 </span>
               </div>
               <Card className="p-10 mt-2 flex flex-col items-center bg-white">
