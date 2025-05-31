@@ -14,7 +14,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    // Extract the search query
+    const { searchParams } = new URL(req.url);
+    const q = searchParams.get("q")?.toLowerCase() || "";
+
     const events = await prisma.event.findMany({
+      where: q
+        ? {
+            OR: [
+              { name: { contains: q, mode: "insensitive" } },
+              { location: { contains: q, mode: "insensitive" } },
+              { country: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : undefined,
       orderBy: {
         createdAt: "desc",
       },

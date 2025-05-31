@@ -1,15 +1,4 @@
 "use client";
-import * as XLSX from "xlsx";
-import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import Image from "next/image";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +17,8 @@ import AdminSearch from "@/components/AdminSearch";
 import { CalendarPlus } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
 import Link from "next/link";
+import Lottie from "lottie-react";
+import searchAnimationData from "../assets/search-cartoon-animation.json";
 
 type Event = {
   id: number;
@@ -52,19 +43,26 @@ export default function Page() {
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [query]);
 
-  const fetchEvents = async () => {
-    try {
+  useEffect(() => {
+    const checkAuth = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
         router.push("/admin/login");
-        return;
       }
+    };
+    checkAuth();
+  }, []);
 
-      const res = await fetch(`/api/admin/events`);
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `/api/admin/events?q=${encodeURIComponent(query.trim())}`
+      );
       const result = await res.json();
 
       if (!res.ok) {
@@ -80,22 +78,7 @@ export default function Page() {
       setLoading(false);
     }
   };
-  async function handleSignOut() {
-    try {
-      const { error } = await supabase.auth.signOut();
-      router.push("/admin/login");
-      if (error) {
-        setErrorMessage(error.message || "Failed to sign out");
-      }
-    } catch (err) {
-      setErrorMessage("An unexpected error occurred during sign out.");
-    }
-  }
 
-  const handleSearch = (q: string) => {
-    console.log("Searching for:", q);
-    // Your search logic here
-  };
   return (
     <>
       <div className="w-full flex flex-col p-8 bg-slate-100 items-center">
@@ -105,11 +88,7 @@ export default function Page() {
         <p className="text-center text-lg text-muted-foreground sm:text-xl mt-3 mb-3 font-bold">
           Organise Events and Track Attendance
         </p>
-        <AdminSearch
-          query={query}
-          setQuery={setQuery}
-          handleSearch={handleSearch}
-        />
+        <AdminSearch query={query} setQuery={setQuery} />
       </div>
       <div className="w-full flex flex-col px-8 py-8 items-center">
         <div className="flex items-center justify-between p-4 text-xs sm:text-sm md:text-base w-full">
@@ -129,9 +108,25 @@ export default function Page() {
           ) : errorMessage ? (
             <p className="text-red-500 text-sm text-center">{errorMessage}</p>
           ) : events.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center">
-              No events found.
-            </p>
+            // <p className="text-muted-foreground text-sm text-center">
+            //   No events found.
+            // </p>
+            <div
+              className={`${
+                events.length === 0 && !loading
+                  ? "flex flex-col items-center"
+                  : "hidden"
+              }`}
+            >
+              <Lottie
+                animationData={searchAnimationData}
+                className="h-[150px]"
+              />
+              <span className="text mt-2">No events found</span>
+              <span className="text-muted-foreground mt-1 text-sm">
+                Try using general keywords or check your spelling
+              </span>
+            </div>
           ) : (
             events.map((event) => (
               <EventCard
