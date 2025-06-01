@@ -322,6 +322,7 @@ import {
   LoaderPinwheel,
   PersonStanding,
   ReceiptText,
+  SquarePen,
   Users,
   UsersRound,
 } from "lucide-react";
@@ -492,15 +493,18 @@ export default function Page() {
                   {detailsData?.event.name}
                 </span>
                 <div className="flex flex-col lg:flex-row justify-between lg:items-center mt-2 lg:mt-0">
-                  <span className="text-sm text-muted-foreground">
-                    Created by {detailsData?.event.createdBy} on{" "}
-                    {new Date(
-                      detailsData?.event.createdAt || ""
-                    ).toLocaleString("en-SG", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <SquarePen size={14} />
+                    <span className="text-sm text-muted-foreground">
+                      Created by {detailsData?.event.createdBy} on{" "}
+                      {new Date(
+                        detailsData?.event.createdAt || ""
+                      ).toLocaleString("en-SG", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
+                    </span>
+                  </div>
                   <div className="flex gap-1 mt-2">
                     <Link href={`/admin/event/${eventId}/checkin`}>
                       <Button variant={"outline"}>QR code for check in</Button>
