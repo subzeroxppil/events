@@ -90,7 +90,7 @@ export default function Page() {
         </p>
         <AdminSearch query={query} setQuery={setQuery} />
       </div>
-      <div className="w-full flex flex-col px-8 py-8 items-center">
+      <div className="w-full flex flex-col px-8 py-8 items-center max-w-7xl self-center">
         <div className="flex items-center justify-between p-4 text-xs sm:text-sm md:text-base w-full">
           <span className="text-muted-foreground text-center text-l">
             {eventCount} {eventCount === 1 ? "result" : "results"}
