@@ -274,6 +274,7 @@ export default function Home() {
                 onClick={handleSpinClick}
                 disabled={mustSpin || spinComplete || isSpinClicked}
                 size={"lg"}
+                className="w-[70px]"
               >
                 {spinClickLoading ? <LoadingSpinner /> : "SPIN"}
               </Button>

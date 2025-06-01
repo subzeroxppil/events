@@ -18,7 +18,6 @@ export async function GET(
     const prizes = await prisma.prize.findMany({
       where: {
         eventId,
-        quantity: { gt: 0 },
       },
       select: {
         name: true,
