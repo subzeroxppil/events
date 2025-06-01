@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-
-import Link from "next/link";
 import { Toaster } from "@/components/ui/sonner";
 import Image from "next/image";
 import { Suspense } from "react";
@@ -39,13 +37,7 @@ export default async function RootLayout({
           <div className="flex-col md:flex">
             <div className="border-b">
               <div className="flex items-center pr-4 pl-2">
-                <Link className="flex px-1 py-2 items-center" href="/">
-                  {/* <Image
-                  src="/impact_day_logo.png"
-                  alt="paypal icon"
-                  width={90}
-                  height={60}
-                /> */}
+                <div className="flex px-1 py-2 items-center cursor-default">
                   <Image
                     src="/paypal_logo.png"
                     alt="paypal icon"
@@ -53,7 +45,7 @@ export default async function RootLayout({
                     height={45}
                   />
                   <span className="font-bold text-lg">Events</span>
-                </Link>
+                </div>
                 <div className="ml-auto flex items-center">
                   <UserNav />
                 </div>

@@ -20,20 +20,8 @@ export default function Page() {
                 height={60}
                 alt="paypal icon"
               />
-              <p className="mb-2 text-2xl font-bold">PayPal Events Portal</p>
+              <p className="mb-2 text-2xl font-bold">PayPal Events</p>
               <div className="w-full flex flex-col gap-2 mt-4">
-                <Link href="/checkin">
-                  <Button size={"lg"} className="w-full" variant="outline">
-                    <CircleUser />
-                    <span>Registration</span>
-                  </Button>
-                </Link>
-                <Link href="/luckydraw">
-                  <Button size={"lg"} className="w-full" variant="outline">
-                    <LoaderPinwheel />
-                    <span>Lucky Draw</span>
-                  </Button>
-                </Link>
                 <Link href="/admin">
                   <Button size={"lg"} className="w-full" variant="outline">
                     <ShieldUser />
