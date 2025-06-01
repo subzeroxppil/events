@@ -102,6 +102,19 @@ export default function Page() {
       return;
     }
 
+    if (title.trim().length > 60) {
+      setError("Please use a shorter event name.");
+      return;
+    }
+
+    if (
+      groupingStrategy !== "noNeed" &&
+      (!groupConfigNumber || groupConfigNumber <= 0)
+    ) {
+      setError("Please enter a valid number for group configuration.");
+      return;
+    }
+
     setLoading(true);
     try {
       let formattedPrizes: {
@@ -111,28 +124,34 @@ export default function Page() {
         imageBlob: number[];
       }[] = [];
 
-      if (hasLuckyDraw && prizes.length > 0) {
-        formattedPrizes = await Promise.all(
-          prizes.map(async (prize, index) => {
-            if (
-              !prize.brand ||
-              !prize.name ||
-              !prize.image ||
-              prize.quantity < 1
-            ) {
-              setError(`Please fill in all fields.`);
-              return;
-            }
+      if (hasLuckyDraw) {
+        if (prizes.length <= 1) {
+          setError("More than one prize is required for the lucky draw.");
+          return;
+        }
 
-            const imageBlob = await toUint8Array(prize.image);
-            return {
-              brand: prize.brand,
-              name: prize.name,
-              quantity: prize.quantity,
-              imageBlob: Array.from(imageBlob),
-            };
-          })
-        );
+        formattedPrizes = [];
+
+        for (const prize of prizes) {
+          if (
+            !prize.brand.trim() ||
+            !prize.name.trim() ||
+            !prize.image ||
+            !prize.quantity ||
+            prize.quantity <= 0
+          ) {
+            setError("Please fill in all fields for your lucky draw prizes.");
+            return;
+          }
+
+          const imageBlob = await toUint8Array(prize.image);
+          formattedPrizes.push({
+            brand: prize.brand.trim(),
+            name: prize.name.trim(),
+            quantity: prize.quantity,
+            imageBlob: Array.from(imageBlob),
+          });
+        }
       }
 
       const res = await fetch(
@@ -189,7 +208,19 @@ export default function Page() {
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="flex flex-col gap-1">
-                <Label htmlFor="title">Name of Event</Label>
+                <div className="flex items-center">
+                  <Label htmlFor="title">Name of Event</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild className="ml-1">
+                        <Info size={19} />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>This is the event name that attendees will see.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Input
                   id="title"
                   placeholder="eg: Impact Day Wheelchair Building Session"
@@ -273,7 +304,7 @@ export default function Page() {
                         onChange={(e) =>
                           setGroupConfigNumber(parseInt(e.target.value, 10))
                         }
-                        value={groupConfigNumber}
+                        value={groupConfigNumber ?? ""}
                       />
                     </div>
                   )}
