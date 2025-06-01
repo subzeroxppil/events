@@ -3,13 +3,14 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
-) {
+  { params }: { params: Promise<{ eventId: string }> }
+): Promise<Response> {
   try {
-    const { workId } = await req.json();
-    const eventId = parseInt(params.eventId);
+    const { eventId } = await params;
+    const eventIdNum = Number(eventId);
 
-    if (!workId || isNaN(eventId)) {
+    const { workId } = await req.json();
+    if (!workId || isNaN(eventIdNum)) {
       return NextResponse.json(
         { message: "Missing or invalid workId or eventId" },
         { status: 400 }
@@ -29,7 +30,7 @@ export async function POST(
       where: {
         userId_eventId: {
           userId: user.id,
-          eventId,
+          eventId: eventIdNum,
         },
       },
       include: {
@@ -55,7 +56,7 @@ export async function POST(
 
     const availablePrizes = await prisma.prize.findMany({
       where: {
-        eventId,
+        eventId: eventIdNum,
         quantity: { gt: 0 },
       },
       include: { brand: true },
@@ -74,7 +75,7 @@ export async function POST(
         where: {
           userId_eventId: {
             userId: user.id,
-            eventId,
+            eventId: eventIdNum,
           },
         },
         data: {

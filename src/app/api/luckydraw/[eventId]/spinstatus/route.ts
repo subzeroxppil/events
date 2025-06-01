@@ -3,14 +3,15 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
-) {
+  { params }: { params: Promise<{ eventId: string }> }
+): Promise<Response> {
   try {
+    const { eventId } = await params;
+    const eventIdNum = Number(eventId);
     const { searchParams } = new URL(req.url);
     const workId = searchParams.get("workId");
-    const eventId = params.eventId;
 
-    if (!workId || !eventId) {
+    if (!workId || isNaN(eventIdNum)) {
       return NextResponse.json(
         { message: "Missing workId or eventId" },
         { status: 400 }
@@ -30,7 +31,7 @@ export async function GET(
       where: {
         userId_eventId: {
           userId: user.id,
-          eventId: Number(eventId),
+          eventId: eventIdNum,
         },
       },
       select: {

@@ -3,20 +3,21 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
-) {
-  const eventId = parseInt(params.eventId);
+  { params }: { params: Promise<{ eventId: string }> }
+): Promise<Response> {
+  const { eventId } = await params;
+  const eventIdNum = Number(eventId);
 
-  if (isNaN(eventId)) {
+  if (isNaN(eventIdNum)) {
     return NextResponse.json({ message: "Invalid event ID" }, { status: 400 });
   }
 
   try {
-    await prisma.attendance.deleteMany({ where: { eventId } });
+    await prisma.attendance.deleteMany({ where: { eventId: eventIdNum } });
 
-    await prisma.prize.deleteMany({ where: { eventId } });
+    await prisma.prize.deleteMany({ where: { eventId: eventIdNum } });
 
-    await prisma.event.delete({ where: { id: eventId } });
+    await prisma.event.delete({ where: { id: eventIdNum } });
 
     await prisma.brand.deleteMany({
       where: {

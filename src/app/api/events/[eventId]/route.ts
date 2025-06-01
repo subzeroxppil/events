@@ -3,12 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
-) {
+  { params }: { params: Promise<{ eventId: string }> }
+): Promise<Response> {
+  const { eventId } = await params;
+  const eventIdNum = Number(eventId);
   try {
-    const eventId = parseInt(params.eventId);
-
-    if (isNaN(eventId)) {
+    if (isNaN(eventIdNum)) {
       return NextResponse.json(
         { message: "Invalid event ID" },
         { status: 400 }
@@ -16,7 +16,7 @@ export async function GET(
     }
 
     const event = await prisma.event.findUnique({
-      where: { id: eventId },
+      where: { id: eventIdNum },
       select: {
         name: true,
         groupingStrategy: true,

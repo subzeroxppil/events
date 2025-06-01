@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 
 export async function POST(
   req: Request,
-  { params }: { params: { eventId: string } }
-) {
-  const eventId = params.eventId;
-  const cookieKey = `luckyDrawSession${eventId}`;
+  { params }: { params: Promise<{ eventId: string }> }
+): Promise<Response> {
+  const { eventId } = await params;
+  const eventIdNum = Number(eventId);
+  const cookieKey = `luckyDrawSession${eventIdNum}`;
 
   return NextResponse.json(
     { message: "Logged out" },

@@ -3,11 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
-) {
+  { params }: { params: Promise<{ eventId: string }> }
+): Promise<Response> {
+  const { eventId } = await params;
+  const eventIdNum = Number(eventId);
   try {
-    const eventId = parseInt(params.eventId);
-    if (isNaN(eventId)) {
+    if (isNaN(eventIdNum)) {
       return NextResponse.json({ message: "Invalid eventId" }, { status: 400 });
     }
 
@@ -25,7 +26,7 @@ export async function GET(
       : "registeredAt";
 
     const attendances = await prisma.attendance.findMany({
-      where: { eventId },
+      where: { eventId: eventIdNum },
       select: {
         registeredAt: true,
         groupNumber: true,

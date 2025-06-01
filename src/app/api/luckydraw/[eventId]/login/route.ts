@@ -3,18 +3,19 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { eventId: string } }
-) {
+  { params }: { params: Promise<{ eventId: string }> }
+): Promise<Response> {
+  const { eventId } = await params;
+  const eventIdNum = Number(eventId);
   try {
     const body = await req.json();
     const workId: string | undefined = body.workId?.trim();
-    const eventId = parseInt(params.eventId);
 
     if (!workId) {
       return NextResponse.json({ message: "Missing work ID" }, { status: 400 });
     }
 
-    if (isNaN(eventId)) {
+    if (isNaN(eventIdNum)) {
       return NextResponse.json(
         { message: "Invalid event ID" },
         { status: 400 }
@@ -38,7 +39,7 @@ export async function POST(
       where: {
         userId_eventId: {
           userId: user.id,
-          eventId,
+          eventId: eventIdNum,
         },
       },
     });
@@ -51,7 +52,7 @@ export async function POST(
     }
 
     // Set HTTP-only session cookie
-    const cookieKey = `luckyDrawSession${eventId}`;
+    const cookieKey = `luckyDrawSession${eventIdNum}`;
     const response = NextResponse.json({ message: "Login successful" });
     response.headers.set(
       "Set-Cookie",
