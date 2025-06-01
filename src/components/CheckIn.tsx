@@ -49,15 +49,15 @@ const CheckIn = ({ className }: CheckInProps) => {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/events/${eventId}`
       );
-      const result = await res.json();
+      const data = await res.json();
 
       if (!res.ok) {
         setError("Failed to load event info");
         return;
       }
 
-      setEventName(result.event.name);
-      setHasGrouping(result.event.groupingStrategy !== null);
+      setEventName(data.name);
+      setHasGrouping(data.groupingStrategy !== null);
     } catch (err) {
       setError("An error occurred while loading event info");
     } finally {

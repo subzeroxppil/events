@@ -15,23 +15,28 @@ export async function GET(
       );
     }
 
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
+    const prizes = await prisma.prize.findMany({
+      where: {
+        eventId,
+        quantity: { gt: 0 },
+      },
       select: {
         name: true,
-        groupingStrategy: true,
-        hasLuckyDraw: true,
       },
     });
 
-    if (!event) {
-      return NextResponse.json({ message: "Event not found" }, { status: 404 });
+    if (prizes.length === 0) {
+      return NextResponse.json(
+        { message: "No prizes available" },
+        { status: 404 }
+      );
     }
-    return NextResponse.json(event, { status: 200 });
-  } catch (err) {
-    console.error("Failed to fetch event:", err);
+
+    return NextResponse.json(prizes.map((prize) => ({ prize: prize.name })));
+  } catch (error) {
+    console.error("Error fetching prizes:", error);
     return NextResponse.json(
-      { message: "Internal server error" },
+      { message: "Internal Server Error" },
       { status: 500 }
     );
   }

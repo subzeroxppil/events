@@ -23,7 +23,7 @@ export default function Page() {
     const fetchEvent = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/qr`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/events/${eventId}`
         );
         const data = await res.json();
 

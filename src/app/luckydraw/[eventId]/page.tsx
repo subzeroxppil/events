@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
 
 // Dynamically import the Wheel component with SSR disabled
@@ -25,7 +25,7 @@ export default function Home() {
   const [resultPrizeBrand, setResultPrizeBrand] = useState("");
   const [resultPrizeName, setResultPrizeName] = useState("");
   const [isClient, setIsClient] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState("");
   const [wheelData, setWheelData] = useState<WheelItem[]>([]);
   const [spinComplete, setSpinComplete] = useState(false);
@@ -34,14 +34,25 @@ export default function Home() {
   const [startingIndex, setStartingIndex] = useState<number | undefined>(
     undefined
   );
+  const [spinClickLoading, setSpinClickLoading] = useState(false);
 
   let workId = useRef<string | null>(null);
   const router = useRouter();
+  const params = useParams();
+  const eventId = Array.isArray(params?.eventId)
+    ? params.eventId[0]
+    : params.eventId;
+
   useEffect(() => {
-    setIsClient(true);
     setError("");
-    fetchWorkId();
-    fetchItemsForWheel();
+    const fetchAll = async () => {
+      await fetchWorkId();
+      await fetchItemsForWheel();
+      setIsClient(true);
+      setInitialLoading(false);
+    };
+
+    fetchAll();
   }, []);
 
   useEffect(() => {
@@ -58,7 +69,7 @@ export default function Home() {
   const fetchWorkId = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/session`
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/${eventId}/session`
       );
       const data = await res.json();
 
@@ -66,7 +77,8 @@ export default function Home() {
         workId.current = data.workId;
         fetchSpinCompletionStatus();
       } else {
-        router.push("/luckydraw/login");
+        router.push(`/luckydraw/${eventId}/login`);
+        return Promise.reject("Redirected to login");
       }
     } catch (err) {
       console.error("Failed to fetch workId:", err);
@@ -76,7 +88,7 @@ export default function Home() {
   const fetchSpinCompletionStatus = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/spinstatus?workId=${workId.current}`
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/${eventId}/spinstatus/?workId=${workId.current}`
       );
       const result = await res.json();
 
@@ -88,10 +100,9 @@ export default function Home() {
           setResultPrizeImgSrc(result.imageUrl);
         }
       } else {
-        setError(result.message || "Failed to fetch spin status");
+        setError("An error occurred, please try again");
       }
     } catch (err) {
-      console.error("Error fetching spin status:", err);
       setError("An error occurred, please try again");
     }
   };
@@ -99,7 +110,7 @@ export default function Home() {
   const fetchItemsForWheel = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/prizes`
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/${eventId}/prizes`
       );
 
       const result = await res.json();
@@ -110,24 +121,22 @@ export default function Home() {
         }));
         setWheelData(prizes);
       } else {
-        setError(result.message || "Failed to fetch wheel prizes data");
+        setError("An error occurred, please try again");
       }
     } catch (err) {
-      console.error("Error fetching wheel prizes data:", err);
       setError("An error occurred, please try again");
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleSpinClick = async () => {
     if (mustSpin || !workId.current || isSpinClicked) return;
     setIsSpinClicked(true);
+    setSpinClickLoading(true);
     setError("");
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/spin`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/${eventId}/spin`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -155,6 +164,7 @@ export default function Home() {
         setError("Prize not found on the wheel.");
         return;
       }
+      setSpinClickLoading(false);
       setPrizeNumber(index);
       setMustSpin(true);
     } catch (err) {
@@ -203,94 +213,94 @@ export default function Home() {
   };
 
   const handleSignOut = async () => {
-    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/logout`, {
-      method: "POST",
-    });
-    router.push(`/luckydraw/login`);
+    await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/luckydraw/${eventId}/logout`,
+      {
+        method: "POST",
+      }
+    );
+    router.push(`/luckydraw/${eventId}/login`);
   };
 
   return (
     <div className="flex w-full justify-center px-6 pt-6 pb-10 md:p-10">
       <div className="flex flex-col gap-4">
-        <Card className="mx-auto p-6">
-          <Button
-            className="cursor-pointer w-[80px]"
-            variant="outline"
-            onClick={handleSignOut}
-          >
-            Sign out
-          </Button>
-          <div className="flex flex-col items-center text-center">
-            <Image
-              src="/paypal_logo.png"
-              width={60}
-              height={60}
-              alt="paypal icon"
-            />
-
-            <p className="mb-2 text-2xl font-bold">Lucky Draw</p>
-            <p className="text-muted-foreground">
-              Thank you for playing your part at Impact Day!
-            </p>
+        {initialLoading ? (
+          <div className="flex flex-col items-center self-center">
+            <LoadingSpinner />
           </div>
-          {loading ? (
-            <div className="flex flex-col items-center self-center">
-              <LoadingSpinner />
+        ) : error ? (
+          <p className="text-center text-red-600 dark:text-red-200">{error}</p>
+        ) : isClient ? (
+          <Card className="mx-auto p-6">
+            <Button
+              className="cursor-pointer w-[80px]"
+              variant="outline"
+              onClick={handleSignOut}
+            >
+              Sign out
+            </Button>
+            <div className="flex flex-col items-center text-center">
+              <Image
+                src="/paypal_logo.png"
+                width={60}
+                height={60}
+                alt="paypal icon"
+              />
+
+              <p className="mb-2 text-2xl font-bold">Lucky Draw</p>
+              <p className="text-muted-foreground">
+                Thank you for playing your part at Impact Day!
+              </p>
             </div>
-          ) : error ? (
-            <p className="text-center text-red-600 dark:text-red-200">
-              {error}
-            </p>
-          ) : isClient ? (
-            <>
-              <div className="w-auto">
-                <Wheel
-                  mustStartSpinning={mustSpin}
-                  prizeNumber={prizeNumber}
-                  data={wheelData}
-                  backgroundColors={["#173066", "#0463ce", "#63cbfb"]}
-                  textColors={["#ffffff"]}
-                  onStopSpinning={handleStopSpinning}
-                  outerBorderColor="#ebebee"
-                  radiusLineColor="#ebebee"
-                  fontFamily="Arial"
-                  fontSize={16}
-                  startingOptionIndex={startingIndex}
-                />
-              </div>
+            <div className="w-auto">
+              <Wheel
+                mustStartSpinning={mustSpin}
+                prizeNumber={prizeNumber}
+                data={wheelData}
+                backgroundColors={["#173066", "#0463ce", "#63cbfb"]}
+                textColors={["#ffffff"]}
+                onStopSpinning={handleStopSpinning}
+                outerBorderColor="#ebebee"
+                radiusLineColor="#ebebee"
+                fontFamily="Arial"
+                fontSize={16}
+                startingOptionIndex={startingIndex}
+              />
+            </div>
 
-              <div className="flex flex-col items-center mt-4">
-                <Button
-                  onClick={handleSpinClick}
-                  disabled={mustSpin || spinComplete || isSpinClicked}
-                  size={"lg"}
-                >
-                  SPIN
-                </Button>
+            <div className="flex flex-col items-center mt-4">
+              <Button
+                onClick={handleSpinClick}
+                disabled={mustSpin || spinComplete || isSpinClicked}
+                size={"lg"}
+              >
+                {spinClickLoading ? <LoadingSpinner /> : "SPIN"}
+              </Button>
 
-                {spinComplete && (
-                  <>
-                    <div className="flex flex-col items-center text-center p-2 mt-2 gap-2">
-                      <p className="text-lg font-semibold">
-                        {`🎉 You won: ${resultPrizeName} (${resultPrizeBrand})!`}
-                      </p>
-                      <div>
-                        <Image
-                          src={`/sample/${resultPrizeImgSrc}`}
-                          alt="prize picture"
-                          width={150}
-                          height={150}
-                        />
-                      </div>
+              {spinComplete && (
+                <>
+                  <div className="flex flex-col items-center text-center p-2 mt-2 gap-2">
+                    <p className="text-lg font-semibold">
+                      {`🎉 You won: ${resultPrizeName} (${resultPrizeBrand})!`}
+                    </p>
+                    <div>
+                      <Image
+                        src={resultPrizeImgSrc}
+                        alt="prize picture"
+                        width={150}
+                        height={150}
+                        className="object-contain"
+                      />
                     </div>
-                  </>
-                )}
-              </div>
-            </>
-          ) : (
-            <></>
-          )}
-        </Card>
+                  </div>
+                </>
+              )}
+            </div>
+          </Card>
+        ) : (
+          <></>
+        )}
       </div>
     </div>
   );
