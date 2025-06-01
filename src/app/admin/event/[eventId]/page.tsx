@@ -275,8 +275,9 @@ export default function Page() {
                         <Button variant="outline">QR code: Lucky Draw</Button>
                       </Link>
                     )}
-                    <Button variant={"outline"}>Roulette game</Button>
-
+                    <Link href={`/admin/event/${eventId}/roulette`}>
+                      <Button variant={"outline"}>Roulette game</Button>
+                    </Link>
                     <AlertDialog>
                       <AlertDialogTrigger>
                         <Button variant={"outline"}>Delete event</Button>
@@ -291,7 +292,6 @@ export default function Page() {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          {/* <AlertDialogAction >Delete</AlertDialogAction> */}
                           <Button
                             variant="destructive"
                             onClick={handleDeleteEvent}
