@@ -249,9 +249,7 @@ export default function Home() {
               />
 
               <p className="mb-2 text-2xl font-bold">Lucky Draw</p>
-              <p className="text-muted-foreground">
-                Thank you for playing your part at Impact Day!
-              </p>
+              <p className="text-muted-foreground">Thank you for coming!</p>
             </div>
             <div className="w-auto">
               <Wheel
