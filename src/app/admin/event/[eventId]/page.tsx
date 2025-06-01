@@ -507,11 +507,13 @@ export default function Page() {
                   </div>
                   <div className="flex gap-1 mt-2">
                     <Link href={`/admin/event/${eventId}/checkin`}>
-                      <Button variant={"outline"}>QR code for check in</Button>
+                      <Button variant={"outline"}>QR Code: Check In</Button>
                     </Link>
-                    <Button variant={"outline"}>QR code for lucky draw</Button>
-                    <Button variant={"outline"}>Roulette game</Button>
-                    <Button variant={"outline"}>Delete event</Button>
+                    <Link href={`/admin/event/${eventId}/luckydraw`}>
+                      <Button variant={"outline"}>QR Code: Lucky Draw</Button>
+                    </Link>
+                    <Button variant={"outline"}>Roulette Game</Button>
+                    <Button variant={"outline"}>Delete Event</Button>
                   </div>
                 </div>
               </div>

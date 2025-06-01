@@ -18,14 +18,17 @@ export async function GET(
     console.log("eventId", eventId);
     const event = await prisma.event.findUnique({
       where: { id: eventId },
-      select: { name: true }, // only return what you need
+      select: { name: true, hasLuckyDraw: true },
     });
 
     if (!event) {
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ name: event.name }, { status: 200 });
+    return NextResponse.json(
+      { name: event.name, hasLuckyDraw: event.hasLuckyDraw },
+      { status: 200 }
+    );
   } catch (err) {
     console.error("Error fetching event:", err);
     return NextResponse.json(
