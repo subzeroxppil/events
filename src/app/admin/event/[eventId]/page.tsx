@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import {
   Download,
+  Info,
   LoaderPinwheel,
   PersonStanding,
   ReceiptText,
@@ -31,6 +32,11 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import ghostAnimationData from "@/app/assets/ghost-animation.json";
+import {
+  GroupingStrategy,
+  groupingStrategyMap,
+  groupingStrategyTooltips,
+} from "@/app/utils/common";
 
 import {
   Card,
@@ -43,6 +49,12 @@ import {
 } from "@/components/ui/card";
 import Lottie from "lottie-react";
 import Link from "next/link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const headers: Record<string, string> = {
   groupNumber: "Group Number",
@@ -71,7 +83,7 @@ type EventDetails = {
   country: string;
   eventStartTime: string;
   eventEndTime: string;
-  groupingStrategy: "roundRobin" | "maxGroupCapacity" | null;
+  groupingStrategy: GroupingStrategy | null;
   groupConfigNumber: number | null;
   hasLuckyDraw: boolean;
 };
@@ -93,21 +105,13 @@ type UserData = {
 export default function Page() {
   const [usersData, setUsersData] = useState<UserData[]>([]);
   const [detailsData, setDetailsData] = useState<DetailsData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("registeredAt");
-  const router = useRouter();
-  const supabase = createClient();
   const params = useParams();
   const rawEventId = params?.eventId;
   const eventId = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
   const [initialLoading, setInitialLoading] = useState(true); // full page
   const [usersDataLoading, setUsersDataLoading] = useState(false); // sort re-fetch
-
-  const strategyMap: Record<string, string> = {
-    roundRobin: "Round Robin",
-    maxGroupCapacity: "Max Group Capacity",
-  };
 
   const fetchEventDetails = async (eventId: string) => {
     const res = await fetch(
@@ -166,21 +170,34 @@ export default function Page() {
   }, [sortBy]);
 
   const handleExport = () => {
-    const exportData = usersData.map((user) => ({
-      [headers.registeredAt]: user.registeredAt,
-      [headers.workId]: user.workId,
-      [headers.groupNumber]: user.groupNumber,
-      [headers.prizeName]:
-        user.prizeName && user.brandName
-          ? `${user.brandName} | ${user.prizeName}`
-          : "-", // Combine prize name and brand name or show "-" if not available
-    }));
+    const includeGroupNumber = !!detailsData?.event.groupingStrategy;
+    const includePrize = !!detailsData?.event.hasLuckyDraw;
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData); // `data` is your JSON array
+    const exportData = usersData.map((user) => {
+      const row: Record<string, string | number> = {
+        [headers.registeredAt]: user.registeredAt,
+        [headers.workId]: user.workId,
+      };
+
+      if (includeGroupNumber) {
+        row[headers.groupNumber] = user.groupNumber;
+      }
+
+      if (includePrize) {
+        row[headers.prizeName] =
+          user.prizeName && user.brandName
+            ? `${user.brandName} | ${user.prizeName}`
+            : "-";
+      }
+
+      return row;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Attendees");
 
-    XLSX.writeFile(workbook, "impact_day_2025_attendees.xlsx");
+    XLSX.writeFile(workbook, `${detailsData?.event.name}_attendees.xlsx`);
   };
 
   return (
@@ -212,9 +229,11 @@ export default function Page() {
                     <Link href={`/admin/event/${eventId}/checkin`}>
                       <Button variant={"outline"}>QR Code: Check In</Button>
                     </Link>
-                    <Link href={`/admin/event/${eventId}/luckydraw`}>
-                      <Button variant={"outline"}>QR Code: Lucky Draw</Button>
-                    </Link>
+                    {detailsData?.event.hasLuckyDraw && (
+                      <Link href={`/admin/event/${eventId}/luckydraw`}>
+                        <Button variant="outline">QR Code: Lucky Draw</Button>
+                      </Link>
+                    )}
                     <Button variant={"outline"}>Roulette Game</Button>
                     <Button variant={"outline"}>Delete Event</Button>
                   </div>
@@ -283,10 +302,6 @@ export default function Page() {
                       </CardHeader>
                       <CardFooter className="flex-col items-start gap-1.5 text-sm">
                         <div className="line-clamp-1 flex gap-2 font-medium">
-                          Unredeemed lucky draws:{" "}
-                          {detailsData?.stats.unredeemedLuckyDraws}
-                        </div>
-                        <div className="text-muted-foreground">
                           Prizes left: {detailsData?.stats.totalPrizesLeft}
                         </div>
                       </CardFooter>
@@ -309,11 +324,27 @@ export default function Page() {
                         <CardAction></CardAction>
                       </CardHeader>
                       <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                        <div className="line-clamp-1 flex gap-2 font-medium">
+                        <div className="line-clamp-1 flex gap-1 font-medium">
                           Grouping Strategy:{" "}
-                          {strategyMap[
+                          {groupingStrategyMap[
                             detailsData?.event.groupingStrategy ?? ""
                           ] || "-"}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild className="">
+                                <Info size={19} />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  {detailsData?.event.groupingStrategy
+                                    ? groupingStrategyTooltips[
+                                        detailsData.event.groupingStrategy
+                                      ]
+                                    : ""}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </CardFooter>
                     </>
@@ -323,7 +354,7 @@ export default function Page() {
                 )}
               </div>
               <div className="px-4 lg:px-6">
-                <Card className="flex-col flex w-full bg-[#f8f8f8] border-0 shadow-none">
+                <Card className="flex-col flex w-full bg-[#f8f8f8] border-0 shadow-none min-h-80">
                   <div className="px-6">
                     <div className="flex gap-2 items-center">
                       <Users />
@@ -350,15 +381,19 @@ export default function Page() {
                                   <SelectItem value="registeredAt">
                                     {headers.registeredAt}
                                   </SelectItem>
-                                  <SelectItem value="groupNumber">
-                                    {headers.groupNumber}
-                                  </SelectItem>
                                   <SelectItem value="workId">
                                     {headers.workId}
                                   </SelectItem>
-                                  <SelectItem value="prizeName">
-                                    {headers.prizeName}
-                                  </SelectItem>
+                                  {detailsData?.event.groupingStrategy && (
+                                    <SelectItem value="groupNumber">
+                                      {headers.groupNumber}
+                                    </SelectItem>
+                                  )}
+                                  {detailsData?.event.hasLuckyDraw && (
+                                    <SelectItem value="prizeName">
+                                      {headers.prizeName}
+                                    </SelectItem>
+                                  )}
                                 </SelectContent>
                               </Select>
                             </div>
@@ -374,25 +409,40 @@ export default function Page() {
                               <TableRow>
                                 <TableHead>{headers.registeredAt}</TableHead>
                                 <TableHead>{headers.workId}</TableHead>
-                                <TableHead>{headers.groupNumber}</TableHead>
-                                <TableHead>{headers.prizeName}</TableHead>
+                                {detailsData?.event.groupingStrategy && (
+                                  <TableHead>{headers.groupNumber}</TableHead>
+                                )}
+                                {detailsData?.event.hasLuckyDraw && (
+                                  <TableHead>{headers.prizeName}</TableHead>
+                                )}
                               </TableRow>
                             </TableHeader>
                             <TableBody>
                               {usersData.map((user) => (
                                 <TableRow key={user.workId}>
                                   <TableCell className="font-medium">
-                                    {user.registeredAt}
+                                    {user.registeredAt
+                                      ? new Date(
+                                          user.registeredAt
+                                        ).toLocaleString("en-SG", {
+                                          dateStyle: "medium",
+                                          timeStyle: "short",
+                                        })
+                                      : "-"}
                                   </TableCell>
                                   <TableCell className="font-medium">
                                     {user.workId}
                                   </TableCell>
-                                  <TableCell>{user.groupNumber}</TableCell>
-                                  <TableCell>
-                                    {user.prizeName && user.brandName
-                                      ? `${user.brandName} | ${user.prizeName}`
-                                      : "-"}
-                                  </TableCell>
+                                  {detailsData?.event.groupingStrategy && (
+                                    <TableCell>{user.groupNumber}</TableCell>
+                                  )}
+                                  {detailsData?.event.hasLuckyDraw && (
+                                    <TableCell>
+                                      {user.prizeName && user.brandName
+                                        ? `${user.brandName} | ${user.prizeName}`
+                                        : "-"}
+                                    </TableCell>
+                                  )}
                                 </TableRow>
                               ))}
                             </TableBody>

@@ -23,6 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { groupingStrategyTooltips } from "@/app/utils/common";
 
 export default function Page() {
   const [title, setTitle] = useState("");
@@ -286,12 +287,7 @@ export default function Page() {
                           <Info size={19} />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>
-                            Attendees will be assigned into groups based on the
-                            maximum number of people allowed per group. Once a
-                            group reaches its capacity, the next group starts
-                            filling.
-                          </p>
+                          <p>{groupingStrategyTooltips["maxGroupCapacity"]}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -320,12 +316,7 @@ export default function Page() {
                           <Info size={19} />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>
-                            Attendees are assigned one by one into groups in
-                            order (Group 1, 2, 3…), looping back to Group 1
-                            after the last group. This ensures groups are filled
-                            evenly.
-                          </p>
+                          <p>{groupingStrategyTooltips["roundRobin"]}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
