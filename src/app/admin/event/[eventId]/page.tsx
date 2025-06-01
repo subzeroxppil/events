@@ -8,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Image from "next/image";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -55,6 +54,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 const headers: Record<string, string> = {
   groupNumber: "Group Number",
@@ -110,24 +121,11 @@ export default function Page() {
   const params = useParams();
   const rawEventId = params?.eventId;
   const eventId = Array.isArray(rawEventId) ? rawEventId[0] : rawEventId;
-  const [initialLoading, setInitialLoading] = useState(true); // full page
-  const [usersDataLoading, setUsersDataLoading] = useState(false); // sort re-fetch
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [usersDataLoading, setUsersDataLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const fetchEventDetails = async (eventId: string) => {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/details`
-    );
-    if (!res.ok) throw new Error("Failed to fetch event details");
-    return res.json();
-  };
-
-  const fetchEventUsers = async (eventId: string, sortBy: string) => {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/users?sortBy=${sortBy}`
-    );
-    if (!res.ok) throw new Error("Failed to fetch event users");
-    return res.json();
-  };
+  const router = useRouter();
 
   useEffect(() => {
     if (!eventId) return;
@@ -169,13 +167,56 @@ export default function Page() {
     loadSortedUsers();
   }, [sortBy]);
 
+  const fetchEventDetails = async (eventId: string) => {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/details`
+    );
+    if (!res.ok) throw new Error("Failed to fetch event details");
+    return res.json();
+  };
+
+  const fetchEventUsers = async (eventId: string, sortBy: string) => {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/users?sortBy=${sortBy}`
+    );
+    if (!res.ok) throw new Error("Failed to fetch event users");
+    return res.json();
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!eventId) return;
+
+    try {
+      setDeleteLoading(true);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/delete`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to delete event");
+
+      router.push("/admin");
+      toast("Event deleted 🗑️");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error deleting event");
+    }
+  };
+
   const handleExport = () => {
     const includeGroupNumber = !!detailsData?.event.groupingStrategy;
     const includePrize = !!detailsData?.event.hasLuckyDraw;
 
     const exportData = usersData.map((user) => {
       const row: Record<string, string | number> = {
-        [headers.registeredAt]: user.registeredAt,
+        [headers.registeredAt]: user.registeredAt
+          ? new Date(user.registeredAt).toLocaleString("en-SG", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })
+          : "-",
         [headers.workId]: user.workId,
       };
 
@@ -227,15 +268,41 @@ export default function Page() {
                   </div>
                   <div className="flex gap-1 mt-2">
                     <Link href={`/admin/event/${eventId}/checkin`}>
-                      <Button variant={"outline"}>QR Code: Check In</Button>
+                      <Button variant={"outline"}>QR code: Check In</Button>
                     </Link>
                     {detailsData?.event.hasLuckyDraw && (
                       <Link href={`/admin/event/${eventId}/luckydraw`}>
-                        <Button variant="outline">QR Code: Lucky Draw</Button>
+                        <Button variant="outline">QR code: Lucky Draw</Button>
                       </Link>
                     )}
-                    <Button variant={"outline"}>Roulette Game</Button>
-                    <Button variant={"outline"}>Delete Event</Button>
+                    <Button variant={"outline"}>Roulette game</Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger>
+                        <Button variant={"outline"}>Delete event</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete event?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete your event and all data
+                            related to it.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          {/* <AlertDialogAction >Delete</AlertDialogAction> */}
+                          <Button
+                            variant="destructive"
+                            onClick={handleDeleteEvent}
+                            className="w-[75px]"
+                            disabled={deleteLoading}
+                          >
+                            {deleteLoading ? <LoadingSpinner /> : "Delete"}
+                          </Button>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               </div>
