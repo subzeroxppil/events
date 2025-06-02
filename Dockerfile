@@ -13,6 +13,9 @@ COPY . .
 COPY package.json package-lock.json* ./
 RUN npm ci
 
+# ✅ PRINT ENV VARS HERE DURING BUILD
+RUN echo '🧾 Environment Variables during build:' && printenv
+
 # Build the Next.js app
 RUN npm run build
 
