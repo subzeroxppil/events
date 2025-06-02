@@ -9,45 +9,134 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import React from "react";
+import RoulettePro from "react-roulette-pro";
+import "react-roulette-pro/dist/index.css";
+import "@/app/globals.css";
+import confetti from "canvas-confetti";
 
 export default function Page() {
   const params = useParams();
   const eventId = Array.isArray(params?.eventId)
     ? params.eventId[0]
     : params.eventId;
-  const [isClient, setIsClient] = useState(false);
 
   const [initialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState("");
+  const [prizes, setPrizes] = useState<{ text: string }[]>([]);
 
-  // useEffect(() => {
-  //   if (!eventId) return;
+  useEffect(() => {
+    if (!eventId) return;
 
-  //   const fetchEvent = async () => {
-  //     try {
-  //       const res = await fetch(
-  //         `${process.env.NEXT_PUBLIC_BASE_URL}/api/events/${eventId}`
-  //       );
-  //       const data = await res.json();
+    const fetchAttendees = async () => {
+      try {
+        setInitialLoading(true);
 
-  //       if (!res.ok) {
-  //         throw new Error(data.message || "Failed to fetch event data");
-  //       }
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/users`
+        );
 
-  //       if (!data.hasLuckyDraw) {
-  //         setError("Lucky Draw not enabled for this event.");
-  //       }
+        const data = await res.json();
 
-  //       setEventTitle(data.name);
-  //     } catch (err: any) {
-  //       setError("Unexpected error occurred, please refresh this page.");
-  //     } finally {
-  //       setInitialLoading(false);
-  //     }
-  //   };
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to fetch attendees");
+        }
 
-  //   fetchEvent();
-  // }, [eventId]);
+        const attendeeList = data.users.map((user: any) => ({
+          text: user.workId, // ✅ use workId only
+        }));
+
+        setPrizes(attendeeList);
+      } catch (err: any) {
+        console.error(err);
+        setError("Failed to load attendees.");
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchAttendees();
+  }, [eventId]);
+
+  function createRepeatedPrizeList(prizes: any[], targetLength: number): any[] {
+    if (prizes.length === 0) return [];
+
+    const repeated = [];
+    while (repeated.length < targetLength) {
+      repeated.push(...prizes);
+    }
+
+    return repeated.slice(0, targetLength); // trim to exact length
+  }
+
+  // i think here max 50
+  const reproducedPrizeList = createRepeatedPrizeList(prizes, 50);
+  console.log("reproducedPrizeList", reproducedPrizeList);
+
+  const generateId = () =>
+    `${Date.now().toString(36)}-${Math.random().toString(36).substring(2)}`;
+
+  const prizeList = reproducedPrizeList.map((prize) => ({
+    ...prize,
+    id:
+      typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : generateId(),
+  }));
+
+  const [start, setStart] = useState(false);
+
+  // const prizeIndex = prizes.length * 4 + winPrizeIndex;
+
+  // const prizeIndex = 44;
+  // const prizeIndex = Math.floor(Math.random() * prizeList.length);
+  const winPrizeIndex = Math.floor(Math.random() * prizes.length);
+
+  // Then calculate a final prizeIndex that ensures a long enough spin
+  const baseOffset = 40; // ensures at least 40 items before landing
+  const prizeIndex = baseOffset + winPrizeIndex;
+  // console.log("prizeIndex", prizeIndex);
+
+  const handleStart = () => {
+    setStart(false); // reset
+    setTimeout(() => {
+      setStart(true); // trigger spin
+    }, 50); // small delay ensures React registers the change
+  };
+
+  const handlePrizeDefined = () => {
+    console.log("🥳 Prize defined! 🥳");
+    triggerConfetti();
+  };
+
+  const triggerConfetti = () => {
+    const end = Date.now() + 3 * 1000; // 3 seconds
+    const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
+
+    const frame = () => {
+      if (Date.now() > end) return;
+
+      confetti({
+        particleCount: 2,
+        angle: 60,
+        spread: 55,
+        startVelocity: 60,
+        origin: { x: 0, y: 0.5 },
+        colors: colors,
+      });
+      confetti({
+        particleCount: 2,
+        angle: 120,
+        spread: 55,
+        startVelocity: 60,
+        origin: { x: 1, y: 0.5 },
+        colors: colors,
+      });
+
+      requestAnimationFrame(frame);
+    };
+
+    frame();
+  };
 
   return (
     <div className="flex w-full justify-center p-4 h-full">
@@ -73,10 +162,18 @@ export default function Page() {
                   {/* <span className="font-bold text-2xl max-w-md break-words whitespace-normal mt-1">
                     hi
                   </span> */}
+                  <RoulettePro
+                    prizes={prizeList}
+                    prizeIndex={prizeIndex}
+                    start={start}
+                    onPrizeDefined={handlePrizeDefined}
+                    defaultDesignOptions={{ prizesWithText: true }}
+                    spinningTime={5}
+                  />
 
-                  {/* <Button onClick={handleStart} size={"lg"}>
+                  <Button onClick={handleStart} size={"lg"}>
                     Start
-                  </Button> */}
+                  </Button>
                 </div>
               </Card>
             </div>

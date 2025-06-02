@@ -45,6 +45,7 @@
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.56.4",
+    "react-roulette-pro": "^3.2.2",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
     "xlsx": "^0.18.5",

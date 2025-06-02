@@ -193,3 +193,18 @@
     cursor: pointer;
   }
 }
+
+.roulette-pro-regular-image-wrapper {
+  display: none !important;
+}
+
+.roulette-pro-regular-prize-item-text {
+  height: 100% !important;
+}
+
+.roulette-pro-regular-prize-item-wrapper {
+  height: 200px;
+  /* background-color: #0551b5 !important; */
+  background: #0551b5 !important;
+  border: 2px solid white !important;
+}
