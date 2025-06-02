@@ -29,7 +29,6 @@ import {
   Users,
   UsersRound,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import ghostAnimationData from "@/app/assets/ghost-animation.json";
 import {
   GroupingStrategy,
