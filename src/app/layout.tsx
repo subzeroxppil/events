@@ -32,32 +32,32 @@ export default async function RootLayout({
       // className={`h-full ${paypalOpen.className}`}
       className={`h-full ${inter.className}`}
     >
-      <body className="flex flex-col">
-        <UserProvider>
-          <div className="flex-col md:flex">
-            <div className="border-b">
-              <div className="flex items-center pr-4 pl-2">
-                <div className="flex px-1 py-2 items-center cursor-default">
-                  <Image
-                    src="/paypal_logo.png"
-                    alt="paypal icon"
-                    width={45}
-                    height={45}
-                  />
-                  <span className="font-bold text-lg">Events</span>
-                </div>
-                <div className="ml-auto flex items-center">
-                  <UserNav />
+      <Suspense>
+        <body className="flex flex-col">
+          <UserProvider>
+            <div className="flex-col md:flex">
+              <div className="border-b">
+                <div className="flex items-center pr-4 pl-2">
+                  <div className="flex px-1 py-2 items-center cursor-default">
+                    <Image
+                      src="/paypal_logo.png"
+                      alt="paypal icon"
+                      width={45}
+                      height={45}
+                    />
+                    <span className="font-bold text-lg">Events</span>
+                  </div>
+                  <div className="ml-auto flex items-center">
+                    <UserNav />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div className="flex flex-col h-full">
-            <Suspense>{children}</Suspense>
-          </div>
-          <Toaster />
-        </UserProvider>
-      </body>
+            <div className="flex flex-col h-full">{children}</div>
+            <Toaster />
+          </UserProvider>
+        </body>
+      </Suspense>
     </html>
   );
 }
