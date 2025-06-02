@@ -27,3 +27,4 @@ RUN npm ci --omit=dev
 
 EXPOSE 8080
 CMD ["npm", "start"]
+
