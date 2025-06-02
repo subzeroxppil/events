@@ -4,6 +4,8 @@ FROM node:20-slim AS builder
 # Set working directory
 WORKDIR /app
 
+RUN apt-get update -y && apt-get install -y openssl
+
 # Copy the rest of your app
 COPY . .
 
