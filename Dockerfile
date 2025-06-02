@@ -13,21 +13,6 @@ COPY . .
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-# Declare build-time arguments
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
-ARG DATABASE_URL
-ARG DIRECT_URL
-
-# Set environment variables (so they're available during RUN commands)
-ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
-ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
-ENV DATABASE_URL=$DATABASE_URL
-ENV DIRECT_URL=$DIRECT_URL
-
-# ✅ PRINT ENV VARS HERE DURING BUILD
-RUN echo '🧾 Environment Variables during build:' && printenv
-
 # Build the Next.js app
 RUN npm run build
 
