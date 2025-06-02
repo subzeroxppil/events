@@ -13,6 +13,8 @@ import RoulettePro from "react-roulette-pro";
 import "react-roulette-pro/dist/index.css";
 import "@/app/globals.css";
 import confetti from "canvas-confetti";
+import ghostAnimationData from "@/app/assets/ghost-animation.json";
+import Lottie from "lottie-react";
 
 export default function Page() {
   const params = useParams();
@@ -23,6 +25,7 @@ export default function Page() {
   const [initialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState("");
   const [prizes, setPrizes] = useState<{ text: string }[]>([]);
+  const [start, setStart] = useState(false);
 
   useEffect(() => {
     if (!eventId) return;
@@ -70,7 +73,6 @@ export default function Page() {
 
   // i think here max 50
   const reproducedPrizeList = createRepeatedPrizeList(prizes, 50);
-  console.log("reproducedPrizeList", reproducedPrizeList);
 
   const generateId = () =>
     `${Date.now().toString(36)}-${Math.random().toString(36).substring(2)}`;
@@ -82,8 +84,6 @@ export default function Page() {
         ? crypto.randomUUID()
         : generateId(),
   }));
-
-  const [start, setStart] = useState(false);
 
   // const prizeIndex = prizes.length * 4 + winPrizeIndex;
 
@@ -142,6 +142,15 @@ export default function Page() {
     <div className="flex w-full justify-center p-4 h-full">
       {initialLoading ? (
         <LoadingSpinner className="mt-5" />
+      ) : prizes.length === 0 ? (
+        <>
+          <div className="w-full py-30 flex flex-col items-center">
+            <Lottie animationData={ghostAnimationData} className="h-[170px]" />
+            <span className="text-muted-foreground text-sm">
+              No attendees have checked in to this event yet
+            </span>
+          </div>
+        </>
       ) : error ? (
         <div className="text-red-500 font-medium text-center mt-5">{error}</div>
       ) : (
