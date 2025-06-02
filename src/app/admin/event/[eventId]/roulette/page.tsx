@@ -149,7 +149,7 @@ export default function Page() {
           <Card className="p-10 pb-15 bg-[#f8f8f8] border-0 shadow-none">
             <div className="flex flex-col items-center text-center">
               <div className="flex items-center">
-                <span className="text-[60px] font-bold">Impact Day</span>
+                <span className="text-[60px] font-bold">Lucky Draw</span>
               </div>
               <Card className="p-10 mt-2 flex flex-col items-center bg-white w-7xl overflow-hidden">
                 <div className="flex flex-col gap-8 items-center">
