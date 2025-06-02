@@ -1,47 +1,24 @@
 ## Getting Started for local development
 
-### Installation
-
 ```bash
-npm install
+docker build -t paypal-events .
+docker run -p 3000:3000 paypal-events
 ```
 
-### Database Setup
+### Teardown
 
-**Build docker container**
+**To Stop and remove the running container**
 
 ```bash
-docker-compose up --build
+docker ps              # Get the container ID
+docker stop <id>       # Stop the container
+docker rm <id>         # Remove the container
 ```
 
-**Set up db tables according to the prisma schema**  
-This directly applies your current Prisma schema to the DB according to `prisma/schema.prisma`
+**To remove the imager**
 
 ```bash
-npx prisma db push
-npx prisma generate # if you need to regenerate Prisma client functions
-```
-
-**Seed the database with dummy data according to `prisma/seed.js`**
-
-```bash
-npx prisma db seed
-```
-
-### Running the Development Server
-
-```bash
-npm run dev
-```
-
-Then, open [http://localhost:3000](http://localhost:3000) in your browser to access the application.
-
-### Teardown: Clean up Docker container
-
-```bash
-docker stop $(docker ps -q)        # stops all running containers
-docker rm $(docker ps -aq)         # removes all containers
-docker-compose down -v             # stops containers & deletes associated volumes
+docker rmi paypal-events
 ```
 
 ## How to make changes to production database
@@ -60,4 +37,10 @@ npx prisma migrate dev --name <name of migration>
 
 ```bash
 npx prisma migrate deploy
+```
+
+**OPTIONAL: Seed the database with dummy data according to `prisma/seed.js`**
+
+```bash
+npx prisma db seed
 ```
