@@ -21,6 +21,7 @@ export async function GET(
         name: true,
         groupingStrategy: true,
         hasLuckyDraw: true,
+        terms: true,
       },
     });
 

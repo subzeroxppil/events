@@ -11,6 +11,26 @@ import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import onboardingAnimationData from "@/app/assets/handshake-animation.json";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "./ui/checkbox";
+import { useMediaQuery } from "@/app/hooks/use-media-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 interface CheckInProps {
@@ -29,13 +49,14 @@ const CheckIn = ({ className }: CheckInProps) => {
     : params?.eventId;
 
   const [eventName, setEventName] = useState("");
+  const [terms, setTerms] = useState("");
   const [hasGrouping, setHasGrouping] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-
-  const router = useRouter();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const [isTermsAgree, setIsTermsAgree] = useState(false);
 
   const submitText = "Check in";
-
   const resultSubheading = "We’re so glad to have you here 🎉";
 
   useEffect(() => {
@@ -58,6 +79,7 @@ const CheckIn = ({ className }: CheckInProps) => {
 
       setEventName(data.name);
       setHasGrouping(data.groupingStrategy !== null);
+      setTerms(data.terms ?? "");
     } catch (err) {
       setError("An error occurred while loading event info");
     } finally {
@@ -72,6 +94,11 @@ const CheckIn = ({ className }: CheckInProps) => {
     // Input validation
     if (workId.trim().includes("@")) {
       setError("Please enter your Corp Pass ID before the '@'");
+      return;
+    }
+
+    if (terms && !isTermsAgree) {
+      setError("Please accept the terms and conditions to proceed");
       return;
     }
 
@@ -155,8 +182,63 @@ const CheckIn = ({ className }: CheckInProps) => {
                     value={workId}
                     onChange={(e) => setWorkID(e.target.value)}
                   />
+                  {terms && (
+                    <div className="flex items-center gap-3 mt-2">
+                      <Checkbox
+                        id="terms"
+                        checked={isTermsAgree}
+                        onCheckedChange={(checked) =>
+                          setIsTermsAgree(!!checked)
+                        }
+                      />
+                      <Label htmlFor="terms" className="gap-0">
+                        Accept{" "}
+                        {isDesktop ? (
+                          <Dialog
+                            open={dialogOpen}
+                            onOpenChange={setDialogOpen}
+                          >
+                            <DialogTrigger asChild>
+                              <span className="underline">
+                                terms and conditions
+                              </span>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Terms & Conditions</DialogTitle>
+                                <DialogDescription>{terms}</DialogDescription>
+                              </DialogHeader>
+                            </DialogContent>
+                          </Dialog>
+                        ) : (
+                          <Drawer
+                            open={dialogOpen}
+                            onOpenChange={setDialogOpen}
+                          >
+                            <DrawerTrigger asChild>
+                              <span className="underline">
+                                terms and conditions
+                              </span>
+                            </DrawerTrigger>
+                            <DrawerContent>
+                              <DrawerHeader className="text-left">
+                                <DrawerTitle>Terms & Conditions</DrawerTitle>
+                                <DrawerDescription>{terms}</DrawerDescription>
+                              </DrawerHeader>
+
+                              <DrawerFooter className="pt-2">
+                                <DrawerClose asChild>
+                                  <Button variant="outline">Close</Button>
+                                </DrawerClose>
+                              </DrawerFooter>
+                            </DrawerContent>
+                          </Drawer>
+                        )}
+                      </Label>
+                    </div>
+                  )}
                   {error && (
-                    <div className="flex items-center gap-1">
+                    <div className="flex mt-1 gap-1">
                       <div>
                         <CircleAlert size="20px" color="#ef4444" />
                       </div>
