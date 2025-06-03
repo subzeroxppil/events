@@ -27,6 +27,10 @@ export default function Page() {
   const [prizes, setPrizes] = useState<{ text: string }[]>([]);
   const [start, setStart] = useState(false);
   const [prizeIndex, setPrizeIndex] = useState(0);
+  const [winners, setWinners] = useState<string[]>([]);
+  const [prizeList, setPrizeList] = useState<{ text: string; id: string }[]>(
+    []
+  );
 
   useEffect(() => {
     if (!eventId) return;
@@ -51,8 +55,20 @@ export default function Page() {
       }));
 
       setPrizes(attendeeList);
+
+      // max 50
+      const reproducedPrizeList = createRepeatedPrizeList(attendeeList, 50);
+
+      setPrizeList(
+        reproducedPrizeList.map((prize) => ({
+          ...prize,
+          id:
+            typeof crypto.randomUUID === "function"
+              ? crypto.randomUUID()
+              : generateId(),
+        }))
+      );
     } catch (err: any) {
-      console.error(err);
       setError("Failed to load attendees.");
     } finally {
       setInitialLoading(false);
@@ -85,21 +101,31 @@ export default function Page() {
 
   // INIT STUFF
 
-  // i think here max 50
-  const reproducedPrizeList = createRepeatedPrizeList(prizes, 50);
+  function getValidPrizeIndex(
+    prizeList: { text: string }[],
+    winners: string[]
+  ): number {
+    const baseOffset = 35;
+    const maxOffset = 10;
+    let attempts = 0;
 
-  const prizeList = reproducedPrizeList.map((prize) => ({
-    ...prize,
-    id:
-      typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID()
-        : generateId(),
-  }));
+    while (attempts < 10) {
+      const candidateIndex = baseOffset + Math.floor(Math.random() * maxOffset);
+      const candidate = prizeList[candidateIndex];
+      if (!winners.includes(candidate.text)) {
+        return candidateIndex;
+      }
+      attempts++;
+    }
+
+    // fallback: allow repeat
+    return baseOffset + Math.floor(Math.random() * maxOffset);
+  }
 
   const handleStart = () => {
     const winPrizeIndex = Math.floor(Math.random() * 10);
     const baseOffset = 35;
-    const prizeIndex = baseOffset + winPrizeIndex; //always less than 45
+    const prizeIndex = getValidPrizeIndex(prizeList, winners);
     setPrizeIndex(prizeIndex);
 
     setStart(false); // reset
@@ -109,7 +135,11 @@ export default function Page() {
   };
 
   const handlePrizeDefined = () => {
-    console.log("🥳 Prize defined! 🥳");
+    const winner = prizeList[prizeIndex];
+    const winnerWorkId = winner?.text;
+    if (winnerWorkId) {
+      setWinners((prev) => [...prev, winnerWorkId]);
+    }
     triggerConfetti();
   };
 
@@ -175,7 +205,7 @@ export default function Page() {
                     alt="paypal icon"
                   />
                   {/* <span className="font-bold text-2xl max-w-md break-words whitespace-normal mt-1">
-                    hi
+                    {prizeList}
                   </span> */}
                   <RoulettePro
                     prizes={prizeList}
