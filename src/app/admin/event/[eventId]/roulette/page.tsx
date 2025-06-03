@@ -147,7 +147,8 @@ export default function Page() {
           <div className="w-full py-30 flex flex-col items-center">
             <Lottie animationData={ghostAnimationData} className="h-[170px]" />
             <span className="text-muted-foreground text-sm">
-              No attendees have checked in to this event yet
+              Roulette game unavailable as no attendees have checked in to this
+              event yet
             </span>
           </div>
         </>
