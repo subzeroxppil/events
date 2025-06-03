@@ -22,60 +22,71 @@ export default function Page() {
     ? params.eventId[0]
     : params.eventId;
 
-  const [initialLoading, setInitialLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState("");
   const [prizes, setPrizes] = useState<{ text: string }[]>([]);
   const [start, setStart] = useState(false);
+  const [prizeIndex, setPrizeIndex] = useState(0);
 
   useEffect(() => {
     if (!eventId) return;
 
-    const fetchAttendees = async () => {
-      try {
-        setInitialLoading(true);
-
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/users`
-        );
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.message || "Failed to fetch attendees");
-        }
-
-        const attendeeList = data.users.map((user: any) => ({
-          text: user.workId, // ✅ use workId only
-        }));
-
-        setPrizes(attendeeList);
-      } catch (err: any) {
-        console.error(err);
-        setError("Failed to load attendees.");
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-
     fetchAttendees();
   }, [eventId]);
+
+  const fetchAttendees = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/users`
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch attendees");
+      }
+
+      const attendeeList = data.users.map((user: any) => ({
+        text: user.workId, // ✅ use workId only
+      }));
+
+      setPrizes(attendeeList);
+    } catch (err: any) {
+      console.error(err);
+      setError("Failed to load attendees.");
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
   function createRepeatedPrizeList(prizes: any[], targetLength: number): any[] {
     if (prizes.length === 0) return [];
 
-    const repeated = [];
-    while (repeated.length < targetLength) {
-      repeated.push(...prizes);
+    const shuffled = [...prizes].sort(() => 0.5 - Math.random());
+
+    if (shuffled.length === targetLength) {
+      return shuffled;
     }
 
-    return repeated.slice(0, targetLength); // trim to exact length
-  }
+    if (shuffled.length < targetLength) {
+      const repeated = [];
+      while (repeated.length < targetLength) {
+        repeated.push(...shuffled.sort(() => 0.5 - Math.random()));
+      }
+      return repeated.slice(0, targetLength);
+    }
 
-  // i think here max 50
-  const reproducedPrizeList = createRepeatedPrizeList(prizes, 50);
+    // shuffled.length > targetLength
+    return shuffled.slice(0, targetLength);
+  }
 
   const generateId = () =>
     `${Date.now().toString(36)}-${Math.random().toString(36).substring(2)}`;
+
+  // INIT STUFF
+
+  // i think here max 50
+  const reproducedPrizeList = createRepeatedPrizeList(prizes, 50);
 
   const prizeList = reproducedPrizeList.map((prize) => ({
     ...prize,
@@ -85,18 +96,12 @@ export default function Page() {
         : generateId(),
   }));
 
-  // const prizeIndex = prizes.length * 4 + winPrizeIndex;
-
-  // const prizeIndex = 44;
-  // const prizeIndex = Math.floor(Math.random() * prizeList.length);
-  const winPrizeIndex = Math.floor(Math.random() * prizes.length);
-
-  // Then calculate a final prizeIndex that ensures a long enough spin
-  const baseOffset = 40; // ensures at least 40 items before landing
-  const prizeIndex = baseOffset + winPrizeIndex;
-  // console.log("prizeIndex", prizeIndex);
-
   const handleStart = () => {
+    const winPrizeIndex = Math.floor(Math.random() * 10);
+    const baseOffset = 35;
+    const prizeIndex = baseOffset + winPrizeIndex; //always less than 45
+    setPrizeIndex(prizeIndex);
+
     setStart(false); // reset
     setTimeout(() => {
       setStart(true); // trigger spin
