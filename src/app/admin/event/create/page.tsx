@@ -27,6 +27,7 @@ import { groupingStrategyTooltips } from "@/app/utils/common";
 
 export default function Page() {
   const [title, setTitle] = useState("");
+  const [terms, setTerms] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [eventStartTime, setEventStartTime] = useState<Date | undefined>(
@@ -172,6 +173,7 @@ export default function Page() {
             groupConfigNumber:
               groupingStrategy === "noNeed" ? null : groupConfigNumber,
             prizes: formattedPrizes,
+            terms: terms.trim() || null,
           }),
         }
       );
@@ -262,6 +264,32 @@ export default function Page() {
                 <DateTimePicker
                   value={eventEndTime}
                   onChange={setEventEndTime}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center">
+                  <Label htmlFor="terms">
+                    Terms & Conditions of event (optional)
+                  </Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild className="ml-1">
+                        <Info size={19} />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          Attendees must accept these terms before they can
+                          check in.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Input
+                  id="terms"
+                  placeholder="eg: By joining, you agree to the event's code of conduct..."
+                  value={terms}
+                  onChange={(e) => setTerms(e.target.value)}
                 />
               </div>
               <div className="flex flex-col gap-3">

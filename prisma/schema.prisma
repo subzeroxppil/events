@@ -23,7 +23,6 @@ model User {
 model Event {
   id          Int          @id @default(autoincrement())
   name        String
-  createdAt   DateTime     @default(now())
   eventStartTime   DateTime 
   eventEndTime   DateTime
   hasLuckyDraw Boolean @default(false)
@@ -31,6 +30,8 @@ model Event {
   groupingStrategy  GroupingStrategy?
   groupConfigNumber Int?      
   country        String
+  terms       String?
+  createdAt   DateTime     @default(now())
   createdBy      String 
 
   prizes      Prize[]

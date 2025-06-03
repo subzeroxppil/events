@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
       groupingStrategy,
       groupConfigNumber,
       prizes,
+      terms,
     } = body;
 
     if (!name || !country || !location || !eventStartTime || !eventEndTime) {
@@ -104,6 +105,7 @@ export async function POST(req: NextRequest) {
           groupingStrategy === "noNeed" ? null : groupingStrategy,
         groupConfigNumber,
         createdBy: user.email,
+        terms: terms?.trim() || null,
       },
     });
 
