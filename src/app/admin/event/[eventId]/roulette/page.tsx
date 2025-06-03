@@ -26,6 +26,7 @@ export default function Page() {
   const [error, setError] = useState("");
   const [prizes, setPrizes] = useState<{ text: string }[]>([]);
   const [start, setStart] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
   const [prizeIndex, setPrizeIndex] = useState(0);
   const [winners, setWinners] = useState<string[]>([]);
   const [prizeList, setPrizeList] = useState<{ text: string; id: string }[]>(
@@ -129,6 +130,7 @@ export default function Page() {
     setStart(false); // reset
     setTimeout(() => {
       setStart(true); // trigger spin
+      setIsSpinning(true);
     }, 50); // small delay ensures React registers the change
   };
 
@@ -139,6 +141,7 @@ export default function Page() {
       setWinners((prev) => [...prev, winnerWorkId]);
     }
     triggerConfetti();
+    setIsSpinning(false);
   };
 
   const triggerConfetti = () => {
@@ -202,9 +205,6 @@ export default function Page() {
                     height={80}
                     alt="paypal icon"
                   />
-                  {/* <span className="font-bold text-2xl max-w-md break-words whitespace-normal mt-1">
-                    {prizeList}
-                  </span> */}
                   <RoulettePro
                     prizes={prizeList}
                     prizeIndex={prizeIndex}
@@ -214,9 +214,18 @@ export default function Page() {
                     spinningTime={5}
                   />
 
-                  <Button onClick={handleStart} size={"lg"}>
+                  <Button
+                    onClick={handleStart}
+                    size={"lg"}
+                    disabled={isSpinning}
+                  >
                     Start
                   </Button>
+                  {winners.length > 0 && !isSpinning && (
+                    <span className="font-bold text-6xl mt-1 p-4 rounded-md bg-green-300">
+                      🎉 {winners[winners.length - 1]}
+                    </span>
+                  )}
                 </div>
               </Card>
             </div>
