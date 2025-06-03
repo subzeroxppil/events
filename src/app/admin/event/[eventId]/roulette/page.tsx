@@ -124,9 +124,13 @@ export default function Page() {
     return baseOffset + Math.floor(Math.random() * maxOffset);
   }
 
+  const spinSound =
+    typeof Audio !== "undefined" ? new Audio("/sounds/spin.wav") : null;
+
   const handleStart = () => {
     const prizeIndex = getValidPrizeIndex(prizeList, winners);
     setPrizeIndex(prizeIndex);
+    spinSound?.play();
 
     setStart(false); // reset
     setTimeout(() => {
