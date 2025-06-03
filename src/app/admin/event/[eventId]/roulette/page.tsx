@@ -123,8 +123,6 @@ export default function Page() {
   }
 
   const handleStart = () => {
-    const winPrizeIndex = Math.floor(Math.random() * 10);
-    const baseOffset = 35;
     const prizeIndex = getValidPrizeIndex(prizeList, winners);
     setPrizeIndex(prizeIndex);
 
