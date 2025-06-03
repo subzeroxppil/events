@@ -29,9 +29,9 @@ export default function Page() {
   const [isSpinning, setIsSpinning] = useState(false);
   const [prizeIndex, setPrizeIndex] = useState(0);
   const [winners, setWinners] = useState<string[]>([]);
-  const [prizeList, setPrizeList] = useState<{ text: string; id: string }[]>(
-    []
-  );
+  const [prizeList, setPrizeList] = useState<
+    { text: string; id: string; image: string }[]
+  >([]);
 
   useEffect(() => {
     if (!eventId) return;
@@ -63,6 +63,7 @@ export default function Page() {
       setPrizeList(
         reproducedPrizeList.map((prize) => ({
           ...prize,
+          image: "",
           id:
             typeof crypto.randomUUID === "function"
               ? crypto.randomUUID()
