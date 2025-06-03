@@ -127,6 +127,8 @@ export default function Home() {
       setError("An error occurred, please try again");
     }
   };
+  const spinSound =
+    typeof Audio !== "undefined" ? new Audio("/sounds/spin2.wav") : null;
 
   const handleSpinClick = async () => {
     if (mustSpin || !workId.current || isSpinClicked) return;
@@ -164,6 +166,7 @@ export default function Home() {
         setError("Prize not found on the wheel.");
         return;
       }
+      spinSound?.play();
       setSpinClickLoading(false);
       setPrizeNumber(index);
       setMustSpin(true);
