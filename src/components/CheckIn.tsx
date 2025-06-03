@@ -191,7 +191,7 @@ const CheckIn = ({ className }: CheckInProps) => {
                           setIsTermsAgree(!!checked)
                         }
                       />
-                      <Label htmlFor="terms" className="gap-0">
+                      <Label className="gap-0">
                         Accept{" "}
                         {isDesktop ? (
                           <Dialog
