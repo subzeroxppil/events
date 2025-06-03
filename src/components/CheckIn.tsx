@@ -107,7 +107,7 @@ const CheckIn = ({ className }: CheckInProps) => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workId: workId.trim(), eventId }),
+        body: JSON.stringify({ workId: workId.trim().toLowerCase(), eventId }),
       });
 
       const result = await res.json();
