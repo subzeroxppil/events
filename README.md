@@ -15,7 +15,7 @@ docker stop <id>       # Stop the container
 docker rm <id>         # Remove the container
 ```
 
-**To remove the imager**
+**To remove the image**
 
 ```bash
 docker rmi paypal-events
