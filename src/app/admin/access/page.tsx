@@ -32,6 +32,41 @@ export default function Page() {
 
   const [admins, setAdmins] = useState<{ email: string }[]>([]);
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState("");
+  const handleAddAdmin = async () => {
+    setAddError("");
+
+    const email = newAdminEmail.trim().toLowerCase();
+    if (!email) {
+      setAddError("Email is required.");
+      return;
+    }
+
+    setAdding(true);
+    try {
+      const res = await fetch("/api/admin/access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }), // always adds as EVENTADMIN
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setAddError(data.message || "Failed to add admin.");
+      } else {
+        toast.success("Event admin added");
+        setAdmins((prev) => [...prev, { email }]);
+        setNewAdminEmail("");
+      }
+    } catch (err) {
+      console.error(err);
+      setAddError("An error occurred while adding admin.");
+    } finally {
+      setAdding(false);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/admin/access")
@@ -95,6 +130,33 @@ export default function Page() {
               />
             ))}
           </div>
+          {currentUserRole === "SUPERADMIN" && (
+            <div className="flex flex-col mt-4">
+              <Label htmlFor="new-admin-email">Add new admin</Label>
+              <p className="text-muted-foreground mt-1 text-sm">
+                This admin will be able to organise events, unable to remove
+                other admins.
+              </p>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  id="new-admin-email"
+                  type="email"
+                  placeholder="Enter admin email"
+                  value={newAdminEmail}
+                  onChange={(e) => setNewAdminEmail(e.target.value)}
+                  className="flex-1"
+                />
+                <Button onClick={handleAddAdmin} disabled={adding}>
+                  {adding ? <LoadingSpinner /> : "Add"}
+                </Button>
+              </div>
+              {addError && (
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <CircleAlert size={16} /> {addError}
+                </p>
+              )}
+            </div>
+          )}
         </Card>
       </div>
     </div>
