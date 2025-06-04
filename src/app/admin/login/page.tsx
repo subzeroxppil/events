@@ -47,6 +47,7 @@ export default function Page() {
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
     try {
       // Input validation
       const res = await fetch(
@@ -64,12 +65,14 @@ export default function Page() {
 
       if (!data.authorized) {
         setError("Email account does not have access to admin portal");
+        setLoading(false);
         return;
       }
 
       setStage("otp");
 
       signInWithEmail(email.trim());
+      setLoading(false);
     } catch (error) {
       setError("An error occurred, please try again");
     }
