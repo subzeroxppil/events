@@ -47,22 +47,28 @@ export default function Page() {
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    // Input validation
-    const authorizedAdmins = [
-      "joshualai9922@gmail.com",
-      "welai@paypal.com",
-      "jokoh@paypal.com",
-      "rmallan@paypal.com",
-    ];
-
-    if (!authorizedAdmins.includes(email.trim())) {
-      setError("Email account does not have access to admin portal");
-      return;
-    }
-
-    setStage("otp");
     try {
+      // Input validation
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/checkAdmin`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!data.authorized) {
+        setError("Email account does not have access to admin portal");
+        return;
+      }
+
+      setStage("otp");
+
       signInWithEmail(email.trim());
     } catch (error) {
       setError("An error occurred, please try again");
@@ -138,7 +144,7 @@ export default function Page() {
                   </>
                 )}
                 {error && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex gap-1 mt-1">
                     <div>
                       <CircleAlert size="20px" color="#ef4444" />
                     </div>
