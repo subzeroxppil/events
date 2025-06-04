@@ -63,6 +63,9 @@ export function UserNav() {
             )}
 
             <DropdownMenuGroup>
+              <Link href="/admin/access">
+                <DropdownMenuItem>Admin Access</DropdownMenuItem>
+              </Link>
               <DropdownMenuItem onClick={handleSignOut}>
                 Sign out
               </DropdownMenuItem>
