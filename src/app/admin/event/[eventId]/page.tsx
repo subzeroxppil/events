@@ -102,6 +102,7 @@ type DetailsData = {
   event: EventDetails;
   stats: EventStats;
   groupCounts: GroupCount[];
+  prizes: PrizeData[];
 };
 
 type UserData = {
@@ -110,6 +111,11 @@ type UserData = {
   groupNumber: number;
   prizeName: string | null;
   brandName: string | null;
+};
+
+type PrizeData = {
+  name: string;
+  quantity: number;
 };
 
 export default function Page() {
@@ -123,6 +129,7 @@ export default function Page() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [usersDataLoading, setUsersDataLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [prizes, setPrizes] = useState<PrizeData[]>([]);
 
   const router = useRouter();
 
@@ -359,18 +366,28 @@ export default function Page() {
                       <CardHeader>
                         <CardDescription className="text-lg flex items-center gap-1">
                           <LoaderPinwheel size={20} />
-                          Lucky Draw Completions
+                          Lucky Draw Completions:{" "}
+                          <span className="font-bold text-black">
+                            {detailsData?.stats.luckyDrawCompleted}
+                          </span>
                         </CardDescription>
-                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                          {detailsData?.stats.luckyDrawCompleted}
-                        </CardTitle>
-                        <CardAction></CardAction>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Prize</TableHead>
+                              <TableHead>Quantity Left</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {detailsData?.prizes.map((prize) => (
+                              <TableRow key={prize.name}>
+                                <TableCell>{prize.name}</TableCell>
+                                <TableCell>{prize.quantity}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       </CardHeader>
-                      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                        <div className="line-clamp-1 flex gap-2 font-medium">
-                          Prizes left: {detailsData?.stats.totalPrizesLeft}
-                        </div>
-                      </CardFooter>
                     </>
                   </Card>
                 ) : (

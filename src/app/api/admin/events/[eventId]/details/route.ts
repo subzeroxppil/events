@@ -54,6 +54,14 @@ export async function GET(
       _count: true,
     });
 
+    const prizes = await prisma.prize.findMany({
+      where: { eventId: eventIdNum },
+      select: {
+        name: true,
+        quantity: true,
+      },
+    });
+
     return NextResponse.json({
       event,
       stats: {
@@ -66,6 +74,7 @@ export async function GET(
         groupNumber: g.groupNumber,
         count: g._count,
       })),
+      prizes,
     });
   } catch (err) {
     console.error(err);
