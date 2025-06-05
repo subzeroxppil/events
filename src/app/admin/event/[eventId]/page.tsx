@@ -71,6 +71,7 @@ const headers: Record<string, string> = {
   workId: "Corp Pass ID",
   registeredAt: "Registration Time",
   prizeName: "Prize",
+  businessUnit: "Business Unit",
 };
 
 type GroupCount = {
@@ -130,6 +131,9 @@ export default function Page() {
   const [usersDataLoading, setUsersDataLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [prizes, setPrizes] = useState<PrizeData[]>([]);
+  const [businessUnitMap, setBusinessUnitMap] = useState<
+    Record<string, string>
+  >({});
 
   const router = useRouter();
 
@@ -173,12 +177,17 @@ export default function Page() {
     loadSortedUsers();
   }, [sortBy]);
 
-  const fetchEventDetails = async (eventId: string) => {
+  const fetchBusinessUnitMappings = async () => {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/details`
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/businessUnit`
     );
-    if (!res.ok) throw new Error("Failed to fetch event details");
-    return res.json();
+    if (!res.ok) return;
+    const data: { email: string; businessUnit: string }[] = await res.json();
+    const map: Record<string, string> = {};
+    for (const item of data) {
+      map[item.email.split("@")[0].toLowerCase().trim()] = item.businessUnit;
+    }
+    setBusinessUnitMap(map);
   };
 
   const fetchEventUsers = async (eventId: string, sortBy: string) => {
@@ -187,6 +196,20 @@ export default function Page() {
     );
     if (!res.ok) throw new Error("Failed to fetch event users");
     return res.json();
+  };
+
+  const fetchEventDetails = async (eventId: string) => {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/details`
+    );
+    if (!res.ok) throw new Error("Failed to fetch event details");
+
+    const data = await res.json();
+    if (data?.event?.country?.toLowerCase() === "singapore") {
+      fetchBusinessUnitMappings();
+    }
+
+    return data;
   };
 
   const handleDeleteEvent = async () => {
@@ -492,6 +515,9 @@ export default function Page() {
                               <TableRow>
                                 <TableHead>{headers.registeredAt}</TableHead>
                                 <TableHead>{headers.workId}</TableHead>
+                                {Object.keys(businessUnitMap).length > 0 && (
+                                  <TableHead>{headers.businessUnit}</TableHead>
+                                )}
                                 {detailsData?.event.groupingStrategy && (
                                   <TableHead>{headers.groupNumber}</TableHead>
                                 )}
@@ -516,6 +542,13 @@ export default function Page() {
                                   <TableCell className="font-medium">
                                     {user.workId}
                                   </TableCell>
+                                  {Object.keys(businessUnitMap).length > 0 && (
+                                    <TableCell>
+                                      {businessUnitMap[
+                                        user.workId.toLowerCase()
+                                      ] || "-"}
+                                    </TableCell>
+                                  )}
                                   {detailsData?.event.groupingStrategy && (
                                     <TableCell>{user.groupNumber}</TableCell>
                                   )}
