@@ -402,7 +402,7 @@ export default function Page() {
                       <Button variant={"outline"}>Roulette game</Button>
                     </Link>
                     <AlertDialog>
-                      <AlertDialogTrigger>
+                      <AlertDialogTrigger asChild>
                         <Button variant={"outline"}>Delete event</Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
