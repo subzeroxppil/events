@@ -65,6 +65,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { TrendingUp } from "lucide-react";
+import { LabelList, Pie, PieChart } from "recharts";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 const headers: Record<string, string> = {
   groupNumber: "Group Number",
@@ -130,10 +140,13 @@ export default function Page() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [usersDataLoading, setUsersDataLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [prizes, setPrizes] = useState<PrizeData[]>([]);
   const [businessUnitMap, setBusinessUnitMap] = useState<
     Record<string, string>
   >({});
+  const [chartData, setChartData] = useState<
+    { chartBusinessUnit: string; attendees: number; fill: string }[]
+  >([]);
+  const [chartConfig, setChartConfig] = useState<ChartConfig>({});
 
   const router = useRouter();
 
@@ -177,6 +190,14 @@ export default function Page() {
     loadSortedUsers();
   }, [sortBy]);
 
+  const fetchBusinessUnitBreakdown = async (eventId: string) => {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/businessUnitBreakdown`
+    );
+    if (!res.ok) return [];
+    return res.json();
+  };
+
   const fetchBusinessUnitMappings = async () => {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/businessUnit`
@@ -207,6 +228,29 @@ export default function Page() {
     const data = await res.json();
     if (data?.event?.country?.toLowerCase() === "singapore") {
       fetchBusinessUnitMappings();
+      const chartBreakdown = await fetchBusinessUnitBreakdown(eventId);
+      setChartData(
+        chartBreakdown.map((item: any, i: any) => ({
+          chartBusinessUnit: item.businessUnit,
+          attendees: item.count,
+          fill: getColor(i),
+        }))
+      );
+
+      const dynamicChartConfig: ChartConfig = {};
+
+      for (const item of chartBreakdown) {
+        dynamicChartConfig[item.businessUnit] = {
+          label: item.businessUnit,
+          color: "", // optional, if using `fill` in chartData instead
+        };
+      }
+
+      dynamicChartConfig["attendees"] = {
+        label: "Total",
+      };
+
+      setChartConfig(dynamicChartConfig);
     }
 
     return data;
@@ -269,6 +313,56 @@ export default function Page() {
 
     XLSX.writeFile(workbook, `${detailsData?.event.name}_attendees.xlsx`);
   };
+
+  // const chartData = [
+  //   {
+  //     chartBusinessUnit: "chrome",
+  //     attendees: 275,
+  //     fill: "var(--color-chrome)",
+  //   },
+  //   {
+  //     chartBusinessUnit: "safari",
+  //     attendees: 200,
+  //     fill: "var(--color-safari)",
+  //   },
+  //   {
+  //     chartBusinessUnit: "firefox",
+  //     attendees: 187,
+  //     fill: "var(--color-firefox)",
+  //   },
+  //   { chartBusinessUnit: "edge", attendees: 173, fill: "var(--color-edge)" },
+  //   { chartBusinessUnit: "other", attendees: 90, fill: "var(--color-other)" },
+  // ];
+
+  const PIE_COLORS = [
+    "#8884d8",
+    "#82ca9d",
+    "#ffc658",
+    "#ff8042",
+    "#a4de6c",
+    "#d0ed57",
+    "#8dd1e1",
+    "#83a6ed",
+    "#f56991",
+    "#9b59b6",
+    "#2ecc71",
+    "#3498db",
+    "#f1c40f",
+    "#e67e22",
+    "#1abc9c",
+    "#e74c3c",
+    "#34495e",
+    "#7f8c8d",
+    "#c0392b",
+    "#16a085",
+    "#2980b9",
+    "#f39c12",
+    "#27ae60",
+    "#8e44ad",
+    "#95a5a6",
+  ];
+
+  const getColor = (index: number) => PIE_COLORS[index % PIE_COLORS.length];
 
   return (
     <div className="flex flex-1 flex-col">
@@ -372,16 +466,62 @@ export default function Page() {
                   </CardFooter>
                 </Card>
                 <Card className="@container/card shadow-none">
-                  <CardHeader>
-                    <CardDescription className="text-lg flex items-center gap-1">
-                      <PersonStanding size={20} />
-                      Attendance
-                    </CardDescription>
-                    <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                      {detailsData?.stats.totalAttendees}
-                    </CardTitle>
-                    <CardAction></CardAction>
-                  </CardHeader>
+                  {Object.keys(businessUnitMap).length > 0 ? (
+                    <>
+                      <CardHeader className="items-center pb-0">
+                        <CardDescription className="text-lg flex items-center gap-1">
+                          <PersonStanding size={20} />
+                          Attendance:
+                          <span className="font-bold text-black">
+                            {detailsData?.stats.totalAttendees}
+                          </span>
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex-1 pb-0">
+                        <ChartContainer
+                          config={chartConfig}
+                          className="mx-auto aspect-square max-h-[300px]"
+                        >
+                          <PieChart>
+                            <ChartTooltip
+                              content={
+                                <ChartTooltipContent
+                                  nameKey="attendees"
+                                  hideLabel
+                                />
+                              }
+                            />
+                            <Pie data={chartData} dataKey="attendees" />
+                            <ChartLegend
+                              content={
+                                <ChartLegendContent nameKey="chartBusinessUnit" />
+                              }
+                              className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 *:justify-center"
+                            />
+                          </PieChart>
+                        </ChartContainer>
+                      </CardContent>
+                      <CardFooter className="flex-col gap-2 text-sm">
+                        <div className="flex items-center gap-2 leading-none font-medium">
+                          Attendance proportion by business unit{" "}
+                        </div>
+                        <div className="text-muted-foreground leading-none">
+                          Hover on the piechart to see total
+                        </div>
+                      </CardFooter>
+                    </>
+                  ) : (
+                    <CardHeader>
+                      <CardDescription className="text-lg flex items-center gap-1">
+                        <PersonStanding size={20} />
+                        Attendance
+                      </CardDescription>
+                      <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                        {detailsData?.stats.totalAttendees}
+                      </CardTitle>
+                      <CardAction></CardAction>
+                    </CardHeader>
+                  )}
                 </Card>
                 {detailsData?.event.hasLuckyDraw ? (
                   <Card className="@container/card shadow-none">
@@ -389,7 +529,7 @@ export default function Page() {
                       <CardHeader>
                         <CardDescription className="text-lg flex items-center gap-1">
                           <LoaderPinwheel size={20} />
-                          Lucky Draw Completions:{" "}
+                          Lucky Draw Completions:
                           <span className="font-bold text-black">
                             {detailsData?.stats.luckyDrawCompleted}
                           </span>
