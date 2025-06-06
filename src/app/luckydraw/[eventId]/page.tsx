@@ -35,6 +35,7 @@ export default function Home() {
     undefined
   );
   const [spinClickLoading, setSpinClickLoading] = useState(false);
+  const [wheelColors, setWheelColors] = useState<string[]>([]);
 
   let workId = useRef<string | null>(null);
   const router = useRouter();
@@ -107,6 +108,7 @@ export default function Home() {
     }
   };
 
+  const BASE_COLORS = ["#173066", "#509bff", "#0463ce", "#63cbfb"];
   const fetchItemsForWheel = async () => {
     try {
       const res = await fetch(
@@ -119,7 +121,14 @@ export default function Home() {
         const prizes = result.map((item: { prize: any }, index: any) => ({
           option: item.prize,
         }));
+
         setWheelData(prizes);
+        // Use first 3 colors if odd, all 4 if even
+        const colorsToUse =
+          prizes.length % 2 === 0 ? BASE_COLORS.slice(0, 3) : BASE_COLORS;
+
+        setWheelColors(colorsToUse);
+        console.log("colorsToUse", colorsToUse);
       } else {
         setError("An error occurred, please try again");
       }
@@ -259,7 +268,7 @@ export default function Home() {
               mustStartSpinning={mustSpin}
               prizeNumber={prizeNumber}
               data={wheelData}
-              backgroundColors={["#173066", "#0463ce", "#63cbfb"]}
+              backgroundColors={wheelColors}
               textColors={["#ffffff"]}
               onStopSpinning={handleStopSpinning}
               outerBorderColor="#ebebee"
