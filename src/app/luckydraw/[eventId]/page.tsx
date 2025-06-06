@@ -265,7 +265,7 @@ export default function Home() {
                 outerBorderColor="#ebebee"
                 radiusLineColor="#ebebee"
                 fontFamily="Arial"
-                fontSize={16}
+                fontSize={14}
                 startingOptionIndex={startingIndex}
               />
             </div>

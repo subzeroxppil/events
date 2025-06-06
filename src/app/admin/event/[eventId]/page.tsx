@@ -227,7 +227,7 @@ export default function Page() {
 
     const data = await res.json();
     if (data?.event?.country?.toLowerCase() === "singapore") {
-      fetchBusinessUnitMappings();
+      await fetchBusinessUnitMappings();
       const chartBreakdown = await fetchBusinessUnitBreakdown(eventId);
       setChartData(
         chartBreakdown.map((item: any, i: any) => ({
@@ -466,7 +466,8 @@ export default function Page() {
                   </CardFooter>
                 </Card>
                 <Card className="@container/card shadow-none">
-                  {Object.keys(businessUnitMap).length > 0 ? (
+                  {Object.keys(businessUnitMap).length > 0 &&
+                  (detailsData?.stats?.totalAttendees ?? 0) ? (
                     <>
                       <CardHeader className="items-center pb-0">
                         <CardDescription className="text-lg flex items-center gap-1">
@@ -502,10 +503,10 @@ export default function Page() {
                         </ChartContainer>
                       </CardContent>
                       <CardFooter className="flex-col gap-2 text-sm">
-                        <div className="flex items-center gap-2 leading-none font-medium">
+                        <div className="flex items-center gap-2 leading-none font-medium text-center">
                           Attendance proportion by business unit{" "}
                         </div>
-                        <div className="text-muted-foreground leading-none">
+                        <div className="text-muted-foreground leading-none text-center">
                           Hover on the piechart to see total
                         </div>
                       </CardFooter>
