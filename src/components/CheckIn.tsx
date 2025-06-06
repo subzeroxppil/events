@@ -31,6 +31,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import confetti from "canvas-confetti";
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 interface CheckInProps {
@@ -115,6 +116,7 @@ const CheckIn = ({ className }: CheckInProps) => {
       if (res.ok) {
         setGroupNumber(result.groupNumber);
         setShowResult(true);
+        triggerConfetti();
       } else {
         setError(result.message || "An error occurred, please try again");
         setLoading(false);
@@ -123,6 +125,46 @@ const CheckIn = ({ className }: CheckInProps) => {
       setError("An error occurred, please try again");
       setLoading(false);
     }
+  };
+
+  const triggerConfetti = () => {
+    const end = Date.now() + 0.5 * 1000; // 3 seconds
+    const colors = [
+      "#a786ff", // soft lavender
+      "#fd8bbc", // pink coral
+      "#eca184", // peachy orange
+      "#f8deb1", // pale gold
+      "#74d3ae", // mint green
+      "#57c7e3", // sky blue
+      "#ffb6b9", // blush
+      "#f6ab6c", // orange sherbet
+      "#ffe156", // bright yellow
+      "#cdb4db", // pastel purple
+    ];
+    const frame = () => {
+      if (Date.now() > end) return;
+
+      confetti({
+        particleCount: 2,
+        angle: 60,
+        spread: 55,
+        startVelocity: 60,
+        origin: { x: 0, y: 0.5 },
+        colors: colors,
+      });
+      confetti({
+        particleCount: 2,
+        angle: 120,
+        spread: 55,
+        startVelocity: 60,
+        origin: { x: 1, y: 0.5 },
+        colors: colors,
+      });
+
+      requestAnimationFrame(frame);
+    };
+
+    frame();
   };
 
   return (
