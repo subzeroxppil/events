@@ -432,11 +432,11 @@ export default function Page() {
               <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-[#f8f8f8] *:data-[slot=card]:border-0 lg:px-6 xl:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]">
                 <Card className="@container/card shadow-none">
                   <CardHeader>
-                    <CardDescription className="text-lg flex items-center gap-1">
+                    <CardTitle className="text-lg flex items-center gap-1 font-bold">
                       <ReceiptText size={20} />
                       Event Details
-                    </CardDescription>
-                    <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                    </CardTitle>
+                    <CardDescription className="text-2xl tabular-nums @[250px]/card:text-3xl text-black-100">
                       {(() => {
                         const datetime = new Date(
                           detailsData?.event.eventStartTime || ""
@@ -454,7 +454,7 @@ export default function Page() {
                           </>
                         );
                       })()}
-                    </CardTitle>
+                    </CardDescription>
                   </CardHeader>
                   <CardFooter className="flex-col items-start gap-1.5 text-sm">
                     <div className="line-clamp-1 flex gap-2 font-medium">
@@ -470,13 +470,13 @@ export default function Page() {
                   (detailsData?.stats?.totalAttendees ?? 0) ? (
                     <>
                       <CardHeader className="items-center pb-0">
-                        <CardDescription className="text-lg flex items-center gap-1">
+                        <CardTitle className="text-lg flex items-center gap-1 font-bold">
                           <PersonStanding size={20} />
                           Attendance:
-                          <span className="font-bold text-black">
+                          <span className="text-black">
                             {detailsData?.stats.totalAttendees}
                           </span>
-                        </CardDescription>
+                        </CardTitle>
                       </CardHeader>
                       <CardContent className="flex-1 pb-0">
                         <ChartContainer
@@ -513,10 +513,10 @@ export default function Page() {
                     </>
                   ) : (
                     <CardHeader>
-                      <CardDescription className="text-lg flex items-center gap-1">
+                      <CardTitle className="text-lg flex items-center gap-1 font-bold">
                         <PersonStanding size={20} />
                         Attendance
-                      </CardDescription>
+                      </CardTitle>
                       <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
                         {detailsData?.stats.totalAttendees}
                       </CardTitle>
@@ -528,13 +528,13 @@ export default function Page() {
                   <Card className="@container/card shadow-none">
                     <>
                       <CardHeader>
-                        <CardDescription className="text-lg flex items-center gap-1">
+                        <CardTitle className="text-lg flex items-center gap-1 font-bold">
                           <LoaderPinwheel size={20} />
                           Lucky Draw Completions:
                           <span className="font-bold text-black">
                             {detailsData?.stats.luckyDrawCompleted}
                           </span>
-                        </CardDescription>
+                        </CardTitle>
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -561,17 +561,17 @@ export default function Page() {
                   <Card className="@container/card shadow-none">
                     <>
                       <CardHeader>
-                        <CardDescription className="text-lg flex items-center gap-1">
+                        <CardTitle className="text-lg flex items-center gap-1 font-bold">
                           <UsersRound size={20} />
                           Groups Formed
-                        </CardDescription>
+                        </CardTitle>
                         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
                           {detailsData?.groupCounts.length}
                         </CardTitle>
                         <CardAction></CardAction>
                       </CardHeader>
                       <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                        <div className="line-clamp-1 flex gap-1 font-medium">
+                        <div className="line-clamp-1 flex gap-1 font-medium text-muted-foreground">
                           Grouping Strategy:{" "}
                           {groupingStrategyMap[
                             detailsData?.event.groupingStrategy ?? ""
