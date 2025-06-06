@@ -142,6 +142,13 @@ export default function Page() {
             !prize.quantity ||
             prize.quantity <= 0
           ) {
+            if (prize.name.trim().length > 18) {
+              setError(
+                `Prize Name "${prize.name.trim()}" is too long. (Max 18 characters, so that it will fit on the lucky draw wheel)`
+              );
+              return;
+            }
+
             setError("Please fill in all fields for your lucky draw prizes.");
             return;
           }
