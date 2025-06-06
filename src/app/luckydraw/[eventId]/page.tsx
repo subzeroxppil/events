@@ -226,84 +226,84 @@ export default function Home() {
   };
 
   return (
-    <div className="flex w-full justify-center px-6 pt-6 pb-10 md:p-10">
-      <div className="flex flex-col gap-4">
-        {initialLoading ? (
-          <div className="flex flex-col items-center self-center">
-            <LoadingSpinner />
+    <div className="flex w-full justify-center px-6 pt-6 pb-10 md:p-10 md:w-2xl self-center">
+      {/* <div className="flex flex-col gap-4"> */}
+      {initialLoading ? (
+        <div className="flex flex-col items-center self-center">
+          <LoadingSpinner />
+        </div>
+      ) : error ? (
+        <p className="text-center text-red-600 dark:text-red-200">{error}</p>
+      ) : isClient ? (
+        <Card className="p-6 w-full">
+          <Button
+            className="cursor-pointer w-[80px]"
+            variant="outline"
+            onClick={handleSignOut}
+          >
+            Sign out
+          </Button>
+          <div className="flex flex-col items-center text-center w-full">
+            <Image
+              src="/paypal_logo.png"
+              width={60}
+              height={60}
+              alt="paypal icon"
+            />
+
+            <p className="mb-2 text-2xl font-bold">Lucky Draw</p>
+            <p className="text-muted-foreground">Thank you for coming!</p>
           </div>
-        ) : error ? (
-          <p className="text-center text-red-600 dark:text-red-200">{error}</p>
-        ) : isClient ? (
-          <Card className="mx-auto p-6">
+          <div className="w-full flex justify-center">
+            <Wheel
+              mustStartSpinning={mustSpin}
+              prizeNumber={prizeNumber}
+              data={wheelData}
+              backgroundColors={["#173066", "#0463ce", "#63cbfb"]}
+              textColors={["#ffffff"]}
+              onStopSpinning={handleStopSpinning}
+              outerBorderColor="#ebebee"
+              radiusLineColor="#ebebee"
+              fontFamily="Arial"
+              fontSize={14}
+              startingOptionIndex={startingIndex}
+            />
+          </div>
+
+          <div className="flex flex-col items-center mt-4 w-full">
             <Button
-              className="cursor-pointer w-[80px]"
-              variant="outline"
-              onClick={handleSignOut}
+              onClick={handleSpinClick}
+              disabled={mustSpin || spinComplete || isSpinClicked}
+              size={"lg"}
+              className="w-[70px]"
             >
-              Sign out
+              {spinClickLoading ? <LoadingSpinner /> : "SPIN"}
             </Button>
-            <div className="flex flex-col items-center text-center">
-              <Image
-                src="/paypal_logo.png"
-                width={60}
-                height={60}
-                alt="paypal icon"
-              />
 
-              <p className="mb-2 text-2xl font-bold">Lucky Draw</p>
-              <p className="text-muted-foreground">Thank you for coming!</p>
-            </div>
-            <div className="w-auto">
-              <Wheel
-                mustStartSpinning={mustSpin}
-                prizeNumber={prizeNumber}
-                data={wheelData}
-                backgroundColors={["#173066", "#0463ce", "#63cbfb"]}
-                textColors={["#ffffff"]}
-                onStopSpinning={handleStopSpinning}
-                outerBorderColor="#ebebee"
-                radiusLineColor="#ebebee"
-                fontFamily="Arial"
-                fontSize={14}
-                startingOptionIndex={startingIndex}
-              />
-            </div>
-
-            <div className="flex flex-col items-center mt-4">
-              <Button
-                onClick={handleSpinClick}
-                disabled={mustSpin || spinComplete || isSpinClicked}
-                size={"lg"}
-                className="w-[70px]"
-              >
-                {spinClickLoading ? <LoadingSpinner /> : "SPIN"}
-              </Button>
-
-              {spinComplete && (
-                <>
-                  <div className="flex flex-col items-center text-center p-2 mt-2 gap-2">
-                    <p className="text-lg font-semibold">
-                      {`🎉 You won: ${resultPrizeName} (${resultPrizeBrand})!`}
-                    </p>
-                    <div>
-                      <Image
-                        src={resultPrizeImgSrc}
-                        alt="prize picture"
-                        width={150}
-                        height={150}
-                        className="object-contain"
-                      />
-                    </div>
+            {spinComplete && (
+              <>
+                <div className="flex flex-col items-center text-center p-2 mt-2 gap-2">
+                  <p className="text-lg font-semibold">
+                    {`🎉 You won: ${resultPrizeName} (${resultPrizeBrand})!`}
+                  </p>
+                  <div>
+                    <Image
+                      src={resultPrizeImgSrc}
+                      alt="prize picture"
+                      width={150}
+                      height={150}
+                      className="object-contain"
+                    />
                   </div>
-                </>
-              )}
-            </div>
-          </Card>
-        ) : (
-          <></>
-        )}
-      </div>
+                </div>
+              </>
+            )}
+          </div>
+        </Card>
+      ) : (
+        <></>
+      )}
+      {/* </div> */}
     </div>
   );
 }
