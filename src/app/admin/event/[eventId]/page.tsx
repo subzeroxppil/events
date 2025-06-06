@@ -281,6 +281,7 @@ export default function Page() {
   const handleExport = () => {
     const includeGroupNumber = !!detailsData?.event.groupingStrategy;
     const includePrize = !!detailsData?.event.hasLuckyDraw;
+    const includeBusinessUnit = Object.keys(businessUnitMap).length > 0;
 
     const exportData = usersData.map((user) => {
       const row: Record<string, string | number> = {
@@ -292,6 +293,11 @@ export default function Page() {
           : "-",
         [headers.workId]: user.workId,
       };
+
+      if (includeBusinessUnit) {
+        row[headers.businessUnit] =
+          businessUnitMap[user.workId.toLowerCase()] || "-";
+      }
 
       if (includeGroupNumber) {
         row[headers.groupNumber] = user.groupNumber;
