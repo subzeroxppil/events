@@ -148,7 +148,7 @@ const CheckIn = ({ className }: CheckInProps) => {
         particleCount: 2,
         angle: 60,
         spread: 55,
-        startVelocity: 60,
+        startVelocity: 50,
         origin: { x: 0, y: 0.5 },
         colors: colors,
       });
@@ -156,7 +156,7 @@ const CheckIn = ({ className }: CheckInProps) => {
         particleCount: 2,
         angle: 120,
         spread: 55,
-        startVelocity: 60,
+        startVelocity: 50,
         origin: { x: 1, y: 0.5 },
         colors: colors,
       });
