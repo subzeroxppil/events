@@ -66,7 +66,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { TrendingUp } from "lucide-react";
-import { LabelList, Pie, PieChart } from "recharts";
+import { LabelList, Pie, PieChart, ResponsiveContainer } from "recharts";
 import {
   ChartConfig,
   ChartContainer,
@@ -247,7 +247,7 @@ export default function Page() {
       }
 
       dynamicChartConfig["attendees"] = {
-        label: "Total",
+        label: "attendees",
       };
 
       setChartConfig(dynamicChartConfig);
@@ -487,9 +487,9 @@ export default function Page() {
                       <CardContent className="flex-1 pb-0">
                         <ChartContainer
                           config={chartConfig}
-                          className="mx-auto aspect-square w-full"
+                          className="mx-auto aspect-square max-h-[300px]"
                         >
-                          <PieChart>
+                          <PieChart className="">
                             <ChartTooltip
                               content={
                                 <ChartTooltipContent
@@ -498,26 +498,32 @@ export default function Page() {
                                 />
                               }
                             />
-                            <Pie
-                              data={chartData}
-                              dataKey="attendees"
-                              className=""
-                            />
-                            <ChartLegend
+                            <Pie data={chartData} dataKey="attendees" />
+                            {/* <ChartLegend
                               content={
                                 <ChartLegendContent nameKey="chartBusinessUnit" />
                               }
                               className="flex flex-col gap-1 items-start"
-                            />
+                            /> */}
                           </PieChart>
                         </ChartContainer>
+                        <div className="flex flex-col gap-1">
+                          {chartData.map((item, i) => (
+                            <div key={i} className="flex gap-2 text-sm">
+                              <div
+                                className="w-3 h-3 rounded-sm shrink-0 mt-[2px]"
+                                style={{ backgroundColor: item.fill }}
+                              ></div>
+                              <span className="text-muted-foreground text-xs">
+                                {item.chartBusinessUnit} ({item.attendees})
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </CardContent>
                       <CardFooter className="flex-col gap-2 text-sm">
                         <div className="flex items-center gap-2 leading-none font-medium text-center">
                           Attendance proportion by business unit{" "}
-                        </div>
-                        <div className="text-muted-foreground leading-none text-center">
-                          Hover on the piechart to see total
                         </div>
                       </CardFooter>
                     </>
