@@ -284,7 +284,7 @@ export default function Home() {
               <>
                 <div className="flex flex-col items-center text-center p-2 mt-2 gap-2">
                   <p className="text-lg font-semibold">
-                    {`🎉 You won: ${resultPrizeName} (${resultPrizeBrand})!`}
+                    {`🎉 You won: ${resultPrizeName} - ${resultPrizeBrand}!`}
                   </p>
                   <div>
                     <Image
