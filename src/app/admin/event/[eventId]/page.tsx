@@ -479,7 +479,7 @@ export default function Page() {
                         <CardTitle className="text-lg flex items-center gap-1 font-bold">
                           <PersonStanding size={20} />
                           Attendance:
-                          <span className="text-black">
+                          <span className="font-bold text-black">
                             {detailsData?.stats.totalAttendees}
                           </span>
                         </CardTitle>
@@ -507,7 +507,7 @@ export default function Page() {
                             /> */}
                           </PieChart>
                         </ChartContainer>
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-1 mt-1">
                           {chartData.map((item, i) => (
                             <div key={i} className="flex gap-2 text-sm">
                               <div
@@ -521,11 +521,6 @@ export default function Page() {
                           ))}
                         </div>
                       </CardContent>
-                      <CardFooter className="flex-col gap-2 text-sm">
-                        <div className="flex items-center gap-2 leading-none font-medium text-center">
-                          Attendance proportion by business unit{" "}
-                        </div>
-                      </CardFooter>
                     </>
                   ) : (
                     <CardHeader>
