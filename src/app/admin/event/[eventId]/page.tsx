@@ -487,7 +487,7 @@ export default function Page() {
                       <CardContent className="flex-1 pb-0">
                         <ChartContainer
                           config={chartConfig}
-                          className="mx-auto aspect-square max-h-[300px]"
+                          className="mx-auto aspect-square w-full"
                         >
                           <PieChart>
                             <ChartTooltip
@@ -498,12 +498,16 @@ export default function Page() {
                                 />
                               }
                             />
-                            <Pie data={chartData} dataKey="attendees" />
+                            <Pie
+                              data={chartData}
+                              dataKey="attendees"
+                              className=""
+                            />
                             <ChartLegend
                               content={
                                 <ChartLegendContent nameKey="chartBusinessUnit" />
                               }
-                              className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 *:justify-center"
+                              className="flex flex-col gap-1 items-start"
                             />
                           </PieChart>
                         </ChartContainer>
