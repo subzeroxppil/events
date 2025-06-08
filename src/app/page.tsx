@@ -12,7 +12,13 @@ export default function Page() {
         <div className="flex flex-col gap-4">
           <Card className="mx-auto w-full max-w-sm p-6">
             <div className="flex flex-col items-center text-center">
-              <House size={40} />
+              {/* <House size={40} /> */}
+              <Image
+                src="/paypal_logo.png"
+                width={70}
+                height={35}
+                alt="paypal icon"
+              />
               <p className="mb-2 text-2xl font-bold">Events</p>
               <div className="w-full flex flex-col gap-2 mt-4">
                 <Link href="/admin">
