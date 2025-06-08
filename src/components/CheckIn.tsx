@@ -126,7 +126,7 @@ const CheckIn = ({ className }: CheckInProps) => {
       if (res.ok) {
         setGroupNumber(result.groupNumber);
         setShowResult(true);
-        triggerConfetti();
+        // triggerConfetti();
       } else {
         setError(result.message || "An error occurred, please try again");
         setLoading(false);
