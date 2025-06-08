@@ -395,21 +395,32 @@ export default function Page() {
                       })}
                     </span>
                   </div>
-                  <div className="flex gap-1 mt-2">
+                  <div className="flex gap-1 mt-2 flex-col md:flex-row">
                     <Link href={`/admin/event/${eventId}/checkin`}>
-                      <Button variant={"outline"}>QR code: Check In</Button>
+                      <Button variant={"outline"} className="w-full md:w-auto">
+                        QR code: Check In
+                      </Button>
                     </Link>
                     {detailsData?.event.hasLuckyDraw && (
                       <Link href={`/admin/event/${eventId}/luckydraw`}>
-                        <Button variant="outline">QR code: Lucky Draw</Button>
+                        <Button variant="outline" className="w-full md:w-auto">
+                          QR code: Lucky Draw
+                        </Button>
                       </Link>
                     )}
                     <Link href={`/admin/event/${eventId}/roulette`}>
-                      <Button variant={"outline"}>Roulette game</Button>
+                      <Button variant={"outline"} className="w-full md:w-auto">
+                        Roulette game
+                      </Button>
                     </Link>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant={"outline"}>Delete event</Button>
+                        <Button
+                          variant={"outline"}
+                          className="w-full md:w-auto"
+                        >
+                          Delete event
+                        </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>

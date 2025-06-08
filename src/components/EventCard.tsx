@@ -45,13 +45,13 @@ export function EventCard({
           <CardDescription>
             {country} | {location}
           </CardDescription>
-          <div className="flex flex-row flex-start text-muted-foreground text-sm gap-3 items-center">
-            <div className="py-1 rounded-lg flex flex-row items-center gap-1">
-              <Users size={14} />
+          <div className="flex flex-row flex-start text-muted-foreground text-sm gap-x-3 items-center flex-wrap py-1">
+            <div className="rounded-lg flex flex-row items-center gap-1">
+              <Users size={14} className="shrink-0" />
               <div>{attendees}</div>
             </div>
-            <div className="py-1 rounded-lg flex flex-row items-center gap-1">
-              <Clock size={14} />
+            <div className="rounded-lg flex flex-row items-center gap-1">
+              <Clock size={14} className="shrink-0" />
               <div>
                 {new Date(eventStartTime).toLocaleString("en-SG", {
                   dateStyle: "medium",
@@ -59,8 +59,8 @@ export function EventCard({
                 })}
               </div>
             </div>
-            <div className="py-1 rounded-lg flex flex-row items-center gap-1">
-              <SquarePen size={14} />
+            <div className="rounded-lg flex flex-row items-center gap-1">
+              <SquarePen size={14} className="shrink-0" />
               <div>
                 Created {getRelativeTime(createdAt)} by {createdBy}
               </div>
