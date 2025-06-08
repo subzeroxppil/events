@@ -395,7 +395,7 @@ export default function Page() {
                       })}
                     </span>
                   </div>
-                  <div className="flex gap-1 mt-2 flex-col md:flex-row">
+                  <div className="flex gap-2 mt-2 flex-col md:flex-row">
                     <Link href={`/admin/event/${eventId}/checkin`}>
                       <Button variant={"outline"} className="w-full md:w-auto">
                         QR code: Check In
