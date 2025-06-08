@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
 import { Gift } from "lucide-react";
+import Lottie from "lottie-react";
+import luckydrawAnimation from "@/app/assets/luckydraw-animation.json";
 
 // Dynamically import the Wheel component with SSR disabled
 const Wheel = dynamic(
@@ -254,7 +256,11 @@ export default function Home() {
             Sign out
           </Button>
           <div className="flex flex-col items-center text-center w-full">
-            <Gift size={60} />
+            {/* <Gift size={60} /> */}
+            <Lottie
+              animationData={luckydrawAnimation}
+              className="h-[140px] mt-[-30px] mb-[-20px]"
+            />
             <p className="text-2xl font-bold">Spin & Win</p>
             <p className="text-muted-foreground">
               Spin the wheel to win a gift from one of our merchants!

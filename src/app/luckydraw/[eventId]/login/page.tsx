@@ -9,6 +9,8 @@ import { CircleAlert, Gift, LogIn } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
+import Lottie from "lottie-react";
+import luckydrawAnimation from "@/app/assets/luckydraw-animation.json";
 
 export default function Page() {
   const [workId, setWorkID] = useState("");
@@ -105,7 +107,11 @@ export default function Page() {
           ) : (
             <Card className="mx-auto w-full max-w-sm p-6">
               <div className="flex flex-col items-center text-center">
-                <Gift size={60} />
+                {/* <Gift size={60} /> */}
+                <Lottie
+                  animationData={luckydrawAnimation}
+                  className="h-[140px] mt-[-30px] mb-[-20px]"
+                />
                 <p className="mb-2 text-2xl font-bold">{heading}</p>
                 <p className="text-muted-foreground">
                   {`Thank you for spending your time at ${eventName} — enjoy a
