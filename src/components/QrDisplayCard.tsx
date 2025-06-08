@@ -34,10 +34,10 @@ export const QrDisplayCard = ({
     <div className="flex flex-col gap-4">
       <Card className="p-10 pb-15 bg-[#f8f8f8] border-0 shadow-none">
         <div className="flex flex-col items-center text-center">
-          <div className="flex items-center">
+          <div className="flex flex-col md:flex-row items-center">
             <Lottie
               animationData={animationData}
-              className={animationClassName}
+              className={`${animationClassName} shrink-0`}
             />
             <span className="text-[60px] font-bold">{headingText}</span>
           </div>
