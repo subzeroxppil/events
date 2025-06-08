@@ -10,6 +10,12 @@ import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { signInWithEmail } from "./actions";
 import { signInWithOtp } from "./actions";
+import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 
 export default function Page() {
   const [email, setEmail] = useState("");
@@ -132,13 +138,21 @@ export default function Page() {
                 ) : (
                   <>
                     <Label htmlFor="otp">OTP Code</Label>
-                    <Input
-                      id="otp"
-                      placeholder="6-digit code"
-                      required
+                    <InputOTP
+                      maxLength={6}
+                      pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                    />
+                      onChange={(e) => setOtp(e)}
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
                   </>
                 )}
                 {error && (
