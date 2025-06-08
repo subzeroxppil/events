@@ -236,7 +236,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex w-full justify-center px-6 pt-6 pb-10 md:p-10 md:w-2xl self-center">
+    <div className="flex w-full justify-center px-6 pt-3 pb-10 md:p-10 md:w-2xl self-center">
       {/* <div className="flex flex-col gap-4"> */}
       {initialLoading ? (
         <div className="flex flex-col items-center self-center">
@@ -245,7 +245,7 @@ export default function Home() {
       ) : error ? (
         <p className="text-center text-red-600 dark:text-red-200">{error}</p>
       ) : isClient ? (
-        <Card className="p-6 w-full">
+        <Card className="p-6 w-full gap-0">
           <Button
             className="cursor-pointer w-[80px]"
             variant="outline"
@@ -255,13 +255,12 @@ export default function Home() {
           </Button>
           <div className="flex flex-col items-center text-center w-full">
             <Gift size={60} />
-
             <p className="mb-2 text-2xl font-bold">Spin & Win</p>
             <p className="text-muted-foreground">
               Spin the wheel to win a gift from one of our merchants!
             </p>
           </div>
-          <div className="w-full flex justify-center">
+          <div className="w-full flex justify-center mt-2">
             <Wheel
               mustStartSpinning={mustSpin}
               prizeNumber={prizeNumber}
@@ -277,7 +276,7 @@ export default function Home() {
             />
           </div>
 
-          <div className="flex flex-col items-center mt-4 w-full">
+          <div className="flex flex-col items-center w-full">
             <Button
               onClick={handleSpinClick}
               disabled={mustSpin || spinComplete || isSpinClicked}
