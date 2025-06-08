@@ -115,7 +115,7 @@ export default function Page() {
                 <p className="mb-2 text-2xl font-bold">{heading}</p>
                 <p className="text-muted-foreground">
                   {`Thank you for spending your time at ${eventName} — enjoy a
-                free gift as our token of appreciation! 🎁`}
+                free gift as our token of appreciation!`}
                 </p>
               </div>
 
