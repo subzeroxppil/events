@@ -238,7 +238,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex w-full justify-center px-6 pt-3 pb-10 md:p-10 md:w-2xl self-center">
+    <div className="flex w-full justify-center px-6 pt-2 pb-10 md:p-10 md:w-2xl self-center">
       {/* <div className="flex flex-col gap-4"> */}
       {initialLoading ? (
         <div className="flex flex-col items-center self-center">
@@ -247,7 +247,7 @@ export default function Home() {
       ) : error ? (
         <p className="text-center text-red-600 dark:text-red-200">{error}</p>
       ) : isClient ? (
-        <Card className="p-6 w-full gap-0">
+        <Card className="px-3 pb-6 pt-3 w-full gap-0">
           <Button
             className="cursor-pointer w-[80px]"
             variant="outline"
