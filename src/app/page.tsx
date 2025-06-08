@@ -2,9 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
-import { LoaderPinwheel } from "lucide-react";
-import { CircleUser } from "lucide-react";
-import { ShieldUser } from "lucide-react";
+import { House, ShieldUser } from "lucide-react";
 import Link from "next/link";
 
 export default function Page() {
@@ -14,13 +12,8 @@ export default function Page() {
         <div className="flex flex-col gap-4">
           <Card className="mx-auto w-full max-w-sm p-6">
             <div className="flex flex-col items-center text-center">
-              <Image
-                src="/paypal_logo.png"
-                width={60}
-                height={60}
-                alt="paypal icon"
-              />
-              <p className="mb-2 text-2xl font-bold">PayPal Events</p>
+              <House size={40} />
+              <p className="mb-2 text-2xl font-bold">Events</p>
               <div className="w-full flex flex-col gap-2 mt-4">
                 <Link href="/admin">
                   <Button size={"lg"} className="w-full" variant="outline">

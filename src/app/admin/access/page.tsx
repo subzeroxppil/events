@@ -108,7 +108,7 @@ export default function Page() {
           <div className="flex flex-col items-center text-center">
             <Image
               src="/paypal_logo.png"
-              width={60}
+              width={120}
               height={60}
               alt="paypal icon"
             />

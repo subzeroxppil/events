@@ -8,6 +8,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
+import { Gift } from "lucide-react";
 
 // Dynamically import the Wheel component with SSR disabled
 const Wheel = dynamic(
@@ -253,15 +254,12 @@ export default function Home() {
             Sign out
           </Button>
           <div className="flex flex-col items-center text-center w-full">
-            <Image
-              src="/paypal_logo.png"
-              width={60}
-              height={60}
-              alt="paypal icon"
-            />
+            <Gift size={60} />
 
-            <p className="mb-2 text-2xl font-bold">Lucky Draw</p>
-            <p className="text-muted-foreground">Thank you for coming!</p>
+            <p className="mb-2 text-2xl font-bold">Spin & Win</p>
+            <p className="text-muted-foreground">
+              Spin the wheel to win a gift from one of our merchants!
+            </p>
           </div>
           <div className="w-full flex justify-center">
             <Wheel

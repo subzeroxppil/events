@@ -37,15 +37,15 @@ export default async function RootLayout({
           <UserProvider>
             <div className="flex-col md:flex">
               <div className="border-b">
-                <div className="flex items-center pr-4 pl-2">
-                  <div className="flex px-1 py-2 items-center cursor-default">
+                <div className="flex items-center pr-4 pl-1">
+                  <div className="flex px-1 pt-1 items-center cursor-default">
                     <Image
                       src="/paypal_logo.png"
                       alt="paypal icon"
-                      width={45}
+                      width={90}
                       height={45}
                     />
-                    <span className="font-bold text-lg">Events</span>
+                    {/* <span className="font-bold text-lg">Events</span> */}
                   </div>
                   <div className="ml-auto flex items-center">
                     <UserNav />

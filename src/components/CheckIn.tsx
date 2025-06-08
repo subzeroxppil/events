@@ -5,11 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "./ui/card";
 import { LoadingSpinner } from "./LoadingSpinner";
-import { CircleAlert, LogIn } from "lucide-react";
+import {
+  Calendar,
+  CircleAlert,
+  DoorClosed,
+  DoorOpen,
+  Footprints,
+  LogIn,
+  SquareArrowRight,
+} from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import onboardingAnimationData from "@/app/assets/handshake-animation.json";
+import checkinAnimationData from "@/app/assets/checkin-animation.json";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "./ui/checkbox";
 import { useMediaQuery } from "@/app/hooks/use-media-query";
@@ -183,10 +192,20 @@ const CheckIn = ({ className }: CheckInProps) => {
               ) : (
                 <Image
                   src="/paypal_logo.png"
-                  width={60}
-                  height={60}
+                  width={70}
+                  height={35}
                   alt="paypal icon"
                 />
+                // <DoorOpen size={64} />
+                // <DoorClosed size={64} />
+                // <LogIn size={64} />
+                // <Lottie
+                //   animationData={checkinAnimationData}
+                //   className="h-[100px]"
+                // />
+                // <SquareArrowRight size={64} />
+                // <Footprints size={64} />
+                // <Calendar size={64} />
               )}
               <p className="mb-2 text-2xl font-bold">
                 {showResult ? (

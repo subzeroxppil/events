@@ -205,13 +205,8 @@ export default function Page() {
       <div className="flex flex-col gap-4 w-full max-w-xl">
         <Card className="w-full p-6">
           <div className="flex flex-col items-center text-center">
-            <Image
-              src="/paypal_logo.png"
-              width={60}
-              height={60}
-              alt="paypal icon"
-            />
-            <p className="mb-2 text-2xl font-bold">{heading}</p>
+            <CalendarPlus size={50} />
+            <p className="mb-2 text-2xl font-bold mt-1">{heading}</p>
             <p className="text-muted-foreground">{subheading}</p>
           </div>
 

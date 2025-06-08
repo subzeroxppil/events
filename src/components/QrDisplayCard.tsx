@@ -46,7 +46,7 @@ export const QrDisplayCard = ({
               <Image
                 src="/paypal_logo.png"
                 width={80}
-                height={80}
+                height={45}
                 alt="paypal icon"
               />
               <span className="font-bold text-2xl max-w-md break-words whitespace-normal mt-1">

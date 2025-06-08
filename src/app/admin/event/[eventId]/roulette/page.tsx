@@ -206,8 +206,8 @@ export default function Page() {
                 <div className="flex flex-col gap-8 items-center">
                   <Image
                     src="/paypal_logo.png"
-                    width={80}
-                    height={80}
+                    width={100}
+                    height={50}
                     alt="paypal icon"
                   />
                   <RoulettePro

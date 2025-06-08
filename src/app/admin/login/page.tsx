@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, KeyRound, LogIn } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
@@ -99,13 +99,8 @@ export default function Page() {
         <div className="flex flex-col gap-4">
           <Card className="mx-auto w-full max-w-sm p-6">
             <div className="flex flex-col items-center text-center">
-              <Image
-                src="/paypal_logo.png"
-                width={60}
-                height={60}
-                alt="paypal icon"
-              />
-              <p className="mb-2 text-2xl font-bold">{heading}</p>
+              <KeyRound size={50} />
+              <p className="mb-2 text-2xl font-bold mt-1">{heading}</p>
               <p className="text-muted-foreground">
                 {stage === "email" ? (
                   "We'll send you an OTP to log in securely."

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { CircleAlert, LogIn } from "lucide-react";
+import { CircleAlert, Gift, LogIn } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,7 @@ export default function Page() {
 
   const router = useRouter();
 
-  const heading = "Lucky Draw";
+  const heading = "Spin & Win";
   const submitText = "Login";
   const params = useParams();
   const eventId = Array.isArray(params?.eventId)
@@ -105,12 +105,7 @@ export default function Page() {
           ) : (
             <Card className="mx-auto w-full max-w-sm p-6">
               <div className="flex flex-col items-center text-center">
-                <Image
-                  src="/paypal_logo.png"
-                  width={60}
-                  height={60}
-                  alt="paypal icon"
-                />
+                <Gift size={60} />
                 <p className="mb-2 text-2xl font-bold">{heading}</p>
                 <p className="text-muted-foreground">
                   {`Thank you for spending your time at ${eventName} — enjoy a
