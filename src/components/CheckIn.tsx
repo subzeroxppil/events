@@ -67,7 +67,8 @@ const CheckIn = ({ className }: CheckInProps) => {
   const [isTermsAgree, setIsTermsAgree] = useState(false);
 
   const submitText = "Check in";
-  const resultSubheading = "We’re so glad to have you here 🎉";
+  // const resultSubheading = "We’re so glad to have you here 🎉";
+  const resultSubheading = "Thank you for fulfilling your call to service.";
 
   useEffect(() => {
     if (!eventId) return;
@@ -137,7 +138,7 @@ const CheckIn = ({ className }: CheckInProps) => {
   };
 
   const triggerConfetti = () => {
-    const end = Date.now() + 0.5 * 1000; // 3 seconds
+    const end = Date.now() + 0.3 * 1000; // 3 seconds
     const colors = [
       "#a786ff", // soft lavender
       "#fd8bbc", // pink coral
@@ -226,9 +227,9 @@ const CheckIn = ({ className }: CheckInProps) => {
                 {showResult ? (
                   resultSubheading
                 ) : hasGrouping ? (
-                  <>👋 Welcome! Check in to join a group and get started.</>
+                  <>Check in to join a team and get started!</>
                 ) : (
-                  <>👋 Welcome! Check in to get started.</>
+                  <>Check in to get started!</>
                 )}
               </p>
             </div>
@@ -253,7 +254,7 @@ const CheckIn = ({ className }: CheckInProps) => {
                         }
                       />
                       <Label className="gap-0">
-                        Accept{" "}
+                        I accept the{" "}
                         {isDesktop ? (
                           <Dialog
                             open={dialogOpen}
@@ -261,7 +262,7 @@ const CheckIn = ({ className }: CheckInProps) => {
                           >
                             <DialogTrigger asChild>
                               <span className="underline">
-                                terms and conditions
+                                Terms & Conditions
                               </span>
                             </DialogTrigger>
                             <DialogContent>
@@ -278,7 +279,7 @@ const CheckIn = ({ className }: CheckInProps) => {
                           >
                             <DrawerTrigger asChild>
                               <span className="underline">
-                                terms and conditions
+                                Terms & Conditions
                               </span>
                             </DrawerTrigger>
                             <DrawerContent>
