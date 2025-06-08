@@ -140,7 +140,7 @@ export default function Home() {
     }
   };
   const spinSound =
-    typeof Audio !== "undefined" ? new Audio("/sounds/spin2.wav") : null;
+    typeof Audio !== "undefined" ? new Audio("/sounds/spin3.mp3") : null;
 
   const handleSpinClick = async () => {
     if (mustSpin || !workId.current || isSpinClicked) return;
