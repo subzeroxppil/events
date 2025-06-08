@@ -255,7 +255,7 @@ export default function Home() {
           </Button>
           <div className="flex flex-col items-center text-center w-full">
             <Gift size={60} />
-            <p className="mb-2 text-2xl font-bold">Spin & Win</p>
+            <p className="text-2xl font-bold">Spin & Win</p>
             <p className="text-muted-foreground">
               Spin the wheel to win a gift from one of our merchants!
             </p>
