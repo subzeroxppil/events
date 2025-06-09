@@ -147,7 +147,7 @@ const SignupForm = ({
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
                 {error && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex gap-1">
                     <div>
                       <CircleAlert size="20px" color="#ef4444" />
                     </div>
