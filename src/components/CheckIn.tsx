@@ -197,7 +197,7 @@ const CheckIn = ({ className }: CheckInProps) => {
                     {hasGrouping && (
                       <>
                         <br />
-                        You’re in Group {groupNumber}
+                        You’re in Team {groupNumber}
                       </>
                     )}
                   </>
