@@ -5,11 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { CircleAlert, Gift, LogIn } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { CircleAlert, LogIn } from "lucide-react";
+import { useParams } from "next/navigation";
 import { Label } from "@/components/ui/label";
-import Lottie from "lottie-react";
-import luckydrawAnimation from "@/app/assets/luckydraw-animation.json";
+import Image from "next/image";
 
 export default function Page() {
   const [workId, setWorkID] = useState("");
@@ -18,8 +17,6 @@ export default function Page() {
   const [error, setError] = useState("");
   const [loginError, setLoginError] = useState("");
   const [eventName, setEventName] = useState("");
-
-  const router = useRouter();
 
   const heading = "Spin & Win";
   const submitText = "Login";
@@ -106,10 +103,11 @@ export default function Page() {
           ) : (
             <Card className="mx-auto w-full max-w-sm p-6">
               <div className="flex flex-col items-center text-center">
-                {/* <Gift size={60} /> */}
-                <Lottie
-                  animationData={luckydrawAnimation}
-                  className="h-[140px] mt-[-30px] mb-[-20px]"
+                <Image
+                  src="/paypal_logo.png"
+                  width={70}
+                  height={35}
+                  alt="paypal icon"
                 />
                 <p className="mb-2 text-2xl font-bold">{heading}</p>
                 <p className="text-muted-foreground">

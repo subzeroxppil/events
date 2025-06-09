@@ -249,17 +249,18 @@ export default function Home() {
       ) : isClient ? (
         <Card className="px-3 pb-6 pt-3 w-full gap-0">
           <Button
-            className="cursor-pointer w-[40px]"
+            className="cursor-pointer w-[80px]"
             variant="outline"
             onClick={handleSignOut}
           >
-            <LogOut />
+            Sign out
           </Button>
           <div className="flex flex-col items-center text-center w-full">
-            {/* <Gift size={60} /> */}
-            <Lottie
-              animationData={luckydrawAnimation}
-              className="h-[140px] mt-[-30px] mb-[-20px]"
+            <Image
+              src="/paypal_logo.png"
+              width={70}
+              height={35}
+              alt="paypal icon"
             />
             <p className="text-2xl font-bold">Spin & Win</p>
             <p className="text-muted-foreground">
