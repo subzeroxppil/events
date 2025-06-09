@@ -57,7 +57,7 @@ const LoginForm = ({
 
       if (res.ok) {
         await fetchUser();
-        router.push(`${process.env.NEXT_PUBLIC_BASE_URL}/admin`);
+        window.location.href = `/admin`;
       } else {
         setError(result.message || "Invalid email or password");
         setLoading(false);

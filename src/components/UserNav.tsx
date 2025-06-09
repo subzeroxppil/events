@@ -32,10 +32,8 @@ export function UserNav() {
         }
       );
       if (res.ok) {
-        console.log("hi");
         await fetchUser();
         router.push("/");
-        console.log("hiii");
       } else {
         alert("Logout failed.");
       }

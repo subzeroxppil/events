@@ -97,7 +97,7 @@ const SignupForm = ({
       const result = await res.json();
       if (res.ok) {
         await fetchUser();
-        router.push(`${process.env.NEXT_PUBLIC_BASE_URL}/admin`);
+        window.location.href = `/admin`;
       } else {
         setError(result.message || "Signup unsuccessful!");
         setLoading(false);

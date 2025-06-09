@@ -128,7 +128,6 @@ export default function Home() {
           prizes.length % 2 === 0 ? BASE_COLORS.slice(0, 3) : BASE_COLORS;
 
         setWheelColors(colorsToUse);
-        console.log("colorsToUse", colorsToUse);
       } else {
         setError("An error occurred, please try again");
       }
