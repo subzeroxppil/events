@@ -63,6 +63,25 @@ const SignupForm = ({
     setLoading(true);
 
     try {
+      const authorisationRes = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/checkAdmin`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        }
+      );
+
+      const data = await authorisationRes.json();
+
+      if (!data.authorized) {
+        setError("Email account does not have access to admin portal");
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/signup`,
         {
