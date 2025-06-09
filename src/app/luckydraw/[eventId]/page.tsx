@@ -8,7 +8,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
-import { Gift } from "lucide-react";
+import { LogOut } from "lucide-react";
 import Lottie from "lottie-react";
 import luckydrawAnimation from "@/app/assets/luckydraw-animation.json";
 
@@ -249,11 +249,11 @@ export default function Home() {
       ) : isClient ? (
         <Card className="px-3 pb-6 pt-3 w-full gap-0">
           <Button
-            className="cursor-pointer w-[80px]"
+            className="cursor-pointer w-[40px]"
             variant="outline"
             onClick={handleSignOut}
           >
-            Sign out
+            <LogOut />
           </Button>
           <div className="flex flex-col items-center text-center w-full">
             {/* <Gift size={60} /> */}
