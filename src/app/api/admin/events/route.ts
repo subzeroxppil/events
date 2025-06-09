@@ -1,19 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
+import { getUserIdFromCookie } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
-    if (error || !user?.email) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
     // Extract the search query
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q")?.toLowerCase() || "";
@@ -62,15 +52,25 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+    const sessionUser = await getUserIdFromCookie();
+
+    if (!sessionUser) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id: userId } = sessionUser;
+
+    // Lookup user by ID to get email
+    const user = await prisma.adminUser.findUnique({
+      where: { id: parseInt(userId) }, // adjust if userId is string
+      select: { email: true },
+    });
 
     if (!user?.email) {
-      return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
+
+    const requesterEmail = user.email.trim().toLowerCase();
 
     const body = await req.json();
     const {
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
         groupingStrategy:
           groupingStrategy === "noNeed" ? null : groupingStrategy,
         groupConfigNumber,
-        createdBy: user.email,
+        createdBy: requesterEmail,
         terms: terms?.trim() || null,
       },
     });

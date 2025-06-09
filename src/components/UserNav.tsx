@@ -23,19 +23,26 @@ export function UserNav() {
   const router = useRouter();
   const supabase = createClient();
 
-  async function handleSignOut() {
+  const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      await fetchUser();
-      window.location.href = "/admin/login";
-
-      if (error) {
-        toast(error.message || "Failed to sign out");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/logout`,
+        {
+          method: "POST",
+        }
+      );
+      if (res.ok) {
+        console.log("hi");
+        await fetchUser();
+        router.push("/");
+        console.log("hiii");
+      } else {
+        alert("Logout failed.");
       }
     } catch (err) {
-      toast("An unexpected error occurred during sign out.");
+      console.log("err", err);
     }
-  }
+  };
   if (loading) return null;
 
   return (

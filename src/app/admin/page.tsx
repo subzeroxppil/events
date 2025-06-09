@@ -19,6 +19,7 @@ import { EventCard } from "@/components/EventCard";
 import Link from "next/link";
 import Lottie from "lottie-react";
 import searchAnimationData from "../assets/search-cartoon-animation.json";
+import { useUser } from "../UserContext";
 
 type Event = {
   id: number;
@@ -38,24 +39,21 @@ export default function Page() {
   const [query, setQuery] = useState("");
   const [events, setEvents] = useState<Event[]>([]);
   const [eventCount, setEventCount] = useState(0);
+  const { fetchUser, user } = useUser();
 
   const supabase = createClient();
 
   useEffect(() => {
     fetchEvents();
+    checkUser();
   }, [query]);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/admin/login");
-      }
-    };
-    checkAuth();
-  }, []);
+  const checkUser = async () => {
+    const fetchedUser = await fetchUser();
+    if (!fetchedUser) {
+      router.push("/admin/login");
+    }
+  };
 
   const fetchEvents = async () => {
     try {

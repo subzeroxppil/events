@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type UserContextType = {
   user: string | null;
-  fetchUser: () => Promise<void>;
+  fetchUser: () => Promise<string | null>;
   loading: boolean;
 };
 
@@ -19,16 +19,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
 
   const fetchUser = async () => {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-    if (error || !user?.email) {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/getUser`,
+      {
+        credentials: "include",
+      }
+    );
+    if (res.ok) {
+      const data = await res.json();
+
+      const userEmail = data.user?.email;
+      setUser(userEmail);
       setLoading(false);
-      return;
+      return userEmail;
     }
-    setUser(user.email);
-    setLoading(false);
   };
 
   useEffect(() => {

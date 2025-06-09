@@ -88,3 +88,10 @@ model BusinessUnitMapping {
   email         String   @id
   businessUnit  String
 }
+
+model AdminUser {
+  id             Int             @id @default(autoincrement())
+  email          String          @unique
+  passwordHash   String          @map("password_hash")
+  createdAt      DateTime        @default(now()) @map("created_at")
+}

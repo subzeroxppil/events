@@ -1,14 +1,27 @@
 import { prisma } from "@/lib/prisma";
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { getUserIdFromCookie } from "@/lib/auth";
 
 export async function GET(req: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const sessionUser = await getUserIdFromCookie();
 
-  const requesterEmail = user?.email?.trim().toLowerCase();
+  if (!sessionUser) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id: userId } = sessionUser;
+
+  // Lookup user by ID to get email
+  const user = await prisma.adminUser.findUnique({
+    where: { id: parseInt(userId) }, // adjust if userId is string
+    select: { email: true },
+  });
+
+  if (!user?.email) {
+    return NextResponse.json({ message: "User not found" }, { status: 404 });
+  }
+
+  const requesterEmail = user.email.trim().toLowerCase();
 
   const currentUser = await prisma.admin.findUnique({
     where: { email: requesterEmail },
@@ -33,13 +46,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Email is required" }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const sessionUser = await getUserIdFromCookie();
+
+  if (!sessionUser) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id: userId } = sessionUser;
+
+  // Lookup user by ID to get email
+  const user = await prisma.adminUser.findUnique({
+    where: { id: parseInt(userId) }, // adjust if userId is string
+    select: { email: true },
+  });
 
   if (!user?.email) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ message: "User not found" }, { status: 404 });
   }
 
   const currentUser = await prisma.admin.findUnique({
