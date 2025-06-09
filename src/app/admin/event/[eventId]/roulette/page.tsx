@@ -32,11 +32,20 @@ export default function Page() {
   const [prizeList, setPrizeList] = useState<
     { text: string; id: string; image: string }[]
   >([]);
+  const [spinSound, setSpinSound] = useState<HTMLAudioElement | null>(null);
+
+  const celebrateAudio =
+    typeof Audio !== "undefined" ? new Audio("/sounds/celebrate.wav") : null;
 
   useEffect(() => {
     if (!eventId) return;
 
     fetchAttendees();
+
+    const spinAudio =
+      typeof Audio !== "undefined" ? new Audio("/sounds/spin2.wav") : null;
+
+    setSpinSound(spinAudio);
   }, [eventId]);
 
   const fetchAttendees = async () => {
@@ -124,13 +133,15 @@ export default function Page() {
     return baseOffset + Math.floor(Math.random() * maxOffset);
   }
 
-  const spinSound =
-    typeof Audio !== "undefined" ? new Audio("/sounds/spin.wav") : null;
-
   const handleStart = () => {
     const prizeIndex = getValidPrizeIndex(prizeList, winners);
     setPrizeIndex(prizeIndex);
-    spinSound?.play();
+
+    if (spinSound) {
+      spinSound.pause(); // Just in case it's already playing
+      spinSound.currentTime = 0;
+      spinSound.play();
+    }
 
     setStart(false); // reset
     setTimeout(() => {
@@ -145,6 +156,19 @@ export default function Page() {
     if (winnerWorkId) {
       setWinners((prev) => [...prev, winnerWorkId]);
     }
+
+    if (spinSound) {
+      spinSound.pause();
+      spinSound.currentTime = 0;
+    }
+
+    if (celebrateAudio) {
+      celebrateAudio.currentTime = 0; // restart from beginning
+      celebrateAudio.play().catch((e) => {
+        console.warn("Playback failed:", e);
+      });
+    }
+
     triggerConfetti();
     setIsSpinning(false);
   };
