@@ -73,7 +73,7 @@ const LoginForm = ({
       <div className="container">
         <div className="flex flex-col gap-4">
           <Card className="mx-auto w-full max-w-sm p-6">
-            <div className="mb-6 flex flex-col items-center text-center">
+            <div className=" flex flex-col items-center text-center">
               <Image
                 src="/paypal_logo.png"
                 width="70"
