@@ -4,15 +4,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Download, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import AdminSearch from "@/components/AdminSearch";
 import { CalendarPlus } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
