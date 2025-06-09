@@ -8,7 +8,8 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { CircleAlert, LogIn } from "lucide-react";
 import { useParams } from "next/navigation";
 import { Label } from "@/components/ui/label";
-import Image from "next/image";
+import Lottie from "lottie-react";
+import luckydrawAnimation from "@/app/assets/luckydraw-animation.json";
 
 export default function Page() {
   const [workId, setWorkID] = useState("");
@@ -103,11 +104,9 @@ export default function Page() {
           ) : (
             <Card className="mx-auto w-full max-w-sm p-6">
               <div className="flex flex-col items-center text-center">
-                <Image
-                  src="/paypal_logo.png"
-                  width={70}
-                  height={35}
-                  alt="paypal icon"
+                <Lottie
+                  animationData={luckydrawAnimation}
+                  className="h-[140px] mt-[-30px] mb-[-20px]"
                 />
                 <p className="mb-2 text-2xl font-bold">{heading}</p>
                 <p className="text-muted-foreground">

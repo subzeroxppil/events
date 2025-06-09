@@ -8,9 +8,6 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
-import { LogOut } from "lucide-react";
-import Lottie from "lottie-react";
-import luckydrawAnimation from "@/app/assets/luckydraw-animation.json";
 
 // Dynamically import the Wheel component with SSR disabled
 const Wheel = dynamic(
