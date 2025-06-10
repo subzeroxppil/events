@@ -75,7 +75,7 @@ export default function Page() {
       setPrizes(attendeeList);
 
       // max 50
-      const reproducedPrizeList = createRepeatedPrizeList(attendeeList, 50);
+      const reproducedPrizeList = createRepeatedPrizeList(attendeeList, 55);
 
       setPrizeList(
         reproducedPrizeList.map((prize) => ({
@@ -142,7 +142,7 @@ export default function Page() {
   }
 
   const handleStart = () => {
-    const reproducedPrizeList = createRepeatedPrizeList(prizes, 50);
+    const reproducedPrizeList = createRepeatedPrizeList(prizes, 55);
 
     const newPrizeList = reproducedPrizeList.map((prize) => ({
       ...prize,
@@ -294,7 +294,7 @@ export default function Page() {
               <div className="flex items-center">
                 <span className="text-[60px] font-bold">Lucky Draw</span>
               </div>
-              <Card className="p-10 mt-2 flex flex-col items-center bg-white">
+              <Card className="p-10 mt-2 flex flex-col items-center bg-white max-w-7xl overflow-hidden">
                 <div className="flex flex-col gap-8 items-center">
                   <Image
                     src="/paypal_logo.png"
