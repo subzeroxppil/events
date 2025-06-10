@@ -2,10 +2,7 @@
 import { useEffect, useState } from "react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useParams } from "next/navigation";
-import luckydrawAnimation from "@/app/assets/luckydraw-animation.json";
-import { QrDisplayCard } from "@/components/QrDisplayCard";
 import { Card } from "@/components/ui/card";
-
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import React from "react";
