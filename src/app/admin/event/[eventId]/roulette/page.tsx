@@ -83,7 +83,7 @@ export default function Page() {
       setPrizeList(
         reproducedPrizeList.map((prize) => ({
           ...prize,
-          image: "",
+          image: null,
           id:
             typeof crypto.randomUUID === "function"
               ? crypto.randomUUID()
@@ -145,6 +145,7 @@ export default function Page() {
   }
 
   const handleStart = () => {
+    console.log("prizeList", prizeList);
     const prizeIndex = getValidPrizeIndex(prizeList, winners);
     setPrizeIndex(prizeIndex);
 
@@ -286,7 +287,7 @@ export default function Page() {
               <div className="flex items-center">
                 <span className="text-[60px] font-bold">Lucky Draw</span>
               </div>
-              <Card className="p-10 mt-2 flex flex-col items-center bg-white w-7xl overflow-hidden">
+              <Card className="p-10 mt-2 flex flex-col items-center bg-white">
                 <div className="flex flex-col gap-8 items-center">
                   <Image
                     src="/paypal_logo.png"
