@@ -234,7 +234,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex w-full justify-center px-6 pt-2 pb-10 md:p-10 md:w-2xl self-center">
+    <div className="flex w-full justify-center px-2 pt-2 pb-10 md:p-10 md:w-2xl self-center">
       {/* <div className="flex flex-col gap-4"> */}
       {initialLoading ? (
         <div className="flex flex-col items-center self-center">

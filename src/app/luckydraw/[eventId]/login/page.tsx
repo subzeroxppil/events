@@ -94,7 +94,7 @@ export default function Page() {
     }
   };
   return (
-    <div className="flex w-full justify-center pt-2 px-6 pb-6 md:p-10 h-full">
+    <div className="flex w-full justify-center pt-2 px-2 pb-6 md:p-10 h-full">
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-4">
           {error ? (
