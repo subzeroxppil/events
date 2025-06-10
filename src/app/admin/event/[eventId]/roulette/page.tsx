@@ -33,6 +33,15 @@ export default function Page() {
     { text: string; id: string; image: string }[]
   >([]);
   const [spinSound, setSpinSound] = useState<HTMLAudioElement | null>(null);
+  const [celebrateSound, setCelebrateSound] = useState<HTMLAudioElement | null>(
+    null
+  );
+  const [applauseSound, setApplauseSound] = useState<HTMLAudioElement | null>(
+    null
+  );
+
+  const spinAudio =
+    typeof Audio !== "undefined" ? new Audio("/sounds/spin3.mp3") : null;
 
   const celebrateAudio =
     typeof Audio !== "undefined" ? new Audio("/sounds/celebrate.wav") : null;
@@ -45,10 +54,9 @@ export default function Page() {
 
     fetchAttendees();
 
-    const spinAudio =
-      typeof Audio !== "undefined" ? new Audio("/sounds/spin3.mp3") : null;
-
     setSpinSound(spinAudio);
+    setCelebrateSound(celebrateAudio);
+    setApplauseSound(applauseAudio);
   }, [eventId]);
 
   const fetchAttendees = async () => {
@@ -146,6 +154,16 @@ export default function Page() {
       spinSound.play();
     }
 
+    if (celebrateSound) {
+      celebrateSound.pause();
+      celebrateSound.currentTime = 0;
+    }
+
+    if (applauseSound) {
+      applauseSound.pause();
+      applauseSound.currentTime = 0;
+    }
+
     setStart(false); // reset
     setTimeout(() => {
       setStart(true); // trigger spin
@@ -165,16 +183,18 @@ export default function Page() {
       spinSound.currentTime = 0;
     }
 
-    if (celebrateAudio) {
-      celebrateAudio.currentTime = 0; // restart from beginning
-      celebrateAudio.play().catch((e) => {
+    if (celebrateSound) {
+      celebrateSound.pause();
+      celebrateSound.currentTime = 0; // restart from beginning
+      celebrateSound.play().catch((e) => {
         console.warn("Playback failed:", e);
       });
     }
 
-    if (applauseAudio) {
-      applauseAudio.currentTime = 0; // restart from beginning
-      applauseAudio.play().catch((e) => {
+    if (applauseSound) {
+      applauseSound.pause();
+      applauseSound.currentTime = 0; // restart from beginning
+      applauseSound.play().catch((e) => {
         console.warn("Playback failed:", e);
       });
     }
