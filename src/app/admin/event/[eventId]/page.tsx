@@ -513,7 +513,7 @@ export default function Page() {
                                   const { chartBusinessUnit, attendees, fill } =
                                     payload[0].payload;
                                   return (
-                                    <div className="bg-white border rounded shadow text-sm flex gap-2 p-1">
+                                    <div className="bg-white border rounded shadow text-sm flex gap-1 p-1">
                                       <div
                                         className="w-3 h-3 rounded-sm shrink-0 mt-[2px]"
                                         style={{ backgroundColor: fill }}
