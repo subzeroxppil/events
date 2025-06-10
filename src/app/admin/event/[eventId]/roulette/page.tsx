@@ -145,10 +145,19 @@ export default function Page() {
   }
 
   const handleStart = () => {
-    console.log("prizeList", prizeList);
-    const prizeIndex = getValidPrizeIndex(prizeList, winners);
-    setPrizeIndex(prizeIndex);
+    const reproducedPrizeList = createRepeatedPrizeList(prizes, 50);
 
+    const newPrizeList = reproducedPrizeList.map((prize) => ({
+      ...prize,
+      image: null,
+      id:
+        typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : generateId(),
+    }));
+    const prizeIndex = getValidPrizeIndex(newPrizeList, winners);
+    setPrizeList(newPrizeList);
+    setPrizeIndex(prizeIndex);
     if (spinSound) {
       spinSound.pause(); // Just in case it's already playing
       spinSound.currentTime = 5;
@@ -203,6 +212,7 @@ export default function Page() {
     // triggerConfetti();
     triggerFireworks();
     setIsSpinning(false);
+    console.log("prizeList", prizeList);
   };
 
   const triggerConfetti = () => {
