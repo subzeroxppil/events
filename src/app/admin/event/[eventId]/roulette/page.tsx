@@ -315,6 +315,7 @@ export default function Page() {
                     onClick={handleStart}
                     size={"lg"}
                     disabled={isSpinning}
+                    variant={"outline"}
                   >
                     Start
                   </Button>
