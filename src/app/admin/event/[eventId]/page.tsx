@@ -501,14 +501,33 @@ export default function Page() {
                           className="mx-auto aspect-square max-h-[300px]"
                         >
                           <PieChart className="">
-                            <ChartTooltip
+                            {/* <ChartTooltip
                               content={
-                                <ChartTooltipContent
-                                  nameKey="attendees"
-                                  hideLabel
-                                />
+                                <ChartTooltipContent nameKey="attendees" />
                               }
+                              
+                            /> */}
+                            <ChartTooltip
+                              content={({ active, payload }) => {
+                                if (active && payload && payload.length) {
+                                  const { chartBusinessUnit, attendees, fill } =
+                                    payload[0].payload;
+                                  return (
+                                    <div className="bg-white border rounded shadow text-sm flex gap-2 p-1">
+                                      <div
+                                        className="w-3 h-3 rounded-sm shrink-0 mt-[2px]"
+                                        style={{ backgroundColor: fill }}
+                                      ></div>
+                                      <span className="text-muted-foreground text-xs">
+                                        {chartBusinessUnit}: {attendees}
+                                      </span>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              }}
                             />
+
                             <Pie data={chartData} dataKey="attendees" />
                             {/* <ChartLegend
                               content={
