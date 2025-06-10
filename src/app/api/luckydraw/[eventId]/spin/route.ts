@@ -63,7 +63,10 @@ export async function POST(
     });
 
     if (availablePrizes.length === 0) {
-      return NextResponse.json({ message: "No prizes left" }, { status: 400 });
+      return NextResponse.json(
+        { message: "There are no prizes left" },
+        { status: 400 }
+      );
     }
 
     const selectedPrize =

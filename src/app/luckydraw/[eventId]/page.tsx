@@ -8,6 +8,8 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
+import Lottie from "lottie-react";
+import ghostAnimationData from "@/app/assets/ghost-animation.json";
 
 // Dynamically import the Wheel component with SSR disabled
 const Wheel = dynamic(
@@ -241,7 +243,10 @@ export default function Home() {
           <LoadingSpinner />
         </div>
       ) : error ? (
-        <p className="text-center text-red-600 dark:text-red-200">{error}</p>
+        <div className="flex flex-col item-center">
+          <Lottie animationData={ghostAnimationData} className="h-[170px]" />
+          <p className="text-center">Oh no! {error}</p>
+        </div>
       ) : isClient ? (
         <Card className="px-3 pb-6 pt-3 w-full gap-0">
           <Button
