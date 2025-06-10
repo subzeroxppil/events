@@ -37,13 +37,16 @@ export default function Page() {
   const celebrateAudio =
     typeof Audio !== "undefined" ? new Audio("/sounds/celebrate.wav") : null;
 
+  const applauseAudio =
+    typeof Audio !== "undefined" ? new Audio("/sounds/applause1.mp3") : null;
+
   useEffect(() => {
     if (!eventId) return;
 
     fetchAttendees();
 
     const spinAudio =
-      typeof Audio !== "undefined" ? new Audio("/sounds/spin2.wav") : null;
+      typeof Audio !== "undefined" ? new Audio("/sounds/spin3.mp3") : null;
 
     setSpinSound(spinAudio);
   }, [eventId]);
@@ -139,7 +142,7 @@ export default function Page() {
 
     if (spinSound) {
       spinSound.pause(); // Just in case it's already playing
-      spinSound.currentTime = 0;
+      spinSound.currentTime = 5;
       spinSound.play();
     }
 
@@ -169,7 +172,15 @@ export default function Page() {
       });
     }
 
-    triggerConfetti();
+    if (applauseAudio) {
+      applauseAudio.currentTime = 0; // restart from beginning
+      applauseAudio.play().catch((e) => {
+        console.warn("Playback failed:", e);
+      });
+    }
+
+    // triggerConfetti();
+    triggerFireworks();
     setIsSpinning(false);
   };
 
@@ -201,6 +212,35 @@ export default function Page() {
     };
 
     frame();
+  };
+
+  const triggerFireworks = () => {
+    const duration = 5 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    const randomInRange = (min: number, max: number) =>
+      Math.random() * (max - min) + min;
+
+    const interval = window.setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 500 * (timeLeft / duration);
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      });
+    }, 250);
   };
 
   return (
