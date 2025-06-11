@@ -49,10 +49,12 @@ export async function GET(
       counts[unit] = (counts[unit] || 0) + 1;
     }
 
-    const result = Object.entries(counts).map(([businessUnit, count]) => ({
-      businessUnit,
-      count,
-    }));
+    const result = Object.entries(counts)
+      .map(([businessUnit, count]) => ({
+        businessUnit,
+        count,
+      }))
+      .sort((a, b) => b.count - a.count);
 
     return NextResponse.json(result);
   } catch (err) {
