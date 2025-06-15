@@ -75,7 +75,7 @@ export default function Page() {
       setPrizes(attendeeList);
 
       // max 50
-      const reproducedPrizeList = createRepeatedPrizeList(attendeeList, 55);
+      const reproducedPrizeList = createRepeatedPrizeList(attendeeList, 120);
 
       setPrizeList(
         reproducedPrizeList.map((prize) => ({
@@ -124,7 +124,7 @@ export default function Page() {
     prizeList: { text: string }[],
     winners: string[]
   ): number {
-    const baseOffset = 35;
+    const baseOffset = 100;
     const maxOffset = 10;
     let attempts = 0;
 
@@ -142,7 +142,7 @@ export default function Page() {
   }
 
   const handleStart = () => {
-    const reproducedPrizeList = createRepeatedPrizeList(prizes, 55);
+    const reproducedPrizeList = createRepeatedPrizeList(prizes, 120);
 
     const newPrizeList = reproducedPrizeList.map((prize) => ({
       ...prize,
@@ -157,7 +157,7 @@ export default function Page() {
     setPrizeIndex(prizeIndex);
     if (spinSound) {
       spinSound.pause(); // Just in case it's already playing
-      spinSound.currentTime = 5;
+      spinSound.currentTime = 1;
       spinSound.play();
     }
 
@@ -308,7 +308,7 @@ export default function Page() {
                     start={start}
                     onPrizeDefined={handlePrizeDefined}
                     defaultDesignOptions={{ prizesWithText: true }}
-                    spinningTime={5}
+                    spinningTime={9}
                   />
 
                   <Button
