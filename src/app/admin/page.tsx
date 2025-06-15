@@ -78,25 +78,27 @@ export default function Page() {
         {/* <p className="text-center text-lg text-muted-foreground sm:text-xl mt-3 mb-3 font-bold">
           Organise Events and Track Attendance
         </p> */}
-        <TypeAnimation
-          className="mt-3 mb-4 text-center text-lg sm:text-xl text-muted-foreground font-bold"
-          speed={60}
-          sequence={[
-            "Organise Events",
-            1500,
-            "Host Spin-&-Win Games",
-            1500,
-            "Run Lucky Draws",
-            1500,
-            "Monitor Attendance Live",
-            1500,
-            "Auto-Assign Groups in Real-Time",
-            1500,
-            "Generate Check-In QR Codes",
-            1500,
-          ]}
-          repeat={Infinity}
-        />
+        <div className="mt-3 mb-4">
+          <TypeAnimation
+            className="text-center text-lg sm:text-xl text-muted-foreground font-bold"
+            speed={60}
+            sequence={[
+              "Organise Events",
+              1500,
+              "Host Spin-&-Win Games",
+              1500,
+              "Run Lucky Draws",
+              1500,
+              "Monitor Attendance Live",
+              1500,
+              "Auto-Assign Groups in Real-Time",
+              1500,
+              "Generate Check-In QR Codes",
+              1500,
+            ]}
+            repeat={Infinity}
+          />
+        </div>
         <AdminSearch query={query} setQuery={setQuery} />
       </div>
       <div className="w-full flex flex-col px-8 py-8 items-center max-w-7xl self-center">
