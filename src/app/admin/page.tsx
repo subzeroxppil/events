@@ -11,6 +11,7 @@ import Link from "next/link";
 import Lottie from "lottie-react";
 import searchAnimationData from "../assets/search-cartoon-animation.json";
 import { useUser } from "../UserContext";
+import { TypeAnimation } from "react-type-animation";
 
 type Event = {
   id: number;
@@ -72,11 +73,30 @@ export default function Page() {
     <>
       <div className="w-full flex flex-col p-8 bg-slate-100 items-center">
         <h1 className="text-center text-4xl font-bold sm:text-5xl">
-          Admin Portal
+          Events Portal
         </h1>
-        <p className="text-center text-lg text-muted-foreground sm:text-xl mt-3 mb-3 font-bold">
+        {/* <p className="text-center text-lg text-muted-foreground sm:text-xl mt-3 mb-3 font-bold">
           Organise Events and Track Attendance
-        </p>
+        </p> */}
+        <TypeAnimation
+          className="mt-3 mb-4 text-center text-lg sm:text-xl text-muted-foreground font-bold"
+          speed={60}
+          sequence={[
+            "Organise Events",
+            1500,
+            "Host Spin-&-Win Games",
+            1500,
+            "Run Lucky Draws",
+            1500,
+            "Monitor Attendance Live",
+            1500,
+            "Auto-Assign Groups in Real-Time",
+            1500,
+            "Generate Check-In QR Codes",
+            1500,
+          ]}
+          repeat={Infinity}
+        />
         <AdminSearch query={query} setQuery={setQuery} />
       </div>
       <div className="w-full flex flex-col px-8 py-8 items-center max-w-7xl self-center">
