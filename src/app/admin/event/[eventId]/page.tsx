@@ -55,7 +55,6 @@ import {
 } from "@/components/ui/tooltip";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -65,15 +64,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { TrendingUp } from "lucide-react";
-import { LabelList, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { Pie, PieChart } from "recharts";
 import {
   ChartConfig,
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart";
 
 const headers: Record<string, string> = {
@@ -383,8 +378,8 @@ export default function Page() {
                   {detailsData?.event.name}
                 </span>
                 <div className="flex flex-col lg:flex-row justify-between lg:items-center mt-2 lg:mt-0">
-                  <div className="flex items-center gap-1">
-                    <SquarePen size={14} />
+                  <div className="flex gap-1">
+                    <SquarePen size={14} className="shrink-0 mt-[3px]" />
                     <span className="text-sm text-muted-foreground">
                       Created by {detailsData?.event.createdBy} on{" "}
                       {new Date(
@@ -395,7 +390,7 @@ export default function Page() {
                       })}
                     </span>
                   </div>
-                  <div className="flex gap-2 mt-2 flex-col md:flex-row">
+                  <div className="flex gap-2 mt-4 md:mt-2 flex-col md:flex-row">
                     <Link href={`/admin/event/${eventId}/checkin`}>
                       <Button variant={"outline"} className="w-full md:w-auto">
                         QR code: Check In
