@@ -18,7 +18,7 @@ function AdminSearch({ query, setQuery }: AdminSearchProps) {
         }}
         className="relative group w-full"
       >
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-zinc-500 to-zinc-600 rounded-lg blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 w-full" />
+        <div className="absolute -inset-0.5 bg-gradient-to-r rounded-lg blur opacity-30 w-full" />
 
         <div className="relative flex items-center font-mono w-full">
           <Input
