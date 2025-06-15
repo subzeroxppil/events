@@ -78,7 +78,7 @@ export default function Page() {
         {/* <p className="text-center text-lg text-muted-foreground sm:text-xl mt-3 mb-3 font-bold">
           Organise Events and Track Attendance
         </p> */}
-        <div className="mt-3 mb-4">
+        <div className="mt-3 mb-10 ">
           <TypeAnimation
             className="text-center text-lg sm:text-xl text-muted-foreground font-bold"
             speed={60}
