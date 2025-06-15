@@ -211,5 +211,8 @@
 
 .roulette-pro-regular-prize-item-text {
   font-weight: bold !important;
-  font-size: x-large;
+  font-size: x-large !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  text-align: center !important;
 }
