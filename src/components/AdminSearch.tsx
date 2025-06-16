@@ -21,7 +21,7 @@ function AdminSearch({ query, setQuery }: AdminSearchProps) {
         )}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by Title/Country/Location..."
+        placeholder="Search by Event/Country/Location..."
       />
     </div>
   );
