@@ -1,7 +1,6 @@
 import React from "react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Search } from "lucide-react";
+import { SearchIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type AdminSearchProps = {
   query: string;
@@ -10,26 +9,20 @@ type AdminSearchProps = {
 
 function AdminSearch({ query, setQuery }: AdminSearchProps) {
   return (
-    <div className="relative px-2 w-full max-w-2xl">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          // handleSearch(query);
-        }}
-        className="relative group w-full"
-      >
-        <div className="absolute -inset-0.5 bg-gradient-to-r rounded-lg blur opacity-30 w-full" />
-
-        <div className="relative flex items-center font-mono w-full">
-          <Input
-            placeholder="Search by Title/Country/Location..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full h-10 pr-10 sm:pr-12 md:pr-16 text-sm bg-background backdrop-blur-xs border-muted rounded-lg"
-          />
-          <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 absolute right-2.5" />
-        </div>
-      </form>
+    <div
+      className={cn(
+        "flex items-center border border-input rounded-md shadow-sm w-full bg-background max-w-2xl"
+      )}
+    >
+      <SearchIcon className="h-[16px] w-[16px] ml-3 flex-shrink-0" />
+      <input
+        className={cn(
+          "bg-background h-9 w-full rounded-md border-input  px-3 py-1 text-base transition-colors placeholder:text-muted-foreground focus-visible:outline-none  disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+        )}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search by Title/Country/Location..."
+      />
     </div>
   );
 }
