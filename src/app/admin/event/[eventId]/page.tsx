@@ -430,7 +430,7 @@ export default function Page() {
                           <Button
                             variant="destructive"
                             onClick={handleDeleteEvent}
-                            className="w-[75px]"
+                            className="w-full sm:w-[75px]"
                             disabled={deleteLoading}
                           >
                             {deleteLoading ? <LoadingSpinner /> : "Delete"}
