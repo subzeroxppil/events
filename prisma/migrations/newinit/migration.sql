@@ -1,0 +1,121 @@
+-- CreateEnum
+CREATE TYPE "AdminRole" AS ENUM ('SUPERADMIN', 'EVENTADMIN');
+
+-- CreateEnum
+CREATE TYPE "GroupingStrategy" AS ENUM ('roundRobin', 'maxGroupCapacity');
+
+-- CreateTable
+CREATE TABLE "events_portal_admin" (
+    "id" SERIAL NOT NULL,
+    "email" TEXT NOT NULL,
+    "role" "AdminRole" NOT NULL,
+
+    CONSTRAINT "Admin_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "events_portal_admin_user" (
+    "id" SERIAL NOT NULL,
+    "email" TEXT NOT NULL,
+    "password_hash" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AdminUser_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "events_portal_attendance" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "eventId" INTEGER NOT NULL,
+    "groupNumber" INTEGER,
+    "prizeId" INTEGER,
+    "registeredAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Attendance_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "events_portal_brand" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+
+    CONSTRAINT "Brand_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "events_portal_business_unit_mapping" (
+    "email" TEXT NOT NULL,
+    "businessUnit" TEXT NOT NULL,
+
+    CONSTRAINT "BusinessUnitMapping_pkey" PRIMARY KEY ("email")
+);
+
+-- CreateTable
+CREATE TABLE "events_portal_event" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "eventStartTime" TIMESTAMP(3) NOT NULL,
+    "eventEndTime" TIMESTAMP(3) NOT NULL,
+    "hasLuckyDraw" BOOLEAN NOT NULL DEFAULT false,
+    "location" TEXT NOT NULL,
+    "country" TEXT NOT NULL,
+    "createdBy" TEXT NOT NULL,
+    "groupConfigNumber" INTEGER,
+    "groupingStrategy" "GroupingStrategy",
+    "terms" TEXT,
+
+    CONSTRAINT "Event_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "events_portal_prize" (
+    "id" SERIAL NOT NULL,
+    "brandId" INTEGER NOT NULL,
+    "eventId" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "quantity" INTEGER NOT NULL DEFAULT 0,
+    "imageBlob" BYTEA NOT NULL,
+
+    CONSTRAINT "Prize_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "events_portal_user" (
+    "id" SERIAL NOT NULL,
+    "workId" TEXT NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Admin_email_key" ON "events_portal_admin"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AdminUser_email_key" ON "events_portal_admin_user"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Attendance_userId_eventId_key" ON "events_portal_attendance"("userId", "eventId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Brand_name_key" ON "events_portal_brand"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_workId_key" ON "events_portal_user"("workId");
+
+-- AddForeignKey
+ALTER TABLE "events_portal_attendance" ADD CONSTRAINT "Attendance_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "events_portal_event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "events_portal_attendance" ADD CONSTRAINT "Attendance_prizeId_fkey" FOREIGN KEY ("prizeId") REFERENCES "events_portal_prize"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "events_portal_attendance" ADD CONSTRAINT "Attendance_userId_fkey" FOREIGN KEY ("userId") REFERENCES "events_portal_user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "events_portal_prize" ADD CONSTRAINT "Prize_brandId_fkey" FOREIGN KEY ("brandId") REFERENCES "events_portal_brand"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "events_portal_prize" ADD CONSTRAINT "Prize_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "events_portal_event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+

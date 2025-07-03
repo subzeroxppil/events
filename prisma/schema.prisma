@@ -8,69 +8,77 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum GroupingStrategy {
-  roundRobin       // Attendees assigned in order across groups (1,2,3,1,...)
-  maxGroupCapacity // Groups filled up one at a time to max capacity
+model events_portal_admin {
+  id    Int       @id(map: "events_portal_admin_pkey") @default(autoincrement())
+  email String    @unique(map: "events_portal_admin_email_key")
+  role  AdminRole
 }
 
-model User {
-  id          Int          @id @default(autoincrement())
-  workId      String       @unique
-
-  attendances Attendance[]
+model events_portal_admin_user {
+  id            Int      @id(map: "events_portal_admin_user_pkey") @default(autoincrement())
+  email         String   @unique(map: "events_portal_admin_user_email_key")
+  password_hash String
+  created_at    DateTime @default(now())
 }
 
-model Event {
-  id          Int          @id @default(autoincrement())
-  name        String
-  eventStartTime   DateTime 
-  eventEndTime   DateTime
-  hasLuckyDraw Boolean @default(false)
-  location       String
-  groupingStrategy  GroupingStrategy?
-  groupConfigNumber Int?      
-  country        String
-  terms       String?
-  createdAt   DateTime     @default(now())
-  createdBy      String 
+model events_portal_attendance {
+  id                  Int                  @id(map: "events_portal_attendance_pkey") @default(autoincrement())
+  userId              Int
+  eventId             Int
+  groupNumber         Int?
+  prizeId             Int?
+  registeredAt        DateTime             @default(now())
+  events_portal_event events_portal_event  @relation(fields: [eventId], references: [id], map: "events_portal_attendance_eventId_fkey")
+  events_portal_prize events_portal_prize? @relation(fields: [prizeId], references: [id], map: "events_portal_attendance_prizeId_fkey")
+  events_portal_user  events_portal_user   @relation(fields: [userId], references: [id], map: "events_portal_attendance_userId_fkey")
 
-  prizes      Prize[]
-  attendances Attendance[]
+  @@unique([userId, eventId], map: "events_portal_attendance_userId_eventId_key")
 }
 
-model Attendance {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  eventId     Int
-  groupNumber Int?
-  prizeId     Int?
-  registeredAt DateTime @default(now())
-
-  user        User     @relation(fields: [userId], references: [id])
-  event       Event    @relation(fields: [eventId], references: [id])
-  prize       Prize?   @relation(fields: [prizeId], references: [id])
-
-  @@unique([userId, eventId]) // Prevent duplicate attendance
+model events_portal_brand {
+  id                  Int                   @id(map: "events_portal_brand_pkey") @default(autoincrement())
+  name                String                @unique(map: "events_portal_brand_name_key")
+  events_portal_prize events_portal_prize[]
 }
 
-model Brand {
-  id     Int     @id @default(autoincrement())
-  name   String  @unique
-
-  prizes Prize[]
+model events_portal_business_unit_mapping {
+  email        String @id(map: "BusinessUnitMapping_pkey")
+  businessUnit String
 }
 
-model Prize {
-  id         Int     @id @default(autoincrement())
-  brandId    Int
-  eventId    Int
-  name       String
-  imageBlob   Bytes
-  quantity   Int     @default(0)
+model events_portal_event {
+  id                       Int                        @id(map: "events_portal_event_pkey") @default(autoincrement())
+  name                     String
+  createdAt                DateTime                   @default(now())
+  eventStartTime           DateTime
+  eventEndTime             DateTime
+  hasLuckyDraw             Boolean                    @default(false)
+  location                 String
+  country                  String
+  createdBy                String
+  groupConfigNumber        Int?
+  groupingStrategy         GroupingStrategy?
+  terms                    String?
+  events_portal_attendance events_portal_attendance[]
+  events_portal_prize      events_portal_prize[]
+}
 
-  brand      Brand   @relation(fields: [brandId], references: [id])
-  event      Event   @relation(fields: [eventId], references: [id])
-  attendances Attendance[]
+model events_portal_prize {
+  id                       Int                        @id(map: "events_portal_prize_pkey") @default(autoincrement())
+  brandId                  Int
+  eventId                  Int
+  name                     String
+  quantity                 Int                        @default(0)
+  imageBlob                Bytes
+  events_portal_attendance events_portal_attendance[]
+  events_portal_brand      events_portal_brand        @relation(fields: [brandId], references: [id], map: "events_portal_prize_brandId_fkey")
+  events_portal_event      events_portal_event        @relation(fields: [eventId], references: [id], map: "events_portal_prize_eventId_fkey")
+}
+
+model events_portal_user {
+  id                       Int                        @id(map: "events_portal_user_pkey") @default(autoincrement())
+  workId                   String                     @unique(map: "events_portal_user_workId_key")
+  events_portal_attendance events_portal_attendance[]
 }
 
 enum AdminRole {
@@ -78,20 +86,7 @@ enum AdminRole {
   EVENTADMIN
 }
 
-model Admin {
-  id     Int     @id @default(autoincrement())
-  email  String  @unique
-  role   AdminRole
-}
-
-model BusinessUnitMapping {
-  email         String   @id
-  businessUnit  String
-}
-
-model AdminUser {
-  id             Int             @id @default(autoincrement())
-  email          String          @unique
-  passwordHash   String          @map("password_hash")
-  createdAt      DateTime        @default(now()) @map("created_at")
+enum GroupingStrategy {
+  roundRobin
+  maxGroupCapacity
 }
