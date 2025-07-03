@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = await prisma.adminUser.findUnique({
+    const user = await prisma.events_portal_admin_user.findUnique({
       where: { email },
     });
 
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
       return NextResponse.json(
         { message: "Invalid email or password." },

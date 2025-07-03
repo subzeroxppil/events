@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q")?.toLowerCase() || "";
 
-    const events = await prisma.event.findMany({
+    const events = await prisma.events_portal_event.findMany({
       where: q
         ? {
             OR: [
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
         createdAt: "desc",
       },
       include: {
-        attendances: true,
+        events_portal_attendance: true,
       },
     });
 
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       title: event.name,
       country: event.country,
       location: event.location,
-      attendees: event.attendances.length,
+      attendees: event.events_portal_attendance.length,
       eventStartTime: event.eventStartTime,
       createdAt: event.createdAt,
       createdBy: event.createdBy,
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     const { id: userId } = sessionUser;
 
     // Lookup user by ID to get email
-    const user = await prisma.adminUser.findUnique({
+    const user = await prisma.events_portal_admin_user.findUnique({
       where: { id: parseInt(userId) }, // adjust if userId is string
       select: { email: true },
     });
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const createdEvent = await prisma.event.create({
+    const createdEvent = await prisma.events_portal_event.create({
       data: {
         name,
         country,
@@ -111,13 +111,13 @@ export async function POST(req: NextRequest) {
 
     if (hasLuckyDraw && prizes?.length > 0) {
       for (const prize of prizes) {
-        const existingBrand = await prisma.brand.upsert({
+        const existingBrand = await prisma.events_portal_brand.upsert({
           where: { name: prize.brand },
           update: {},
           create: { name: prize.brand },
         });
 
-        await prisma.prize.create({
+        await prisma.events_portal_prize.create({
           data: {
             name: prize.name,
             quantity: prize.quantity,

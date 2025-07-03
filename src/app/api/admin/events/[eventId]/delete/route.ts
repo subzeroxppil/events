@@ -13,13 +13,17 @@ export async function DELETE(
   }
 
   try {
-    await prisma.attendance.deleteMany({ where: { eventId: eventIdNum } });
+    await prisma.events_portal_attendance.deleteMany({
+      where: { eventId: eventIdNum },
+    });
 
-    await prisma.prize.deleteMany({ where: { eventId: eventIdNum } });
+    await prisma.events_portal_prize.deleteMany({
+      where: { eventId: eventIdNum },
+    });
 
-    await prisma.event.delete({ where: { id: eventIdNum } });
+    await prisma.events_portal_event.delete({ where: { id: eventIdNum } });
 
-    await prisma.brand.deleteMany({
+    await prisma.events_portal_brand.deleteMany({
       where: {
         prizes: {
           none: {},
@@ -27,7 +31,7 @@ export async function DELETE(
       },
     });
 
-    await prisma.user.deleteMany({
+    await prisma.events_portal_user.deleteMany({
       where: {
         attendances: {
           none: {},

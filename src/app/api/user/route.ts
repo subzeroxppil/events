@@ -16,21 +16,25 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 1: Get or create the user
-    let user = await prisma.user.findUnique({ where: { workId } });
+    let user = await prisma.events_portal_user.findUnique({
+      where: { workId },
+    });
 
     if (!user) {
-      user = await prisma.user.create({ data: { workId } });
+      user = await prisma.events_portal_user.create({ data: { workId } });
     }
 
     // Step 2: Check if user already checked in
-    const existingAttendance = await prisma.attendance.findUnique({
-      where: {
-        userId_eventId: {
-          userId: user.id,
-          eventId,
+    const existingAttendance = await prisma.events_portal_attendance.findUnique(
+      {
+        where: {
+          userId_eventId: {
+            userId: user.id,
+            eventId,
+          },
         },
-      },
-    });
+      }
+    );
 
     if (existingAttendance) {
       return NextResponse.json(
@@ -40,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 3: Fetch event and related attendances
-    const event = await prisma.event.findUnique({
+    const event = await prisma.events_portal_event.findUnique({
       where: { id: eventId },
       include: { attendances: true },
     });
@@ -79,7 +83,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 4: Create attendance
-    await prisma.attendance.create({
+    await prisma.events_portal_attendance.create({
       data: {
         userId: user.id,
         eventId,

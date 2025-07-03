@@ -15,7 +15,7 @@ export async function GET(
       );
     }
 
-    const event = await prisma.event.findUnique({
+    const event = await prisma.events_portal_event.findUnique({
       where: { id: eventIdNum },
       select: {
         name: true,

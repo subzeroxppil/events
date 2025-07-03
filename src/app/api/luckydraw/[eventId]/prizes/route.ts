@@ -15,7 +15,7 @@ export async function GET(
       );
     }
 
-    const prizes = await prisma.prize.findMany({
+    const prizes = await prisma.events_portal_prize.findMany({
       where: {
         eventId: eventIdNum,
       },

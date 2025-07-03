@@ -12,7 +12,7 @@ export async function GET(
   }
 
   try {
-    const event = await prisma.event.findUnique({
+    const event = await prisma.events_portal_event.findUnique({
       where: { id: eventIdNum },
       select: {
         id: true,
@@ -33,7 +33,7 @@ export async function GET(
       return NextResponse.json({ message: "Event not found" }, { status: 404 });
     }
 
-    const attendances = await prisma.attendance.findMany({
+    const attendances = await prisma.events_portal_attendance.findMany({
       where: { eventId: eventIdNum },
       select: {
         id: true,
@@ -43,18 +43,18 @@ export async function GET(
     });
 
     const prizeWinners = attendances.filter((a) => a.prizeId !== null);
-    const totalPrizesLeft = await prisma.prize.aggregate({
+    const totalPrizesLeft = await prisma.events_portal_prize.aggregate({
       where: { eventId: eventIdNum },
       _sum: { quantity: true },
     });
 
-    const groupCounts = await prisma.attendance.groupBy({
+    const groupCounts = await prisma.events_portal_attendance.groupBy({
       by: ["groupNumber"],
       where: { eventId: eventIdNum },
       _count: true,
     });
 
-    const prizes = await prisma.prize.findMany({
+    const prizes = await prisma.events_portal_prize.findMany({
       where: { eventId: eventIdNum },
       select: {
         name: true,

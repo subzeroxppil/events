@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Insert into PostgreSQL
-    const user = await prisma.adminUser.create({
+    const user = await prisma.events_portal_admin_user.create({
       data: {
         email,
         passwordHash: hashedPassword,

@@ -25,20 +25,20 @@ export async function GET(
       ? sortBy
       : "registeredAt";
 
-    const attendances = await prisma.attendance.findMany({
+    const attendances = await prisma.events_portal_attendance.findMany({
       where: { eventId: eventIdNum },
       select: {
         registeredAt: true,
         groupNumber: true,
-        user: {
+        events_portal_user: {
           select: {
             workId: true,
           },
         },
-        prize: {
+        events_portal_prize: {
           select: {
             name: true,
-            brand: {
+            events_portal_brand: {
               select: {
                 name: true,
               },
@@ -49,13 +49,13 @@ export async function GET(
       orderBy:
         sortField === "prizeName"
           ? {
-              prize: {
+              events_portal_prize: {
                 name: "asc",
               },
             }
           : sortField === "workId"
           ? {
-              user: {
+              events_portal_user: {
                 workId: "asc",
               },
             }
@@ -65,11 +65,11 @@ export async function GET(
     });
 
     const formattedUsers = attendances.map((a) => ({
-      workId: a.user.workId,
+      workId: a.events_portal_user.workId,
       groupNumber: a.groupNumber,
       registeredAt: a.registeredAt.toISOString(),
-      prizeName: a.prize?.name || null,
-      brandName: a.prize?.brand?.name || null,
+      prizeName: a.events_portal_prize?.name || null,
+      brandName: a.events_portal_prize?.events_portal_brand?.name || null,
     }));
 
     return NextResponse.json({ users: formattedUsers });

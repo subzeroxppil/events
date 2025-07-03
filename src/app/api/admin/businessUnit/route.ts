@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const data = await prisma.businessUnitMapping.findMany({
+    const data = await prisma.events_portal_business_unit_mapping.findMany({
       select: { email: true, businessUnit: true },
     });
 

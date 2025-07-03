@@ -17,7 +17,7 @@ export async function POST(
       );
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.events_portal_user.findUnique({
       where: { workId },
       select: { id: true },
     });
@@ -26,7 +26,7 @@ export async function POST(
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    const attendance = await prisma.attendance.findUnique({
+    const attendance = await prisma.events_portal_attendance.findUnique({
       where: {
         userId_eventId: {
           userId: user.id,
@@ -54,7 +54,7 @@ export async function POST(
       );
     }
 
-    const availablePrizes = await prisma.prize.findMany({
+    const availablePrizes = await prisma.events_portal_prize.findMany({
       where: {
         eventId: eventIdNum,
         quantity: { gt: 0 },
@@ -74,7 +74,7 @@ export async function POST(
 
     // Atomically assign prize to attendance and decrement quantity
     await prisma.$transaction([
-      prisma.attendance.update({
+      prisma.events_portal_attendance.update({
         where: {
           userId_eventId: {
             userId: user.id,
@@ -85,7 +85,7 @@ export async function POST(
           prizeId: selectedPrize.id,
         },
       }),
-      prisma.prize.update({
+      prisma.events_portal_prize.update({
         where: { id: selectedPrize.id },
         data: {
           quantity: { decrement: 1 },

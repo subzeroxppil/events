@@ -23,7 +23,7 @@ export async function POST(
     }
 
     // Step 1: Find the user by workId
-    const user = await prisma.user.findUnique({
+    const user = await prisma.events_portal_user.findUnique({
       where: { workId },
     });
 
@@ -35,7 +35,7 @@ export async function POST(
     }
 
     // Step 2: Check if user has attendance for the event
-    const attendance = await prisma.attendance.findUnique({
+    const attendance = await prisma.events_portal_attendance.findUnique({
       where: {
         userId_eventId: {
           userId: user.id,

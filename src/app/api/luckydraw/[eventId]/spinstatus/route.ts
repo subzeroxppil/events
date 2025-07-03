@@ -18,7 +18,7 @@ export async function GET(
       );
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.events_portal_user.findUnique({
       where: { workId },
       select: { id: true },
     });
@@ -27,7 +27,7 @@ export async function GET(
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    const attendance = await prisma.attendance.findUnique({
+    const attendance = await prisma.events_portal_attendance.findUnique({
       where: {
         userId_eventId: {
           userId: user.id,

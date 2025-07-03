@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    const admin = await prisma.admin.findUnique({
+    const admin = await prisma.events_portal_admin.findUnique({
       where: { email: normalizedEmail },
     });
 

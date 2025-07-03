@@ -20,12 +20,12 @@ export async function GET(req: NextRequest) {
   const userId = Number(session?.userId);
 
   try {
-    const user = await prisma.adminUser.findUnique({
+    const user = await prisma.events_portal_admin_user.findUnique({
       where: { id: userId },
       select: {
         id: true,
         email: true,
-        createdAt: true,
+        created_at: true,
       },
     });
 

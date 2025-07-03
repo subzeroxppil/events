@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   const { id: userId } = sessionUser;
 
   // Lookup user by ID to get email
-  const user = await prisma.adminUser.findUnique({
+  const user = await prisma.events_portal_admin_user.findUnique({
     where: { id: parseInt(userId) }, // adjust if userId is string
     select: { email: true },
   });
@@ -23,11 +23,11 @@ export async function GET(req: Request) {
 
   const requesterEmail = user.email.trim().toLowerCase();
 
-  const currentUser = await prisma.admin.findUnique({
+  const currentUser = await prisma.events_portal_admin.findUnique({
     where: { email: requesterEmail },
   });
 
-  const admins = await prisma.admin.findMany({
+  const admins = await prisma.events_portal_admin.findMany({
     select: { email: true },
     orderBy: { email: "asc" },
   });
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
   const { id: userId } = sessionUser;
 
   // Lookup user by ID to get email
-  const user = await prisma.adminUser.findUnique({
+  const user = await prisma.events_portal_adminUser.findUnique({
     where: { id: parseInt(userId) }, // adjust if userId is string
     select: { email: true },
   });
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "User not found" }, { status: 404 });
   }
 
-  const currentUser = await prisma.admin.findUnique({
+  const currentUser = await prisma.events_portal_admin.findUnique({
     where: { email: user.email.trim().toLowerCase() },
   });
 
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const exists = await prisma.admin.findUnique({
+    const exists = await prisma.events_portal_admin.findUnique({
       where: { email: normalizedEmail },
     });
 
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
       );
     }
 
-    await prisma.admin.create({
+    await prisma.events_portal_admin.create({
       data: {
         email: normalizedEmail,
         role: "EVENTADMIN",

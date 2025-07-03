@@ -18,7 +18,7 @@ export async function DELETE(
   const { id: userId } = sessionUser;
 
   // Lookup user by ID to get email
-  const user = await prisma.adminUser.findUnique({
+  const user = await prisma.events_portal_admin_user.findUnique({
     where: { id: parseInt(userId) }, // adjust if userId is string
     select: { email: true },
   });
@@ -29,7 +29,7 @@ export async function DELETE(
 
   const requesterEmail = user.email.trim().toLowerCase();
 
-  const requester = await prisma.admin.findUnique({
+  const requester = await prisma.events_portal_admin.findUnique({
     where: { email: requesterEmail },
   });
 
@@ -38,7 +38,9 @@ export async function DELETE(
   }
 
   try {
-    await prisma.admin.delete({ where: { email: emailToDelete } });
+    await prisma.events_portal_admin.delete({
+      where: { email: emailToDelete },
+    });
     return NextResponse.json({ message: "Admin deleted successfully" });
   } catch (error) {
     console.error("Failed to delete admin:", error);

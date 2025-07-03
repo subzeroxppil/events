@@ -13,10 +13,10 @@ export async function GET(
 
   try {
     // Fetch all attendances for this event
-    const attendances = await prisma.attendance.findMany({
+    const attendances = await prisma.events_portal_attendance.findMany({
       where: { eventId: eventIdNum },
       select: {
-        user: {
+        events_portal_user: {
           select: { workId: true },
         },
       },
@@ -28,12 +28,13 @@ export async function GET(
 
     // Extract user identifiers (before @ in workId)
     const userWorkIds = attendances.map((a) =>
-      a.user.workId.toLowerCase().trim()
+      a.events_portal_user.workId.toLowerCase().trim()
     );
 
-    const allMappings = await prisma.businessUnitMapping.findMany({
-      select: { email: true, businessUnit: true },
-    });
+    const allMappings =
+      await prisma.events_portal_business_unit_mapping.findMany({
+        select: { email: true, businessUnit: true },
+      });
 
     const mappingMap = new Map<string, string>();
 
