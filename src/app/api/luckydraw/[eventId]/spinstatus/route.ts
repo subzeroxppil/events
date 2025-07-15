@@ -35,11 +35,11 @@ export async function GET(
         },
       },
       select: {
-        prize: {
+        events_portal_prize: {
           select: {
             name: true,
             imageBlob: true,
-            brand: { select: { name: true } },
+            events_portal_brand: { select: { name: true } },
           },
         },
       },
@@ -52,13 +52,13 @@ export async function GET(
       );
     }
 
-    if (attendance.prize) {
+    if (attendance.events_portal_prize) {
       return NextResponse.json({
         hasSpun: true,
-        brand: attendance.prize.brand.name,
-        name: attendance.prize.name,
+        brand: attendance.events_portal_prize.events_portal_brand.name,
+        name: attendance.events_portal_prize.name,
         imageUrl: `data:image/png;base64,${Buffer.from(
-          attendance.prize.imageBlob
+          attendance.events_portal_prize.imageBlob
         ).toString("base64")}`,
       });
     } else {

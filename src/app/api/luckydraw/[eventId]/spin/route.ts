@@ -34,8 +34,8 @@ export async function POST(
         },
       },
       include: {
-        prize: {
-          include: { brand: true },
+        events_portal_prize: {
+          include: { events_portal_brand: true },
         },
       },
     });
@@ -47,7 +47,7 @@ export async function POST(
       );
     }
 
-    if (attendance.prize) {
+    if (attendance.events_portal_prize) {
       return NextResponse.json(
         { message: "User has already spun" },
         { status: 400 }
@@ -59,7 +59,7 @@ export async function POST(
         eventId: eventIdNum,
         quantity: { gt: 0 },
       },
-      include: { brand: true },
+      include: { events_portal_brand: true },
     });
 
     if (availablePrizes.length === 0) {
@@ -95,7 +95,7 @@ export async function POST(
 
     return NextResponse.json({
       prize: {
-        brand: selectedPrize.brand.name,
+        brand: selectedPrize.events_portal_brand.name,
         name: selectedPrize.name,
         imageUrl: `data:image/png;base64,${Buffer.from(
           selectedPrize.imageBlob

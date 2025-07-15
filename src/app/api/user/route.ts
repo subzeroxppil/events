@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     // Step 3: Fetch event and related attendances
     const event = await prisma.events_portal_event.findUnique({
       where: { id: eventId },
-      include: { attendances: true },
+      include: { events_portal_attendance: true },
     });
 
     if (!event) {
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     let groupNumber: number | null = null;
 
     if (event.groupingStrategy && event.groupConfigNumber) {
-      const attendances = event.attendances;
+      const attendances = event.events_portal_attendance;
 
       if (event.groupingStrategy === "roundRobin") {
         const totalGroups = event.groupConfigNumber;

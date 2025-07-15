@@ -25,7 +25,7 @@ export async function DELETE(
 
     await prisma.events_portal_brand.deleteMany({
       where: {
-        prizes: {
+        events_portal_prize: {
           none: {},
         },
       },
@@ -33,7 +33,7 @@ export async function DELETE(
 
     await prisma.events_portal_user.deleteMany({
       where: {
-        attendances: {
+        events_portal_attendance: {
           none: {},
         },
       },

@@ -24,12 +24,12 @@ export async function POST(req: Request) {
     const user = await prisma.events_portal_admin_user.create({
       data: {
         email,
-        passwordHash: hashedPassword,
+        password_hash: hashedPassword,
       },
       select: {
         id: true,
         email: true,
-        createdAt: true,
+        created_at: true,
       },
     });
 

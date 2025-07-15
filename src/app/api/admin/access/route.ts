@@ -55,7 +55,7 @@ export async function POST(req: Request) {
   const { id: userId } = sessionUser;
 
   // Lookup user by ID to get email
-  const user = await prisma.events_portal_adminUser.findUnique({
+  const user = await prisma.events_portal_admin_user.findUnique({
     where: { id: parseInt(userId) }, // adjust if userId is string
     select: { email: true },
   });
