@@ -297,16 +297,15 @@ export default function Home() {
             {spinComplete && (
               <>
                 <div className="flex flex-col items-center text-center p-2 mt-2 gap-2">
-                  {/* TODO: revert */}
-                  {/* <p className="text-lg font-semibold">
-                    {`🎉 You won: ${resultPrizeName} - ${resultPrizeBrand}!`}
-                  </p> */}
                   <p className="text-lg font-semibold">
+                    {`🎉 You won: ${resultPrizeName} - ${resultPrizeBrand}!`}
+                  </p>
+                  {/* <p className="text-lg font-semibold">
                     {`🎉 Pop by ${resultPrizeName.replace(
                       /'s$/,
                       ""
                     )}'s booth to collect your ${resultPrizeBrand}!`}
-                  </p>
+                  </p> */}
                   <div>
                     <Image
                       src={resultPrizeImgSrc}
