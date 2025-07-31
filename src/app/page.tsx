@@ -21,12 +21,12 @@
 //               />
 //               <p className="mb-2 text-2xl font-bold">Events</p>
 //               <div className="w-full flex flex-col gap-2 mt-4">
-//                 <Link href="/admin">
-//                   <Button size={"lg"} className="w-full" variant="outline">
-//                     <ShieldUser />
-//                     <span>Admin Portal</span>
-//                   </Button>
-//                 </Link>
+// <Link href="/admin">
+//   <Button size={"lg"} className="w-full" variant="outline">
+//     <ShieldUser />
+//     <span>Admin Portal</span>
+//   </Button>
+// </Link>
 //               </div>
 //             </div>
 //           </Card>
@@ -47,6 +47,10 @@ import Lottie from "lottie-react";
 import searchAnimationData from "@/app/assets/search-cartoon-animation.json";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { DraggableCardDemo } from "@/components/DraggableCard";
+import { PointerHighlight } from "@/components/ui/pointer-highlight";
+import { Button } from "@/components/ui/button";
+import { LogIn } from "lucide-react";
+import Link from "next/link";
 
 export default function Page() {
   const [loading, setLoading] = useState(true);
@@ -74,6 +78,26 @@ export default function Page() {
         ) : (
           <>
             <DraggableCardDemo />
+            <div className="mx-auto mt-4 text-base font-bold tracking-tight md:text-5xl">
+              Manage events
+              <PointerHighlight
+                rectangleClassName="bg-green-100 dark:bg-green-900 border-green-300 dark:border-green-700 leading-loose"
+                pointerClassName="text-green-500 h-3 w-3"
+                containerClassName="inline-block ml-1"
+              >
+                <span className="relative z-10">smartly</span>
+              </PointerHighlight>
+              .
+            </div>
+            <span className="text-lg text-muted-foreground mt-2">
+              Track attendance and attrition effortlessly, with zero cost 🙌
+            </span>
+            <Link href="/admin">
+              <Button size={"lg"} className="w-full mt-2" variant="outline">
+                <LogIn />
+                <span>Start managing your event now</span>
+              </Button>
+            </Link>
           </>
         )}
       </div>
