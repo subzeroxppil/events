@@ -93,9 +93,9 @@ export default function Page() {
               Track attendance and attrition effortlessly, with zero cost 🙌
             </span>
             <Link href="/admin">
-              <Button size={"lg"} className="w-full mt-2" variant="outline">
+              <Button size={"lg"} className="w-full mt-2">
                 <LogIn />
-                <span>Start managing your event now</span>
+                <span>Let's get started</span>
               </Button>
             </Link>
           </>
