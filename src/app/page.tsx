@@ -102,7 +102,7 @@ export default function Page() {
               </PointerHighlight>
               .
             </div>
-            <span className="text-lg text-muted-foreground mt-2">
+            <span className="text-lg text-muted-foreground mt-2 text-center">
               Psst... try dragging the cards around to see past events!
             </span>
             <Link href="/admin">
