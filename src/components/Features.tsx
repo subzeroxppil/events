@@ -18,19 +18,19 @@ const features: FeatureProps[] = [
     title: "No more manual attendance",
     description:
       "Let participants easily enter your venue by scanning your event QR code. No more manual check-ins required.",
-    image: "/growth.png",
+    image: "/qrfeature.png",
   },
   {
     title: "Attendance analytics",
     description:
       "Discover the demographics of your event's attendees. Enhance inclusivity and engagement for future events.",
-    image: "/reflecting.png",
+    image: "/analyticsfeature.png",
   },
   {
-    title: "Gamified experience",
+    title: "Gamified prize distribution",
     description:
       "Partner merchants to distribute prizes via in-app lucky-draw and spin-to-wins.",
-    image: "/looking-ahead.png",
+    image: "/luckydrawfeature.png",
   },
 ];
 
@@ -65,7 +65,7 @@ export const Features = () => {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {features.map(({ title, description, image }: FeatureProps) => (
-          <Card key={title}>
+          <Card key={title} className="border-0 bg-[#f8f8f8] shadow-none">
             <CardHeader>
               <CardTitle>{title}</CardTitle>
             </CardHeader>

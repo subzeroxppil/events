@@ -88,7 +88,7 @@ export default function Page() {
                 className="whitespace-pre-wrap text-7xl font-bold tracking-tighter text-[#548164]"
               />
               <span className="text-2xl font-semibold text-gray-700">
-                Total check-ins
+                Total check-ins 🥳
               </span>
             </div>
             <div className="mx-auto mt-4 text-base font-bold tracking-tight md:text-5xl">
