@@ -51,6 +51,9 @@ import { PointerHighlight } from "@/components/ui/pointer-highlight";
 import { Button } from "@/components/ui/button";
 import { LogIn } from "lucide-react";
 import Link from "next/link";
+import { Features } from "@/components/Features";
+import { NumberTickerDemo } from "@/components/NumberTicker";
+import { NumberTicker } from "@/components/magicui/number-ticker";
 
 export default function Page() {
   const [loading, setLoading] = useState(true);
@@ -78,6 +81,16 @@ export default function Page() {
         ) : (
           <>
             <DraggableCardDemo />
+            <div className="flex flex-col py-4 px-14 bg-[hsl(108,33%,90%)] rounded-lg mt-12 justify-center items-center">
+              <NumberTicker
+                value={410}
+                startValue={300}
+                className="whitespace-pre-wrap text-7xl font-bold tracking-tighter text-[#548164]"
+              />
+              <span className="text-2xl font-semibold text-gray-700">
+                Total check-ins
+              </span>
+            </div>
             <div className="mx-auto mt-4 text-base font-bold tracking-tight md:text-5xl">
               Manage events
               <PointerHighlight
@@ -90,14 +103,15 @@ export default function Page() {
               .
             </div>
             <span className="text-lg text-muted-foreground mt-2">
-              Track attendance and attrition effortlessly, with zero cost 🙌
+              Psst... try dragging the cards around to see past events!
             </span>
             <Link href="/admin">
-              <Button size={"lg"} className="w-full mt-2">
+              <Button size={"lg"} className="w-full mt-4">
                 <LogIn />
                 <span>Let's get started</span>
               </Button>
             </Link>
+            <Features />
           </>
         )}
       </div>
