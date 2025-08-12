@@ -32,10 +32,10 @@ export function MainNav({
         Events
       </Link>
       <Link
-        href="/luckydraw"
+        href="/admin/luckydraw"
         className={cn(
           "text-md font-medium transition-colors",
-          pathname === "/luckydraw"
+          pathname === "/admin/luckydraw"
             ? "text-black font-bold"
             : "text-muted-foreground hover:text-black"
         )}

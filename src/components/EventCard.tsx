@@ -9,7 +9,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { Users } from "lucide-react";
-import { Clock } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { SquarePen } from "lucide-react";
 
 interface EventCardProps {
@@ -51,7 +51,7 @@ export function EventCard({
               <div>{attendees}</div>
             </div>
             <div className="rounded-lg flex flex-row items-center gap-1">
-              <Clock size={14} className="shrink-0" />
+              <CalendarDays size={14} className="shrink-0" />
               <div>
                 {new Date(eventStartTime).toLocaleString("en-SG", {
                   dateStyle: "medium",
