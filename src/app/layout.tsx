@@ -7,6 +7,7 @@ import localFont from "next/font/local";
 import { Inter } from "next/font/google";
 import { UserNav } from "@/components/UserNav";
 import { UserProvider } from "./UserContext";
+import { MainNav } from "@/components/MainNav";
 
 const paypalOpen = localFont({
   src: "../fonts/PayPalOpen-Regular.woff2",
@@ -45,8 +46,8 @@ export default async function RootLayout({
                       width={90}
                       height={45}
                     />
-                    {/* <span className="font-bold text-lg">Events</span> */}
                   </div>
+                  <MainNav className="mx-6" />
                   <div className="ml-auto flex items-center">
                     <UserNav />
                   </div>
