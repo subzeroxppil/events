@@ -11,7 +11,6 @@ export function MainNav({
   if (!pathname.startsWith("/admin")) {
     return null;
   }
-  console.log("pathname", pathname);
   return (
     <nav
       className={cn(
