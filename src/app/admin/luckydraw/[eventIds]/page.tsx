@@ -315,12 +315,12 @@ export default function Page() {
         <div className="text-red-500 font-medium text-center mt-5">{error}</div>
       ) : (
         <div className="flex flex-col gap-4">
-          <Card className="p-10 pb-15 bg-[#f8f8f8] border-0 shadow-none w-screen h-screen">
+          <Card className="p-10 pb-15  border-0 shadow-none w-screen h-screen">
             <div className="flex flex-col items-center text-center">
               <div className="flex items-center">
                 <span className="text-[60px] font-bold">Lucky Draw</span>
               </div>
-              <Card className="p-10 mt-2 flex flex-col items-center bg-white max-w-7xl overflow-hidden">
+              <Card className="p-10 mt-2 flex flex-col items-center bg-gray-100 max-w-7xl overflow-hidden shadow-none border-0">
                 <div className="flex flex-col gap-8 items-center">
                   <Image
                     src="/paypal_logo.png"

@@ -206,7 +206,9 @@
   height: 200px;
   /* background-color: #0551b5 !important; */
   background: #2dc8ff !important;
-  border: 2px solid white !important;
+  border: 2px solid rgb(243 244 246) !important;
+  border-radius: 35px !important;
+  overflow: hidden !important;
 }
 
 .roulette-pro-regular-prize-item-text {
