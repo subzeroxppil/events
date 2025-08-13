@@ -8,7 +8,11 @@ export function MainNav({
   ...props
 }: React.HTMLAttributes<HTMLElement>) {
   const pathname = usePathname();
-  if (!pathname.startsWith("/admin")) {
+  if (
+    !pathname.startsWith("/admin") ||
+    pathname.startsWith("/admin/login") ||
+    pathname.startsWith("/admin/signup")
+  ) {
     return null;
   }
   return (
@@ -23,7 +27,7 @@ export function MainNav({
         href="/admin"
         className={cn(
           "text-md font-medium transition-colors",
-          pathname === "/admin"
+          pathname === "/admin" || pathname.includes("/admin/event")
             ? "text-black font-bold"
             : "text-muted-foreground hover:text-black"
         )}
@@ -34,7 +38,7 @@ export function MainNav({
         href="/admin/luckydraw"
         className={cn(
           "text-md font-medium transition-colors",
-          pathname === "/admin/luckydraw"
+          pathname.includes("/admin/luckydraw")
             ? "text-black font-bold"
             : "text-muted-foreground hover:text-black"
         )}
