@@ -115,7 +115,7 @@ const EventCheckbox = ({ selectedEventIds, onChange }: Props) => {
             }
             className={cn(
               "relative ring-[1px] ring-border rounded-lg px-4 py-3 text-start text-muted-foreground",
-              isChecked ? "ring-2 ring-primary" : " hover:ring-primary"
+              isChecked ? "ring-2 ring-primary" : "hover:ring-primary"
             )}
           >
             <div className="flex items-start justify-between gap-3">
