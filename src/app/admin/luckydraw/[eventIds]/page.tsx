@@ -318,16 +318,16 @@ export default function Page() {
           <Card className="p-10 pb-15  border-0 shadow-none w-screen h-screen">
             <div className="flex flex-col items-center text-center">
               <div className="flex items-center">
-                <span className="text-[60px] font-bold">Lucky Draw 🎁</span>
+                <span className="text-[60px] font-bold">Lucky Draw</span>
               </div>
-              <Card className="p-10 mt-2 flex flex-col items-center shadow-none border-0">
+              <Card className="p-10 mt-2 flex flex-col items-center bg-gray-100 max-w-7xl overflow-hidden shadow-none border-0">
                 <div className="flex flex-col gap-8 items-center">
-                  {/* <Image
+                  <Image
                     src="/paypal_logo.png"
                     width={100}
                     height={50}
                     alt="paypal icon"
-                  /> */}
+                  />
                   <RoulettePro
                     prizes={prizeList}
                     prizeIndex={prizeIndex}
@@ -346,7 +346,7 @@ export default function Page() {
                     Start
                   </Button>
                   {winners.length > 0 && !isSpinning && (
-                    <span className="font-bold text-6xl mt-1 p-4 rounded-md bg-emerald-100 text-green-800">
+                    <span className="font-bold text-6xl mt-1 p-4 rounded-md bg-green-300">
                       🎉 {winners[winners.length - 1]}
                     </span>
                   )}
