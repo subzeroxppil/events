@@ -196,25 +196,41 @@
 
 .roulette-pro-regular-image-wrapper {
   display: none !important;
+  background: transparent !important;
 }
 
 .roulette-pro-regular-prize-item-text {
   height: 100% !important;
+  background: transparent !important;
+  color: black !important;
 }
 
 .roulette-pro-regular-prize-item-wrapper {
   height: 200px;
   /* background-color: #0551b5 !important; */
-  background: #2dc8ff !important;
-  border: 2px solid rgb(243 244 246) !important;
+  /* background: #2dc8ff !important; */
+  /* border: 2px solid rgb(243 244 246) !important; */
+  border-width: 0px !important;
   border-radius: 35px !important;
   overflow: hidden !important;
+  background: transparent !important;
 }
 
 .roulette-pro-regular-prize-item-text {
-  font-weight: bold !important;
+  font-weight: normal !important;
   font-size: x-large !important;
   white-space: normal !important;
   word-break: break-word !important;
   text-align: center !important;
+  background: transparent !important;
+}
+
+.roulette-pro-regular-prize-item {
+  display: flex !important;
+  background: hsl(202, 68%, 90%) !important;
+  justify-content: center !important;
+  align-items: center !important;
+  border-radius: 100px !important;
+  border: 2px solid rgb(243 244 246) !important;
+  height: 200px !important;
 }
