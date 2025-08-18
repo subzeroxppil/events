@@ -17,7 +17,7 @@ const features: FeatureProps[] = [
   {
     title: "No more manual attendance",
     description:
-      "Let participants easily enter your venue by scanning your event QR code. No more manual check-ins required.",
+      "Let participants easily enter your venue by scanning your event QR code. Assign groups upon check-in if needed.",
     image: "/qrfeature.png",
   },
   {
@@ -27,7 +27,7 @@ const features: FeatureProps[] = [
     image: "/analyticsfeature.png",
   },
   {
-    title: "Gamified prize distribution",
+    title: "Engaging prize distribution",
     description:
       "Partner merchants to distribute prizes via in-app lucky-draw and spin-to-wins.",
     image: "/luckydrawfeature.png",
