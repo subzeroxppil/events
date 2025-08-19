@@ -315,7 +315,7 @@ export default function Page() {
         <div className="text-red-500 font-medium text-center mt-5">{error}</div>
       ) : (
         <div className="flex flex-col gap-4">
-          <Card className="p-10 pb-15  border-0 shadow-none w-screen max-w-[5000px] overflow-hidden">
+          <Card className="p-10 pb-15  border-0 shadow-none w-screen max-w-[1500px] overflow-hidden">
             <div className="flex flex-col items-center text-center mt-20">
               <div className="flex items-center">
                 <span className="text-[60px] font-bold">Lucky Draw 🎁</span>
