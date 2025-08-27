@@ -404,11 +404,11 @@ export default function Page() {
                         </Button>
                       </Link>
                     )}
-                    <Link href={`/admin/event/${eventId}/roulette`}>
+                    {/* <Link href={`/admin/event/${eventId}/roulette`}>
                       <Button variant={"outline"} className="w-full md:w-auto">
                         Roulette game
                       </Button>
-                    </Link>
+                    </Link> */}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
