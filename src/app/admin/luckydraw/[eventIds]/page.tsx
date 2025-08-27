@@ -78,7 +78,6 @@ export default function Page() {
       // }));
 
       let allAttendees: { text: string }[] = [];
-      console.log("eventIds", eventIds);
       // Loop through all event IDs
       for (const id of eventIds) {
         const res = await fetch(
@@ -97,6 +96,11 @@ export default function Page() {
 
         allAttendees = [...allAttendees, ...attendeeList];
       }
+
+      // make unique
+      allAttendees = Array.from(
+        new Map(allAttendees.map((a) => [a.text, a])).values()
+      );
 
       setPrizes(allAttendees);
 
