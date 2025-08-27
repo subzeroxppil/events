@@ -58,9 +58,8 @@ const CheckIn = ({ className }: CheckInProps) => {
   const [isTermsAgree, setIsTermsAgree] = useState(false);
 
   const submitText = "Check in";
-  // TODO: revert
-  // const resultSubheading = "We’re so glad to have you here 🎉";
-  const resultSubheading = "Thank you for fulfilling your call to service.";
+  const resultSubheading = "We’re so glad to have you here 🎉";
+  // const resultSubheading = "Thank you for fulfilling your call to service.";
 
   useEffect(() => {
     if (!eventId) return;
