@@ -227,7 +227,8 @@
 
 .roulette-pro-regular-prize-item {
   display: flex !important;
-  background: hsl(202, 68%, 90%) !important;
+  /* background: hsl(202, 68%, 90%) !important; */
+  background: #60cdff !important;
   justify-content: center !important;
   align-items: center !important;
   border-radius: 100px !important;

@@ -344,7 +344,7 @@ export default function Page() {
                     Start
                   </Button>
                   {winners.length > 0 && !isSpinning && (
-                    <span className="font-bold text-6xl mt-1 p-4 rounded-md bg-emerald-100 text-green-800">
+                    <span className="font-bold text-6xl mt-1 p-4 rounded-md text-[#008cff]">
                       🎉 {winners[winners.length - 1]}
                     </span>
                   )}
