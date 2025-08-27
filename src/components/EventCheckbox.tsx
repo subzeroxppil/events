@@ -11,7 +11,7 @@ type Event = {
   id: number;
   title: string;
   attendees: number;
-  eventStartTime: string; // from API
+  eventStartTime: string;
 };
 
 function formatDateTime(date: string | Date) {
