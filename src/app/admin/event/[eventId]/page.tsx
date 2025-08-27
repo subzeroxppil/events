@@ -221,7 +221,8 @@ export default function Page() {
     if (!res.ok) throw new Error("Failed to fetch event details");
 
     const data = await res.json();
-    if (data?.event?.country?.toLowerCase() === "singapore") {
+
+    if (data?.event?.name?.toLowerCase() === "impact day") {
       await fetchBusinessUnitMappings();
       const chartBreakdown = await fetchBusinessUnitBreakdown(eventId);
       setChartData(
