@@ -371,7 +371,7 @@ export default function Page() {
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 w-full max-w-[2000px] self-center">
+        <div className="flex flex-col gap-4 py-2 md:gap-6 w-full max-w-[2000px] self-center">
           {initialLoading ? (
             <LoadingSpinner className="self-center mt-5" />
           ) : (
@@ -379,7 +379,7 @@ export default function Page() {
               <div className="px-4 lg:px-6 flex flex-col">
                 <Button
                   variant="outline"
-                  className="mb-2 w-[50px]"
+                  className="mb-2 w-[40px] h-[30px]"
                   onClick={() => router.back()}
                 >
                   <ArrowLeft />
