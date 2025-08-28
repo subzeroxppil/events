@@ -17,7 +17,7 @@ function AdminSearch({ query, setQuery }: AdminSearchProps) {
       <SearchIcon className="h-[16px] w-[16px] ml-3 flex-shrink-0" />
       <input
         className={cn(
-          "bg-background h-9 w-full rounded-md border-input  px-3 py-1 text-base transition-colors placeholder:text-muted-foreground focus-visible:outline-none  disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+          "bg-background h-9 w-full rounded-md border-input  px-3 py-1 transition-colors placeholder:text-muted-foreground focus-visible:outline-none  disabled:cursor-not-allowed disabled:opacity-50 text-sm"
         )}
         value={query}
         onChange={(e) => setQuery(e.target.value)}

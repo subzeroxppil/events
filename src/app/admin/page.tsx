@@ -71,14 +71,14 @@ export default function Page() {
 
   return (
     <>
-      <div className="w-full flex flex-col p-8 bg-slate-100 items-center">
+      <div className="w-full flex flex-col px-4 md:px-8 py-8 bg-slate-100 items-center">
         <h1 className="text-center text-4xl font-bold sm:text-5xl">
           Events Portal
         </h1>
         {/* <p className="text-center text-lg text-muted-foreground sm:text-xl mt-3 mb-3 font-bold">
           Organise Events and Track Attendance
         </p> */}
-        <div className="mt-4 mb-4 ">
+        <div className="mt-4 mb-4 text-center">
           <TypeAnimation
             className="text-center text-lg sm:text-xl text-muted-foreground font-bold"
             speed={60}
@@ -101,7 +101,7 @@ export default function Page() {
         </div>
         <AdminSearch query={query} setQuery={setQuery} />
       </div>
-      <div className="w-full flex flex-col px-8 py-8 items-center max-w-7xl self-center">
+      <div className="w-full flex flex-col px-4 md:px-8 py-8 items-center max-w-7xl self-center">
         <div className="flex items-center justify-between p-4 text-xs sm:text-sm md:text-base w-full">
           <span className="text-muted-foreground text-center text-l">
             {eventCount} {eventCount === 1 ? "result" : "results"}
