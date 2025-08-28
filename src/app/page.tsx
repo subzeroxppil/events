@@ -81,7 +81,7 @@ export default function Page() {
         ) : (
           <>
             <DraggableCardDemo />
-            <div className="flex flex-col py-4 px-14 bg-[hsl(108,33%,90%)] rounded-lg mt-12 justify-center items-center">
+            <div className="flex flex-col py-2 px-7 md:py-4 md:px-14 bg-[hsl(108,33%,90%)] rounded-lg mt-12 justify-center items-center">
               <NumberTicker
                 value={410}
                 startValue={300}
