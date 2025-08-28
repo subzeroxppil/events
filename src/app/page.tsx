@@ -85,13 +85,13 @@ export default function Page() {
               <NumberTicker
                 value={410}
                 startValue={300}
-                className="whitespace-pre-wrap text-7xl font-bold tracking-tighter text-[#548164]"
+                className="whitespace-pre-wrap text-5xl md:text-7xl font-bold tracking-tighter text-[#548164]"
               />
-              <span className="text-2xl font-semibold text-gray-700">
+              <span className="text-lg md:text-2xl font-semibold text-gray-700">
                 Total check-ins 🥳
               </span>
             </div>
-            <div className="mx-auto mt-4 text-base font-bold tracking-tight md:text-5xl">
+            <div className="mx-auto mt-4 text-3xl font-bold tracking-tight md:text-5xl text-center">
               Manage events
               <PointerHighlight
                 rectangleClassName="bg-green-100 dark:bg-green-900 border-green-300 dark:border-green-700 leading-loose"
@@ -102,7 +102,7 @@ export default function Page() {
               </PointerHighlight>
               .
             </div>
-            <span className="text-lg text-muted-foreground mt-2 text-center">
+            <span className="text-sm md:text-lg text-muted-foreground mt-2 text-center">
               Psst... try dragging the cards around to see past events!
             </span>
             <Link href="/admin">
