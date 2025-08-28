@@ -71,7 +71,7 @@ export default function Page() {
 
   return (
     <>
-      <div className="w-full flex flex-col px-4 md:px-8 py-8 bg-slate-100 items-center">
+      <div className="w-full flex flex-col px-8 py-8 bg-slate-100 items-center">
         <h1 className="text-center text-4xl font-bold sm:text-5xl">
           Events Portal
         </h1>
