@@ -73,7 +73,7 @@ export default function Page() {
 
   return (
     <>
-      <div className="w-full flex flex-col px-8 py-8 items-center self-center">
+      <div className="w-full flex flex-col px-4 md:px-8 py-8 items-center self-center">
         {!loading ? (
           <LoadingSpinner className="my-10 self-center" />
         ) : errorMessage ? (
