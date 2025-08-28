@@ -17,7 +17,7 @@ export default function Page() {
   return (
     <div className="flex min-h-svh w-full justify-center p-6 md:p-10 ">
       <div className="max-w-sm flex flex-col">
-        <span className="text-2xl font-bold">
+        <span className="text-2xl font-bold mb-2">
           Select your participants for Lucky Draw 🎁
         </span>
         <EventCheckbox
