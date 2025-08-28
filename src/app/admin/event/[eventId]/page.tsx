@@ -28,6 +28,8 @@ import {
   SquarePen,
   Users,
   UsersRound,
+  ArrowBigLeft,
+  ArrowLeft,
 } from "lucide-react";
 import ghostAnimationData from "@/app/assets/ghost-animation.json";
 import {
@@ -375,6 +377,13 @@ export default function Page() {
           ) : (
             <>
               <div className="px-4 lg:px-6 flex flex-col">
+                <Button
+                  variant="outline"
+                  className="mb-2 w-[50px]"
+                  onClick={() => router.back()}
+                >
+                  <ArrowLeft />
+                </Button>
                 <span className="text-4xl font-bold">
                   {detailsData?.event.name}
                 </span>
@@ -394,13 +403,13 @@ export default function Page() {
                   <div className="flex gap-2 mt-4 md:mt-2 flex-col md:flex-row">
                     <Link href={`/admin/event/${eventId}/checkin`}>
                       <Button variant={"outline"} className="w-full md:w-auto">
-                        QR code: Check In
+                        Check-in QR code
                       </Button>
                     </Link>
                     {detailsData?.event.hasLuckyDraw && (
                       <Link href={`/admin/event/${eventId}/luckydraw`}>
                         <Button variant="outline" className="w-full md:w-auto">
-                          QR code: Lucky Draw
+                          Lucky Draw QR code
                         </Button>
                       </Link>
                     )}
