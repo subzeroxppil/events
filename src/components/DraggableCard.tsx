@@ -58,9 +58,9 @@ export function DraggableCardDemo() {
           <img
             src={item.image}
             alt={item.title}
-            className="pointer-events-none relative z-10 h-80 w-80 object-cover"
+            className="pointer-events-none relative z-10 h-40 w-40 md:h-80 md:w-80 object-cover"
           />
-          <h3 className="mt-4 text-center text-2xl font-bold text-neutral-700 dark:text-neutral-300">
+          <h3 className="mt-2 md:mt-4 text-center text-sm md:text-2xl font-bold text-neutral-700 dark:text-neutral-300">
             {item.title}
           </h3>
         </DraggableCardBody>
