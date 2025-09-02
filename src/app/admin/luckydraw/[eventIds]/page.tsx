@@ -190,9 +190,25 @@ export default function Page() {
     const prizeIndex = getValidPrizeIndex(newPrizeList, winners);
     setPrizeList(newPrizeList);
     setPrizeIndex(prizeIndex);
+    // if (spinSound) {
+    //   spinSound.pause(); // Just in case it's already playing
+    //   spinSound.currentTime = 0.5;
+    //   spinSound.play();
+    // }
+
     if (spinSound) {
       spinSound.pause(); // Just in case it's already playing
       spinSound.currentTime = 1;
+
+      // Add event listener to stop at 12 seconds
+      const handleTimeUpdate = () => {
+        if (spinSound.currentTime >= 10.5) {
+          spinSound.pause();
+          spinSound.removeEventListener("timeupdate", handleTimeUpdate);
+        }
+      };
+
+      spinSound.addEventListener("timeupdate", handleTimeUpdate);
       spinSound.play();
     }
 
@@ -263,7 +279,7 @@ export default function Page() {
         // Add the animation class
         roulettePrizeList.classList.add("with-animation");
       }
-    }, 3000);
+    }, 5000);
   };
 
   const triggerConfetti = () => {
@@ -356,7 +372,7 @@ export default function Page() {
                     start={start}
                     onPrizeDefined={handlePrizeDefined}
                     defaultDesignOptions={{ prizesWithText: true }}
-                    spinningTime={15} //prev was 9
+                    spinningTime={13} //prev was 9
                   />
 
                   <Button
