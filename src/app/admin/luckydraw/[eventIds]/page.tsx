@@ -245,6 +245,16 @@ export default function Page() {
     triggerFireworks();
     setIsSpinning(false);
     console.log("prizeList", prizeList);
+
+    // make slow animation begin after 3 seconds
+    setTimeout(() => {
+      const roulettePrizeList = document.querySelector(
+        ".roulette-pro-prize-list"
+      );
+      if (roulettePrizeList) {
+        roulettePrizeList.classList.add("with-animation");
+      }
+    }, 3000);
   };
 
   const triggerConfetti = () => {
