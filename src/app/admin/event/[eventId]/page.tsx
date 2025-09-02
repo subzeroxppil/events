@@ -409,7 +409,7 @@ export default function Page() {
                     {detailsData?.event.hasLuckyDraw && (
                       <Link href={`/admin/event/${eventId}/luckydraw`}>
                         <Button variant="outline" className="w-full md:w-auto">
-                          Spin-to-Win QR code
+                          Spin & Win QR code
                         </Button>
                       </Link>
                     )}

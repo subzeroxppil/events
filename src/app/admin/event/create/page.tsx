@@ -372,7 +372,7 @@ export default function Page() {
               </div>
               <div className="flex flex-col gap-1">
                 <div className="flex">
-                  <Label>Does your event require a lucky draw?</Label>
+                  <Label>Does your event require a Spin & Win?</Label>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild className="ml-1">
