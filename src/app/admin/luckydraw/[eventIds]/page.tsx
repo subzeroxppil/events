@@ -252,6 +252,15 @@ export default function Page() {
         ".roulette-pro-prize-list"
       );
       if (roulettePrizeList) {
+        // Remove all inline styles
+        roulettePrizeList.removeAttribute("style");
+
+        // Add the specific styles
+        const element = roulettePrizeList as HTMLElement;
+        element.style.left = "0px";
+        element.style.willChange = "left";
+
+        // Add the animation class
         roulettePrizeList.classList.add("with-animation");
       }
     }, 3000);
