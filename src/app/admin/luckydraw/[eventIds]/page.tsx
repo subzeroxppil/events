@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useRef } from "react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
@@ -41,6 +41,11 @@ export default function Page() {
   const [applauseSound, setApplauseSound] = useState<HTMLAudioElement | null>(
     null
   );
+
+  const isSpinningRef = useRef(isSpinning);
+  useEffect(() => {
+    isSpinningRef.current = isSpinning;
+  }, [isSpinning]);
 
   const spinAudio =
     typeof Audio !== "undefined" ? new Audio("/sounds/spin3.mp3") : null;
@@ -260,45 +265,10 @@ export default function Page() {
 
     // triggerConfetti();
     triggerFireworks();
+    setIsSpinning(false);
+
     setTimeout(() => {
-      // Capture existing roulette prize list DOM styles & classes
-      // Capture the ONLY ul child inside .roulette-pro-wrapper
-      const wrapper = document.querySelector(
-        ".roulette-pro-wrapper"
-      ) as HTMLElement | null;
-      const prevEl = wrapper
-        ? (wrapper.querySelector("ul") as HTMLElement | null)
-        : null;
-      const savedClassList = prevEl ? Array.from(prevEl.classList) : [];
-      const savedStyleAttr = prevEl ? prevEl.getAttribute("style") : null;
-
-      console.log("savedClassList", savedClassList);
-      console.log("savedStyleAttr", savedStyleAttr);
-
-      // const wrapper = document.querySelector(
-      //   ".roulette-pro-wrapper"
-      // ) as HTMLElement | null;
-      // const prevEl = wrapper
-      //   ? (wrapper.querySelector("ul") as HTMLElement | null)
-      //   : null;
-      // const savedClassList = prevEl ? Array.from(prevEl.classList) : [];
-      // const savedStyleAttr = prevEl ? prevEl.getAttribute("style") : null;
-
-      // console.log("savedClassList", savedClassList);
-      // console.log("savedStyleAttr", savedStyleAttr);
-
-      // // Capture geometry & proportional position BEFORE changing list
-      // const prevWrapperWidth = wrapper?.clientWidth || 0;
-      // const prevUlWidth = prevEl?.scrollWidth || 0;
-      // const computedLeft = prevEl
-      //   ? parseFloat(window.getComputedStyle(prevEl).left || "0")
-      //   : 0;
-      // const positionRatio =
-      //   prevUlWidth > prevWrapperWidth
-      //     ? computedLeft / (prevUlWidth - prevWrapperWidth)
-      //     : 0;
-
-      // Extend prizeList by appending first 100 names again (with new ids)
+      if (isSpinningRef.current) return;
       setPrizeList((prev) => {
         const count = Math.min(100, prev.length);
         const duplicated = prev.slice(0, count).map((p) => ({
@@ -311,50 +281,19 @@ export default function Page() {
         return [...prev, ...duplicated];
       });
 
-      // // After React commits the new prizeList, restore styles & classes
-      // requestAnimationFrame(() => {
-      //   const wrapperEl = document.querySelector(
-      //     ".roulette-pro-wrapper"
-      //   ) as HTMLElement | null;
-      //   if (!wrapperEl) return;
-
-      //   const ulList = wrapperEl.querySelectorAll("ul");
-      //   if (ulList.length !== 1) return;
-      //   const newUl = ulList[0] as HTMLElement;
-
-      //   // Completely replace class list
-      //   if (savedClassList.length) {
-      //     console.log("after re render savedClassList", savedClassList);
-      //     newUl.className = savedClassList.join(" ");
-      //   } else {
-      //     newUl.removeAttribute("class");
-      //   }
-
-      //   // Completely replace inline styles
-      //   if (savedStyleAttr) {
-      //     console.log("after re render savedStyleAttr", savedStyleAttr);
-      //     newUl.setAttribute("style", savedStyleAttr);
-      //   } else {
-      //     newUl.removeAttribute("style");
-      //   }
-
       requestAnimationFrame(() => {
+        // resize to force it to shift to correct position
         window.dispatchEvent(new Event("resize"));
-        // Optional: fire twice if timing sensitive
-        setTimeout(() => window.dispatchEvent(new Event("resize")), 50);
-        // After resize(s), strip any transition the library injects
         const removeTransitionOnce = () => {
           const wrapperEl = document.querySelector(".roulette-pro-wrapper");
           if (!wrapperEl) return;
           const ul = wrapperEl.querySelector("ul") as HTMLElement | null;
           if (!ul) return;
 
-          // Remove inline transition property if present
           if (ul.style.transition) {
             ul.style.removeProperty("transition");
           }
 
-          // Also clean transition from the style attribute text if still there
           const styleAttr = ul.getAttribute("style");
           if (styleAttr && /transition\s*:/.test(styleAttr)) {
             const cleaned = styleAttr
@@ -364,113 +303,17 @@ export default function Page() {
             else ul.removeAttribute("style");
           }
         };
+        removeTransitionOnce();
 
-        // Try several frames (library may set it slightly later)
-        let tries = 0;
-        const rafStrip = () => {
-          removeTransitionOnce();
-          if (tries++ < 12) requestAnimationFrame(rafStrip);
-        };
-        requestAnimationFrame(rafStrip);
+        // make it move slowly again
+        const roulettePrizeList = document.querySelector(
+          ".roulette-pro-prize-list"
+        );
+        if (roulettePrizeList) {
+          roulettePrizeList.classList.add("with-animation");
+        }
       });
-
-      const roulettePrizeList = document.querySelector(
-        ".roulette-pro-prize-list"
-      );
-      if (roulettePrizeList) {
-        // Remove all inline styles
-        roulettePrizeList.removeAttribute("style");
-
-        // Add the specific styles
-        const element = roulettePrizeList as HTMLElement;
-        element.style.left = "0px";
-        element.style.willChange = "left";
-
-        // Add the animation class
-        roulettePrizeList.classList.add("with-animation");
-      }
     }, 5000);
-
-    // requestAnimationFrame(() => {
-    //   const wrapperEl = document.querySelector(
-    //     ".roulette-pro-wrapper"
-    //   ) as HTMLElement | null;
-    //   if (!wrapperEl) return;
-
-    //   const ulList = wrapperEl.querySelectorAll("ul");
-    //   if (ulList.length !== 1) return;
-    //   const newUl = ulList[0] as HTMLElement;
-
-    //   // Replace class list exactly
-    //   if (savedClassList.length) {
-    //     newUl.className = savedClassList.join(" ");
-    //   } else {
-    //     newUl.removeAttribute("class");
-    //   }
-
-    //   // Start from a clean style (do not reapply old width-dependent left directly)
-    //   if (savedStyleAttr) {
-    //     // Extract transition (so we can momentarily disable while repositioning)
-    //     const transitionMatch = savedStyleAttr.match(/transition:[^;]+;/i);
-    //     const transitionValue = transitionMatch
-    //       ? transitionMatch[0]
-    //           .replace("transition:", "")
-    //           .replace(";", "")
-    //           .trim()
-    //       : "";
-    //     // Set initial style without transition to avoid a jump animation
-    //     newUl.style.transition = "none";
-
-    //     // Compute proportional new left
-    //     const newUlWidth = newUl.scrollWidth;
-    //     const newWrapperWidth = wrapperEl.clientWidth;
-    //     const newLeft =
-    //       newUlWidth > newWrapperWidth
-    //         ? positionRatio * (newUlWidth - newWrapperWidth)
-    //         : 0;
-
-    //     // Apply restored style baseline (except left & transition we control)
-    //     // Clear then reapply left + transition
-    //     // We rebuild from savedStyleAttr but override left & transition
-    //     const leftRegex = /left:\s*[-\d.]+px;?/i;
-    //     const cleaned = savedStyleAttr
-    //       .replace(leftRegex, "")
-    //       .replace(/transition:[^;]+;?/i, "");
-    //     newUl.setAttribute("style", cleaned.trim());
-    //     newUl.style.left = `${newLeft}px`;
-    //     if (transitionValue) {
-    //       // Force reflow then restore transition
-    //       void newUl.offsetWidth;
-    //       newUl.style.transition = transitionValue;
-    //     } else {
-    //       newUl.style.removeProperty("transition");
-    //     }
-    //   } else {
-    //     newUl.removeAttribute("style");
-    //   }
-    // });
-
-    setIsSpinning(false);
-    console.log("prizeList", prizeList);
-
-    // make slow animation begin after 3 seconds
-    // setTimeout(() => {
-    //   const roulettePrizeList = document.querySelector(
-    //     ".roulette-pro-prize-list"
-    //   );
-    //   if (roulettePrizeList) {
-    //     // Remove all inline styles
-    //     roulettePrizeList.removeAttribute("style");
-
-    //     // Add the specific styles
-    //     const element = roulettePrizeList as HTMLElement;
-    //     element.style.left = "0px";
-    //     element.style.willChange = "left";
-
-    //     // Add the animation class
-    //     roulettePrizeList.classList.add("with-animation");
-    //   }
-    // }, 5000);
   };
 
   const triggerConfetti = () => {
