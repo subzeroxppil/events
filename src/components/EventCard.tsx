@@ -33,6 +33,9 @@ export function EventCard({
   createdAt,
   createdBy,
 }: EventCardProps) {
+  const createdByCorpId =
+    typeof createdBy === "string" ? createdBy.split("@")[0] : createdBy;
+
   return (
     <Link
       href={{
@@ -62,7 +65,7 @@ export function EventCard({
             <div className="rounded-lg flex flex-row items-center gap-1">
               <SquarePen size={14} className="shrink-0" />
               <div>
-                Created {getRelativeTime(createdAt)} by {createdBy}
+                Created {getRelativeTime(createdAt)} by {createdByCorpId}
               </div>
             </div>
           </div>

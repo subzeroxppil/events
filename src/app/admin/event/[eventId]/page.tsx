@@ -368,6 +368,11 @@ export default function Page() {
 
   const getColor = (index: number) => PIE_COLORS[index % PIE_COLORS.length];
 
+  const createdByCorpId =
+    typeof detailsData?.event.createdBy === "string"
+      ? detailsData?.event.createdBy.split("@")[0]
+      : detailsData?.event.createdBy;
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
@@ -391,7 +396,7 @@ export default function Page() {
                   <div className="flex gap-1">
                     <SquarePen size={14} className="shrink-0 mt-[3px]" />
                     <span className="text-sm text-muted-foreground">
-                      Created by {detailsData?.event.createdBy} on{" "}
+                      Created by {createdByCorpId} on{" "}
                       {new Date(
                         detailsData?.event.createdAt || ""
                       ).toLocaleString("en-SG", {
