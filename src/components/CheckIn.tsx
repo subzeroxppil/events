@@ -607,7 +607,7 @@ const CheckIn = ({ className }: CheckInProps) => {
                     )}
                   </>
                 ) : (
-                  eventName
+                  <span className="font-bold">{eventName}</span>
                 )}
               </p>
               <p className="text-muted-foreground">
