@@ -547,7 +547,7 @@ const CheckIn = ({ className }: CheckInProps) => {
                   </div>
                 </>
               )}
-              <p className="mb-2 text-2xl ">
+              <p className="text-2xl">
                 {showResult ? (
                   <>
                     {hasGrouping && groupNumber != null ? (
@@ -575,8 +575,10 @@ const CheckIn = ({ className }: CheckInProps) => {
                 )}
               </p>
               <p className="text-muted-foreground">
-                {showResult ? (
+                {showResult && hasGrouping ? (
                   <>Please take the wristband shown above</>
+                ) : showResult ? (
+                  <>We’re so glad to have you here 🎉</>
                 ) : hasGrouping ? (
                   <>Check in to join a team and get started!</>
                 ) : (
