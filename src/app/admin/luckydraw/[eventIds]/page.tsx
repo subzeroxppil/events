@@ -85,20 +85,6 @@ export default function Page() {
 
   const fetchAttendees = async () => {
     try {
-      // const res = await fetch(
-      //   `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${eventId}/users`
-      // );
-
-      // const data = await res.json();
-
-      // if (!res.ok) {
-      //   throw new Error(data.message || "Failed to fetch attendees");
-      // }
-
-      // const attendeeList = data.users.map((user: any) => ({
-      //   text: user.workId, // ✅ use workId only
-      // }));
-
       let allAttendees: { text: string }[] = [];
       // Loop through all event IDs
       for (const id of eventIds) {
@@ -209,13 +195,6 @@ export default function Page() {
     }));
     const prizeIndex = getValidPrizeIndex(newPrizeList, winners);
 
-    // const wrapperEl = document.querySelector(".roulette-pro-wrapper");
-    // if (!wrapperEl) return;
-    // const ul = wrapperEl.querySelector("ul") as HTMLElement | null;
-    // if (!ul) return;
-    // // Replace entire style with desired values
-    // ul.setAttribute("style", "left: 0px; will-change: left;");
-
     setPrizeList(newPrizeList);
     setPrizeIndex(prizeIndex);
 
@@ -292,53 +271,6 @@ export default function Page() {
 
     setTimeout(() => {
       if (isSpinningRef.current) return;
-      // setPrizeList((prev) => {
-      //   const count = Math.min(100, prev.length);
-      //   const duplicated = prev.slice(0, count).map((p) => ({
-      //     ...p,
-      //     id:
-      //       typeof crypto.randomUUID === "function"
-      //         ? crypto.randomUUID()
-      //         : generateId(),
-      //   }));
-      //   return [...prev, ...duplicated];
-      // });
-
-      // requestAnimationFrame(() => {
-      //   // resize to force it to shift to correct position
-      //   window.dispatchEvent(new Event("resize"));
-      //   const removeTransitionOnce = () => {
-      //     const wrapperEl = document.querySelector(".roulette-pro-wrapper");
-      //     if (!wrapperEl) return;
-      //     const ul = wrapperEl.querySelector("ul") as HTMLElement | null;
-      //     if (!ul) return;
-
-      //     // Capture current inline style BEFORE stripping transition
-      //     const currentAttr = ul.getAttribute("style");
-      //     previousUlStyleRef.current = currentAttr || null;
-
-      //     if (ul.style.transition) {
-      //       ul.style.removeProperty("transition");
-      //     }
-
-      //     const styleAttr = ul.getAttribute("style");
-      //     if (styleAttr && /transition\s*:/.test(styleAttr)) {
-      //       const cleaned = styleAttr
-      //         .replace(/transition:[^;]+;?/gi, "")
-      //         .trim();
-      //       if (cleaned) ul.setAttribute("style", cleaned);
-      //       else ul.removeAttribute("style");
-      //     }
-      //   };
-      //   removeTransitionOnce();
-
-      // make it move slowly again
-      // const roulettePrizeList = document.querySelector(
-      //   ".roulette-pro-prize-list"
-      // );
-      // if (roulettePrizeList) {
-      //   roulettePrizeList.classList.add("with-animation");
-      // }
 
       const roulettePrizeList = document.querySelector(
         ".roulette-pro-prize-list"
