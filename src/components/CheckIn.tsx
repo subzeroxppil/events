@@ -552,10 +552,29 @@ const CheckIn = ({ className }: CheckInProps) => {
             </div> */}
             <div className="flex flex-col items-center text-center">
               {showResult ? (
-                <Lottie
-                  animationData={onboardingAnimationData}
-                  className="h-[170px]"
-                />
+                <>
+                  {hasGrouping && groupNumber != null ? (
+                    <>
+                      <Image
+                        src={`/sdc18-wristbands/${groupNumber}.png`}
+                        width={170}
+                        height={170}
+                        alt={`Team ${
+                          TEAM_NAME_MAP[groupNumber] ?? groupNumber
+                        }`}
+                        className="h-[170px] object-contain"
+                        priority
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Lottie
+                        animationData={onboardingAnimationData}
+                        className="h-[170px]"
+                      />
+                    </>
+                  )}
+                </>
               ) : (
                 <Image
                   src="/paypal_logo.png"
@@ -567,21 +586,24 @@ const CheckIn = ({ className }: CheckInProps) => {
               <p className="mb-2 text-2xl ">
                 {showResult ? (
                   <>
-                    Welcome! You're in:
-                    {hasGrouping && groupNumber != null && (
+                    {hasGrouping && groupNumber != null ? (
                       <>
+                        Welcome! You're in:
                         <br />
                         <span className="font-bold">
-                          Team {TEAM_NAME_MAP[groupNumber] ?? groupNumber}, {""}
                           {eventAttendanceCount != null && (
                             <>
                               {eventAttendanceCount <= 120
                                 ? "Group A"
                                 : "Group B"}
+                              , {""}
                             </>
                           )}
+                          Team {TEAM_NAME_MAP[groupNumber] ?? groupNumber}
                         </span>
                       </>
+                    ) : (
+                      <>Welcome!</>
                     )}
                   </>
                 ) : (
