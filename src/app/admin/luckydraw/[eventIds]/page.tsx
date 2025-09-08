@@ -196,12 +196,12 @@ export default function Page() {
     }));
     const prizeIndex = getValidPrizeIndex(newPrizeList, winners);
 
-    const wrapperEl = document.querySelector(".roulette-pro-wrapper");
-    if (!wrapperEl) return;
-    const ul = wrapperEl.querySelector("ul") as HTMLElement | null;
-    if (!ul) return;
-    // Replace entire style with desired values
-    ul.setAttribute("style", "left: 0px; will-change: left;");
+    // const wrapperEl = document.querySelector(".roulette-pro-wrapper");
+    // if (!wrapperEl) return;
+    // const ul = wrapperEl.querySelector("ul") as HTMLElement | null;
+    // if (!ul) return;
+    // // Replace entire style with desired values
+    // ul.setAttribute("style", "left: 0px; will-change: left;");
 
     setPrizeList(newPrizeList);
     setPrizeIndex(prizeIndex);
@@ -273,54 +273,54 @@ export default function Page() {
 
     setTimeout(() => {
       if (isSpinningRef.current) return;
-      setPrizeList((prev) => {
-        const count = Math.min(100, prev.length);
-        const duplicated = prev.slice(0, count).map((p) => ({
-          ...p,
-          id:
-            typeof crypto.randomUUID === "function"
-              ? crypto.randomUUID()
-              : generateId(),
-        }));
-        return [...prev, ...duplicated];
-      });
+      // setPrizeList((prev) => {
+      //   const count = Math.min(100, prev.length);
+      //   const duplicated = prev.slice(0, count).map((p) => ({
+      //     ...p,
+      //     id:
+      //       typeof crypto.randomUUID === "function"
+      //         ? crypto.randomUUID()
+      //         : generateId(),
+      //   }));
+      //   return [...prev, ...duplicated];
+      // });
 
-      requestAnimationFrame(() => {
-        // resize to force it to shift to correct position
-        window.dispatchEvent(new Event("resize"));
-        const removeTransitionOnce = () => {
-          const wrapperEl = document.querySelector(".roulette-pro-wrapper");
-          if (!wrapperEl) return;
-          const ul = wrapperEl.querySelector("ul") as HTMLElement | null;
-          if (!ul) return;
+      // requestAnimationFrame(() => {
+      //   // resize to force it to shift to correct position
+      //   window.dispatchEvent(new Event("resize"));
+      //   const removeTransitionOnce = () => {
+      //     const wrapperEl = document.querySelector(".roulette-pro-wrapper");
+      //     if (!wrapperEl) return;
+      //     const ul = wrapperEl.querySelector("ul") as HTMLElement | null;
+      //     if (!ul) return;
 
-          // Capture current inline style BEFORE stripping transition
-          const currentAttr = ul.getAttribute("style");
-          previousUlStyleRef.current = currentAttr || null;
+      //     // Capture current inline style BEFORE stripping transition
+      //     const currentAttr = ul.getAttribute("style");
+      //     previousUlStyleRef.current = currentAttr || null;
 
-          if (ul.style.transition) {
-            ul.style.removeProperty("transition");
-          }
+      //     if (ul.style.transition) {
+      //       ul.style.removeProperty("transition");
+      //     }
 
-          const styleAttr = ul.getAttribute("style");
-          if (styleAttr && /transition\s*:/.test(styleAttr)) {
-            const cleaned = styleAttr
-              .replace(/transition:[^;]+;?/gi, "")
-              .trim();
-            if (cleaned) ul.setAttribute("style", cleaned);
-            else ul.removeAttribute("style");
-          }
-        };
-        removeTransitionOnce();
+      //     const styleAttr = ul.getAttribute("style");
+      //     if (styleAttr && /transition\s*:/.test(styleAttr)) {
+      //       const cleaned = styleAttr
+      //         .replace(/transition:[^;]+;?/gi, "")
+      //         .trim();
+      //       if (cleaned) ul.setAttribute("style", cleaned);
+      //       else ul.removeAttribute("style");
+      //     }
+      //   };
+      //   removeTransitionOnce();
 
-        // make it move slowly again
-        const roulettePrizeList = document.querySelector(
-          ".roulette-pro-prize-list"
-        );
-        if (roulettePrizeList) {
-          roulettePrizeList.classList.add("with-animation");
-        }
-      });
+      // make it move slowly again
+      const roulettePrizeList = document.querySelector(
+        ".roulette-pro-prize-list"
+      );
+      if (roulettePrizeList) {
+        roulettePrizeList.classList.add("with-animation");
+      }
+      // });
     }, 5000);
   };
 
