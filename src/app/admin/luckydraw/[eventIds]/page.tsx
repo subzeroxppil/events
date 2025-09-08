@@ -41,6 +41,19 @@ export default function Page() {
   const [applauseSound, setApplauseSound] = useState<HTMLAudioElement | null>(
     null
   );
+
+  // Add near other refs at top inside component:
+  const idleAnimationRestartRef = useRef<number | null>(null);
+
+  // (Optional) Cleanup on unmount: add in a useEffect:
+  useEffect(() => {
+    return () => {
+      if (idleAnimationRestartRef.current) {
+        clearTimeout(idleAnimationRestartRef.current);
+      }
+    };
+  }, []);
+
   const previousUlStyleRef = useRef<string | null>(null);
 
   const isSpinningRef = useRef(isSpinning);
@@ -232,6 +245,12 @@ export default function Page() {
       applauseSound.currentTime = 0;
     }
 
+    // In handleStart (before setStart(false)) clear any pending restart:
+    if (idleAnimationRestartRef.current) {
+      clearTimeout(idleAnimationRestartRef.current);
+      idleAnimationRestartRef.current = null;
+    }
+
     setStart(false); // reset
     setTimeout(() => {
       setStart(true); // trigger spin
@@ -314,11 +333,32 @@ export default function Page() {
       //   removeTransitionOnce();
 
       // make it move slowly again
+      // const roulettePrizeList = document.querySelector(
+      //   ".roulette-pro-prize-list"
+      // );
+      // if (roulettePrizeList) {
+      //   roulettePrizeList.classList.add("with-animation");
+      // }
+
       const roulettePrizeList = document.querySelector(
         ".roulette-pro-prize-list"
-      );
+      ) as HTMLElement | null;
       if (roulettePrizeList) {
         roulettePrizeList.classList.add("with-animation");
+
+        // Schedule restart after 60s (adjust as needed)
+        if (idleAnimationRestartRef.current) {
+          clearTimeout(idleAnimationRestartRef.current);
+        }
+        idleAnimationRestartRef.current = window.setTimeout(() => {
+          if (!roulettePrizeList.isConnected) return;
+          roulettePrizeList.classList.remove("with-animation");
+          roulettePrizeList.style.transform = "translate3d(0px,0px,0px)";
+          roulettePrizeList.style.removeProperty("transition");
+          roulettePrizeList.style.left = "0px";
+          void roulettePrizeList.offsetWidth;
+          roulettePrizeList.classList.add("with-animation");
+        }, 60000); // 1 minute
       }
       // });
     }, 5000);
