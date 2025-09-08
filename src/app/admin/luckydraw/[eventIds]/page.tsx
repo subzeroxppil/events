@@ -41,6 +41,7 @@ export default function Page() {
   const [applauseSound, setApplauseSound] = useState<HTMLAudioElement | null>(
     null
   );
+  const previousUlStyleRef = useRef<string | null>(null);
 
   const isSpinningRef = useRef(isSpinning);
   useEffect(() => {
@@ -194,6 +195,14 @@ export default function Page() {
           : generateId(),
     }));
     const prizeIndex = getValidPrizeIndex(newPrizeList, winners);
+
+    const wrapperEl = document.querySelector(".roulette-pro-wrapper");
+    if (!wrapperEl) return;
+    const ul = wrapperEl.querySelector("ul") as HTMLElement | null;
+    if (!ul) return;
+    // Replace entire style with desired values
+    ul.setAttribute("style", "left: 0px; will-change: left;");
+
     setPrizeList(newPrizeList);
     setPrizeIndex(prizeIndex);
     // if (spinSound) {
@@ -289,6 +298,10 @@ export default function Page() {
           if (!wrapperEl) return;
           const ul = wrapperEl.querySelector("ul") as HTMLElement | null;
           if (!ul) return;
+
+          // Capture current inline style BEFORE stripping transition
+          const currentAttr = ul.getAttribute("style");
+          previousUlStyleRef.current = currentAttr || null;
 
           if (ul.style.transition) {
             ul.style.removeProperty("transition");
