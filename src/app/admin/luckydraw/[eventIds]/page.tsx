@@ -205,11 +205,6 @@ export default function Page() {
 
     setPrizeList(newPrizeList);
     setPrizeIndex(prizeIndex);
-    // if (spinSound) {
-    //   spinSound.pause(); // Just in case it's already playing
-    //   spinSound.currentTime = 0.5;
-    //   spinSound.play();
-    // }
 
     if (spinSound) {
       spinSound.pause(); // Just in case it's already playing
