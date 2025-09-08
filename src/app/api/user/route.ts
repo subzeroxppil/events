@@ -37,8 +37,11 @@ export async function POST(req: NextRequest) {
     );
 
     if (existingAttendance) {
+      const count = await prisma.events_portal_attendance.count({
+        where: { eventId },
+      });
       return NextResponse.json(
-        { groupNumber: existingAttendance.groupNumber },
+        { groupNumber: existingAttendance.groupNumber, count },
         { status: 200 }
       );
     }
@@ -90,8 +93,9 @@ export async function POST(req: NextRequest) {
         groupNumber,
       },
     });
+    const count = event.events_portal_attendance.length + 1;
 
-    return NextResponse.json({ groupNumber }, { status: 200 });
+    return NextResponse.json({ groupNumber, count }, { status: 200 });
   } catch (err) {
     console.error("Failed to register user:", err);
     return NextResponse.json(
