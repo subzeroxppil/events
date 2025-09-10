@@ -576,11 +576,11 @@ export default function Page() {
             </div>
           </div>
           <Card className="px-15 pb-15  border-0 shadow-none w-screen max-w-[1500px] overflow-hidden self-center">
-            <div className="flex flex-col items-center text-center mt-15">
+            <div className="flex flex-col items-center text-center mt-10">
               <div className="flex items-center">
                 <span className="text-[60px] font-bold">Lucky Draw 🎁</span>
               </div>
-              <div className="text-muted-foreground mb-4">
+              <div className="w-auto px-2 py-1 rounded bg-primary/10 flex items-center justify-center text-xs font-medium">
                 {prizes.length} participant{prizes.length === 1 ? "" : "s"}
               </div>
               <Card className="p-10 mt-2 flex flex-col items-center shadow-none border-0">
