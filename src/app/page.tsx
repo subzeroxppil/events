@@ -105,7 +105,7 @@ export default function Page() {
         ) : (
           <>
             <DraggableCardDemo />
-            <div className="flex flex-col py-2 px-7 md:py-3 md:px-14 bg-[hsl(108,33%,90%)] rounded-lg mt-12 justify-center items-center w-full">
+            <div className="flex flex-col py-2 px-7 md:py-3 md:px-14 bg-[hsl(108,33%,90%)] rounded-lg mt-2 justify-center items-center w-full">
               {checkinsLoading ? (
                 <>
                   <Skeleton className="h-16 md:h-20 w-32 md:w-40 bg-[#548164]/20" />
@@ -117,8 +117,8 @@ export default function Page() {
                 <>
                   <NumberTicker
                     value={totalCheckins}
-                    startValue={Math.max(0, totalCheckins - 100)}
-                    className="whitespace-pre-wrap text-5xl md:text-7xl font-bold tracking-tighter text-[#548164]"
+                    startValue={Math.max(0, totalCheckins - 110)}
+                    className="whitespace-pre-wrap text-5xl md:text-6xl font-bold tracking-tighter text-[#548164]"
                   />
                   <span className="text-lg md:text-2xl font-semibold text-gray-700 mt-1">
                     Total check-ins 🥳
