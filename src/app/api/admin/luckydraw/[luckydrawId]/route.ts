@@ -187,6 +187,81 @@ export async function POST(
   }
 }
 
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ luckydrawId: string }> }
+): Promise<Response> {
+  try {
+    const { luckydrawId } = await params;
+    const luckydrawIdNum = Number(luckydrawId);
+
+    if (isNaN(luckydrawIdNum)) {
+      return NextResponse.json(
+        { message: "Invalid luckydrawId" },
+        { status: 400 }
+      );
+    }
+
+    const body = await req.json();
+    const { workId } = body;
+
+    if (!workId) {
+      return NextResponse.json(
+        { message: "workId is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if lucky draw exists
+    const existingLuckyDraw = await prisma.events_portal_luckydraw.findUnique({
+      where: { id: luckydrawIdNum },
+    });
+
+    if (!existingLuckyDraw) {
+      return NextResponse.json(
+        { message: "Lucky draw not found" },
+        { status: 404 }
+      );
+    }
+
+    // Find the user by workId
+    const user = await prisma.events_portal_user.findUnique({
+      where: { workId: workId },
+    });
+
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    // Delete the winner record
+    const deletedWinner =
+      await prisma.events_portal_luckydraw_winners.deleteMany({
+        where: {
+          luckydrawId: luckydrawIdNum,
+          userId: user.id,
+        },
+      });
+
+    if (deletedWinner.count === 0) {
+      return NextResponse.json(
+        { message: "Winner not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: "Winner deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting winner:", error);
+    return NextResponse.json(
+      { message: "Failed to delete winner" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ luckydrawId: string }> }

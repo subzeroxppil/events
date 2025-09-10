@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import BackButton from "@/components/BackButton";
+import { Trash2 } from "lucide-react";
 
 type LuckyDraw = {
   id: number;
@@ -363,6 +364,30 @@ export default function Page() {
     }
   };
 
+  const handleDeleteWinner = async (winnerWorkId: string) => {
+    try {
+      const response = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ workId: winnerWorkId }),
+      });
+
+      if (response.ok) {
+        // Remove winner from UI
+        setWinners((prev) => prev.filter((winner) => winner !== winnerWorkId));
+        toast.success("Winner removed successfully");
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.message || "Failed to remove winner");
+      }
+    } catch (error) {
+      console.error("Error removing winner:", error);
+      toast.error("Failed to remove winner");
+    }
+  };
+
   const triggerConfetti = () => {
     const end = Date.now() + 3 * 1000; // 3 seconds
     const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
@@ -479,7 +504,14 @@ export default function Page() {
                               </div>
                               <span className="font-medium">{winner}</span>
                             </div>
-                            <div className="text-2xl">🎉</div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteWinner(winner)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
                           </div>
                         ))}
                       </div>
