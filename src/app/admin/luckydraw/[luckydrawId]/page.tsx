@@ -257,11 +257,31 @@ export default function Page() {
     }, 50); // small delay ensures React registers the change
   };
 
-  const handlePrizeDefined = () => {
+  const handlePrizeDefined = async () => {
     const winner = prizeList[prizeIndex];
     const winnerWorkId = winner?.text;
+
     if (winnerWorkId) {
-      setWinners((prev) => [...prev, winnerWorkId]);
+      try {
+        // Send POST request to record the winner
+        const response = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ workId: winnerWorkId }),
+        });
+
+        if (response.ok) {
+          // Only update UI if the API call was successful
+          setWinners((prev) => [...prev, winnerWorkId]);
+        } else {
+          const errorData = await response.json();
+          console.error("Error recording winner:", errorData.message);
+        }
+      } catch (error) {
+        console.error("Error recording winner:", error);
+      }
     }
 
     if (spinSound) {

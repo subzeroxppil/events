@@ -78,6 +78,97 @@ export async function GET(
   }
 }
 
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ luckydrawId: string }> }
+): Promise<Response> {
+  try {
+    const { luckydrawId } = await params;
+    const luckydrawIdNum = Number(luckydrawId);
+
+    if (isNaN(luckydrawIdNum)) {
+      return NextResponse.json(
+        { message: "Invalid luckydrawId" },
+        { status: 400 }
+      );
+    }
+
+    const body = await req.json();
+    const { workId } = body;
+
+    if (!workId) {
+      return NextResponse.json(
+        { message: "workId is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if lucky draw exists
+    const existingLuckyDraw = await prisma.events_portal_luckydraw.findUnique({
+      where: { id: luckydrawIdNum },
+    });
+
+    if (!existingLuckyDraw) {
+      return NextResponse.json(
+        { message: "Lucky draw not found" },
+        { status: 404 }
+      );
+    }
+
+    // Find the user by workId
+    const user = await prisma.events_portal_user.findUnique({
+      where: { workId: workId },
+    });
+
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    // Check if user already won this lucky draw
+    // Note: Commenting out winner check for now since the table might not exist yet
+    const existingWinner =
+      await prisma.events_portal_luckydraw_winners.findFirst({
+        where: {
+          luckydrawId: luckydrawIdNum,
+          userId: user.id,
+        },
+      });
+
+    if (existingWinner) {
+      return NextResponse.json(
+        { message: "User has already won this lucky draw" },
+        { status: 400 }
+      );
+    }
+
+    // Record the winner
+    // Note: For now, just return success since the winner table might not exist
+    const winner = await prisma.events_portal_luckydraw_winners.create({
+      data: {
+        luckydrawId: luckydrawIdNum,
+        userId: user.id,
+      },
+    });
+
+    return NextResponse.json(
+      {
+        message: "Winner recorded successfully",
+        winner: {
+          workId: workId,
+          wonAt: new Date(),
+        },
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Error recording winner:", error);
+    return NextResponse.json(
+      { message: "Failed to record winner" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ luckydrawId: string }> }
