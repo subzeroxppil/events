@@ -79,6 +79,7 @@ model events_portal_user {
   id                       Int                        @id(map: "events_portal_user_pkey") @default(autoincrement())
   workId                   String                     @unique(map: "events_portal_user_workId_key")
   events_portal_attendance events_portal_attendance[]
+  events_portal_luckydraw_winners events_portal_luckydraw_winners[]
 }
 
 enum AdminRole {
@@ -97,4 +98,16 @@ model events_portal_luckydraw {
   createdAt DateTime @default(now())
   createdBy String
   eventIds  Int[]    @default([])
+  events_portal_luckydraw_winners events_portal_luckydraw_winners[]
+}
+
+model events_portal_luckydraw_winners {
+  id           Int                     @id @default(autoincrement())
+  luckydrawId  Int
+  userId       Int
+  createdAt        DateTime                @default(now())
+  
+  events_portal_luckydraw events_portal_luckydraw @relation(fields: [luckydrawId], references: [id])
+  events_portal_user      events_portal_user      @relation(fields: [userId], references: [id])
+  
 }
