@@ -57,7 +57,9 @@ export default function Page() {
   const [start, setStart] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [prizeIndex, setPrizeIndex] = useState(0);
-  const [winners, setWinners] = useState<string[]>([]);
+  const [winners, setWinners] = useState<{ workId: string; wonAt: string }[]>(
+    []
+  );
   const [prizeList, setPrizeList] = useState<
     { text: string; id: string; image: string }[]
   >([]);
@@ -191,7 +193,7 @@ export default function Page() {
 
   function getValidPrizeIndex(
     prizeList: { text: string }[],
-    winners: string[]
+    winners: { workId: string; wonAt: string }[]
   ): number {
     const maxOffset = 10;
     let attempts = 0;
@@ -199,7 +201,7 @@ export default function Page() {
     while (attempts < 10) {
       const candidateIndex = baseOffset + Math.floor(Math.random() * maxOffset);
       const candidate = prizeList[candidateIndex];
-      if (!winners.includes(candidate.text)) {
+      if (!winners.some((winner) => winner.workId === candidate.text)) {
         return candidateIndex;
       }
       attempts++;
@@ -281,7 +283,10 @@ export default function Page() {
 
         if (response.ok) {
           // Only update UI if the API call was successful
-          setWinners((prev) => [...prev, winnerWorkId]);
+          setWinners((prev) => [
+            ...prev,
+            { workId: winnerWorkId, wonAt: new Date().toISOString() },
+          ]);
         } else {
           const errorData = await response.json();
           console.error("Error recording winner:", errorData.message);
@@ -376,7 +381,9 @@ export default function Page() {
 
       if (response.ok) {
         // Remove winner from UI
-        setWinners((prev) => prev.filter((winner) => winner !== winnerWorkId));
+        setWinners((prev) =>
+          prev.filter((winner) => winner.workId !== winnerWorkId)
+        );
         toast.success("Winner removed successfully");
       } else {
         const errorData = await response.json();
@@ -506,15 +513,23 @@ export default function Page() {
                             className="flex items-center justify-between p-3 border rounded-lg bg-background"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
-                                {index + 1}
+                              <div className="w-auto px-2 py-1 rounded bg-primary/10 flex items-center justify-center text-xs font-medium">
+                                {new Date(winner.wonAt).toLocaleTimeString(
+                                  "en-SG",
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}
                               </div>
-                              <span className="font-medium">{winner}</span>
+                              <span className="font-medium">
+                                {winner.workId}
+                              </span>
                             </div>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteWinner(winner)}
+                              onClick={() => handleDeleteWinner(winner.workId)}
                               className="text-red-500 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 size={16} />
@@ -582,7 +597,7 @@ export default function Page() {
                   </Button>
                   {winners.length > 0 && !isSpinning && (
                     <span className="font-bold text-6xl mt-1 p-4 rounded-md text-[#008cff]">
-                      🎉 {winners[winners.length - 1]}
+                      🎉 {winners[winners.length - 1]?.workId}
                     </span>
                   )}
                 </div>

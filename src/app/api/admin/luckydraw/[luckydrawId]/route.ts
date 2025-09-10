@@ -71,9 +71,10 @@ export async function GET(
       orderBy: { createdAt: "asc" },
     });
 
-    const winnerWorkIds = winners.map(
-      (winner) => winner.events_portal_user.workId
-    );
+    const winnerData = winners.map((winner) => ({
+      workId: winner.events_portal_user.workId,
+      wonAt: winner.createdAt,
+    }));
 
     return NextResponse.json({
       luckyDraw: {
@@ -85,7 +86,7 @@ export async function GET(
       },
       participants: uniqueWorkIds,
       participantCount: uniqueWorkIds.length,
-      winners: winnerWorkIds, // winnerWorkIds when table is available
+      winners: winnerData, // winnerWorkIds when table is available
     });
   } catch (error) {
     console.error("Error fetching lucky draw participants:", error);
