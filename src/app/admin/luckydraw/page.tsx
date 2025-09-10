@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import Lottie from "lottie-react";
 import ghostAnimationData from "@/app/assets/ghost-animation.json";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 
 type LuckyDraw = {
   id: number;
@@ -47,13 +49,22 @@ export default function Page() {
 
   return (
     <div className="flex min-h-svh w-full justify-center p-6 md:p-10 ">
-      <div className="max-w-sm flex flex-col">
-        <span className="text-2xl font-bold ">Lucky Draw</span>
+      <div className="max-w-xl flex flex-col w-full">
+        <span className="text-4xl font-bold ">Lucky Draw</span>
         <span className="text-md text-muted-foreground mb-2">
           View past lucky draws or create a new one!
         </span>
+        <div className="flex justify-end mb-4 w-full">
+          <Link href="/admin/luckydraw/create">
+            <Button>
+              <Plus />
+              Create Lucky Draw
+            </Button>
+          </Link>
+        </div>
+
         {loading ? (
-          <div className="w-full max-w-sm flex flex-col gap-3 mt-5">
+          <div className="w-full max-w-sm flex flex-col gap-3 mt-5 self-center">
             {Array.from({ length: 3 }).map((_, idx) => (
               <div
                 key={idx}
