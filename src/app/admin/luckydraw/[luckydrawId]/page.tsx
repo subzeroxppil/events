@@ -52,6 +52,7 @@ export default function Page() {
 
   const [initialLoading, setInitialLoading] = useState(true);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const [error, setError] = useState("");
   const [prizes, setPrizes] = useState<{ text: string }[]>([]);
   const [start, setStart] = useState(false);
@@ -263,6 +264,7 @@ export default function Page() {
     setTimeout(() => {
       setStart(true); // trigger spin
       setIsSpinning(true);
+      setHasStarted(true); // Mark that user has started at least once
     }, 50); // small delay ensures React registers the change
   };
 
@@ -595,7 +597,7 @@ export default function Page() {
                   >
                     Start
                   </Button>
-                  {winners.length > 0 && !isSpinning && (
+                  {winners.length > 0 && !isSpinning && hasStarted && (
                     <span className="font-bold text-6xl mt-1 p-4 rounded-md text-[#008cff]">
                       🎉 {winners[winners.length - 1]?.workId}
                     </span>
