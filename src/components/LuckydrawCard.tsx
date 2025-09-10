@@ -29,16 +29,10 @@ export function LuckydrawCard({
 
   return (
     <Link href={`/admin/luckydraw/${id}`}>
-      <Card className="fade-in hover:bg-slate-100 transition-colors">
-        <CardHeader className="pb-3">
+      <Card className="fade-in hover:bg-slate-100 transition-colors py-3">
+        <CardHeader className="gap-0">
           <CardTitle className="text-lg">{name}</CardTitle>
           <div className="flex flex-row items-center text-muted-foreground text-sm gap-x-4 flex-wrap">
-            <div className="flex items-center gap-1">
-              <Calendar size={14} className="shrink-0" />
-              <span>
-                {eventCount} event{eventCount === 1 ? "" : "s"}
-              </span>
-            </div>
             <div className="flex items-center gap-1">
               <SquarePen size={14} className="shrink-0" />
               <span>
