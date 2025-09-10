@@ -470,7 +470,14 @@ export default function Page() {
             <div className="flex gap-2">
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline">View Winners</Button>
+                  <Button variant="outline">
+                    View Winners
+                    {winners.length > 0 && (
+                      <span className="px-2 py-1 bg-[#60cdff] rounded-full text-xs">
+                        {winners.length}
+                      </span>
+                    )}
+                  </Button>
                 </SheetTrigger>
                 <SheetContent>
                   <SheetHeader>
