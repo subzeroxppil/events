@@ -67,7 +67,7 @@ export default function Page() {
   }, [isSpinning]);
 
   const spinAudio =
-    typeof Audio !== "undefined" ? new Audio("/sounds/spin3.mp3") : null;
+    typeof Audio !== "undefined" ? new Audio("/sounds/spin4.mp3") : null;
 
   const celebrateAudio =
     typeof Audio !== "undefined" ? new Audio("/sounds/celebrate.wav") : null;
