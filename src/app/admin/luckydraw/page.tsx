@@ -88,7 +88,7 @@ export default function Page() {
             </span>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="flex flex-col gap-2">
             {luckyDraws.map((luckyDraw) => (
               <LuckydrawCard
                 key={luckyDraw.id}
