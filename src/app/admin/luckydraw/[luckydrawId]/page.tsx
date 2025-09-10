@@ -13,16 +13,20 @@ import confetti from "canvas-confetti";
 import ghostAnimationData from "@/app/assets/ghost-animation.json";
 import Lottie from "lottie-react";
 
+type LuckyDraw = {
+  id: number;
+  name: string;
+  eventIds: number[];
+  createdAt: string;
+  createdBy: string;
+};
+
 export default function Page() {
   const params = useParams();
 
-  const encodedParam = Array.isArray(params?.eventIds)
-    ? params.eventIds[0]
-    : params.eventIds;
-
-  const eventIds = JSON.parse(
-    atob(decodeURIComponent(encodedParam || "[]"))
-  ) as number[];
+  const luckydrawId = Array.isArray(params?.luckydrawId)
+    ? params.luckydrawId[0]
+    : params?.luckydrawId;
 
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState("");
@@ -74,40 +78,31 @@ export default function Page() {
   const baseOffset = 160;
 
   useEffect(() => {
-    if (!eventIds) return;
+    if (!luckydrawId) return;
 
-    fetchAttendees();
+    fetchLuckyDrawData();
 
     setSpinSound(spinAudio);
     setCelebrateSound(celebrateAudio);
     setApplauseSound(applauseAudio);
   }, []);
 
-  const fetchAttendees = async () => {
+  const fetchLuckyDrawData = async () => {
     try {
-      let allAttendees: { text: string }[] = [];
-      // Loop through all event IDs
-      for (const id of eventIds) {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/events/${id}/users`
-        );
+      const res = await fetch(`/api/admin/luckydraw/${luckydrawId}`);
+      const data = await res.json();
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.message || "Failed to fetch attendees");
-        }
-
-        const attendeeList = data.users.map((user: any) => ({
-          text: user.workId,
-        }));
-
-        allAttendees = [...allAttendees, ...attendeeList];
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch attendees");
       }
+
+      let allAttendees = data.participants.map((workId: any) => ({
+        text: workId,
+      }));
 
       // make unique
       allAttendees = Array.from(
-        new Map(allAttendees.map((a) => [a.text, a])).values()
+        new Map(allAttendees.map((a: { text: any }) => [a.text, a])).values()
       );
 
       setPrizes(allAttendees);
