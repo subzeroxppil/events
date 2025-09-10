@@ -23,6 +23,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import BackButton from "@/components/BackButton";
 
 type LuckyDraw = {
   id: number;
@@ -404,12 +405,16 @@ export default function Page() {
       ) : error ? (
         <div className="text-red-500 font-medium text-center mt-5">{error}</div>
       ) : (
-        <div className="flex flex-col gap-4">
-          <Card className="p-10 pb-15  border-0 shadow-none w-screen max-w-[1500px] overflow-hidden">
-            <div className="flex w-full justify-end gap-2">
+        <div className="flex flex-col gap-4 w-full">
+          <div className="flex w-full justify-between p-4">
+            <BackButton />
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={triggerFireworks}>
+                View Winners
+              </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant={"outline"}>Delete Lucky Draw</Button>
+                  <Button variant={"outline"}>Delete </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -433,6 +438,8 @@ export default function Page() {
                 </AlertDialogContent>
               </AlertDialog>
             </div>
+          </div>
+          <Card className="p-10 pb-15  border-0 shadow-none w-screen max-w-[1500px] overflow-hidden self-center">
             <div className="flex flex-col items-center text-center mt-15">
               <div className="flex items-center">
                 <span className="text-[60px] font-bold">Lucky Draw 🎁</span>

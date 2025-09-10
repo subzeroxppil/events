@@ -28,8 +28,6 @@ import {
   SquarePen,
   Users,
   UsersRound,
-  ArrowBigLeft,
-  ArrowLeft,
 } from "lucide-react";
 import ghostAnimationData from "@/app/assets/ghost-animation.json";
 import {
@@ -72,6 +70,7 @@ import {
   ChartContainer,
   ChartTooltip,
 } from "@/components/ui/chart";
+import BackButton from "@/components/BackButton";
 
 const headers: Record<string, string> = {
   groupNumber: "Group Number",
@@ -382,13 +381,7 @@ export default function Page() {
           ) : (
             <>
               <div className="px-4 lg:px-6 flex flex-col">
-                <Button
-                  variant="outline"
-                  className="mb-2 w-[40px] h-[30px]"
-                  onClick={() => router.back()}
-                >
-                  <ArrowLeft />
-                </Button>
+                <BackButton className="self-start" />
                 <span className="text-4xl font-bold">
                   {detailsData?.event.name}
                 </span>
