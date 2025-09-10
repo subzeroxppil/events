@@ -64,7 +64,7 @@ export default function Page() {
         </div>
 
         {loading ? (
-          <div className="w-full max-w-sm flex flex-col gap-3 mt-5 self-center">
+          <div className="w-full flex flex-col gap-3 mt-5 self-center">
             {Array.from({ length: 3 }).map((_, idx) => (
               <div
                 key={idx}
