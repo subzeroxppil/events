@@ -22,6 +22,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { toast } from "sonner";
 import BackButton from "@/components/BackButton";
 
@@ -409,9 +417,50 @@ export default function Page() {
           <div className="flex w-full justify-between p-4">
             <BackButton />
             <div className="flex gap-2">
-              <Button variant="outline" onClick={triggerFireworks}>
-                View Winners
-              </Button>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline">View Winners</Button>
+                </SheetTrigger>
+                <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle>Lucky Draw Winners</SheetTitle>
+                    <SheetDescription>
+                      List of all winners from this lucky draw session
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    {winners.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-8 text-center">
+                        <div className="text-4xl mb-2">🎁</div>
+                        <p className="text-muted-foreground">
+                          No winners yet! Start the lucky draw to see winners
+                          here.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Total winners: {winners.length}
+                        </p>
+                        {winners.map((winner, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3 border rounded-lg bg-background"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                                {index + 1}
+                              </div>
+                              <span className="font-medium">{winner}</span>
+                            </div>
+                            <div className="text-2xl">🎉</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant={"outline"}>Delete </Button>
@@ -439,7 +488,7 @@ export default function Page() {
               </AlertDialog>
             </div>
           </div>
-          <Card className="p-10 pb-15  border-0 shadow-none w-screen max-w-[1500px] overflow-hidden self-center">
+          <Card className="px-15 pb-15  border-0 shadow-none w-screen max-w-[1500px] overflow-hidden self-center">
             <div className="flex flex-col items-center text-center mt-15">
               <div className="flex items-center">
                 <span className="text-[60px] font-bold">Lucky Draw 🎁</span>
