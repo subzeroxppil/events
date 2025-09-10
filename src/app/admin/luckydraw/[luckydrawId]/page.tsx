@@ -45,6 +45,7 @@ export default function Page() {
   const [applauseSound, setApplauseSound] = useState<HTMLAudioElement | null>(
     null
   );
+  const [luckyDraw, setLuckyDraw] = useState<LuckyDraw | null>(null);
 
   // Add near other refs at top inside component:
   const idleAnimationRestartRef = useRef<number | null>(null);
@@ -95,6 +96,8 @@ export default function Page() {
       if (!res.ok) {
         throw new Error(data.message || "Failed to fetch attendees");
       }
+
+      setLuckyDraw(data.luckyDraw);
 
       let allAttendees = data.participants.map((workId: any) => ({
         text: workId,
