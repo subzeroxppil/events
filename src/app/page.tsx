@@ -54,9 +54,12 @@ import Link from "next/link";
 import { Features } from "@/components/Features";
 import { NumberTickerDemo } from "@/components/NumberTicker";
 import { NumberTicker } from "@/components/magicui/number-ticker";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Page() {
   const [loading, setLoading] = useState(true);
+  const [checkinsLoading, setCheckinsLoading] = useState(true);
+  const [totalCheckins, setTotalCheckins] = useState(0);
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [events, setEvents] = useState([]);
@@ -71,6 +74,27 @@ export default function Page() {
     Bad: "#C4554D",
   };
 
+  useEffect(() => {
+    const fetchCheckins = async () => {
+      try {
+        setCheckinsLoading(true);
+        const response = await fetch("/api/stats/checkins");
+        if (response.ok) {
+          const data = await response.json();
+          setTotalCheckins(data.totalCheckins);
+        } else {
+          console.error("Failed to fetch check-ins");
+        }
+      } catch (error) {
+        console.error("Error fetching check-ins:", error);
+      } finally {
+        setCheckinsLoading(false);
+      }
+    };
+
+    fetchCheckins();
+  }, []);
+
   return (
     <>
       <div className="w-full flex flex-col px-4 md:px-8 py-8 items-center self-center">
@@ -81,15 +105,26 @@ export default function Page() {
         ) : (
           <>
             <DraggableCardDemo />
-            <div className="flex flex-col py-2 px-7 md:py-4 md:px-14 bg-[hsl(108,33%,90%)] rounded-lg mt-12 justify-center items-center">
-              <NumberTicker
-                value={410}
-                startValue={300}
-                className="whitespace-pre-wrap text-5xl md:text-7xl font-bold tracking-tighter text-[#548164]"
-              />
-              <span className="text-lg md:text-2xl font-semibold text-gray-700">
-                Total check-ins 🥳
-              </span>
+            <div className="flex flex-col py-2 px-7 md:py-3 md:px-14 bg-[hsl(108,33%,90%)] rounded-lg mt-12 justify-center items-center w-full">
+              {checkinsLoading ? (
+                <>
+                  <Skeleton className="h-16 md:h-20 w-32 md:w-40 bg-[#548164]/20" />
+                  <span className="text-lg md:text-2xl font-semibold text-gray-700 mt-2">
+                    Total check-ins 🥳
+                  </span>
+                </>
+              ) : (
+                <>
+                  <NumberTicker
+                    value={totalCheckins}
+                    startValue={Math.max(0, totalCheckins - 100)}
+                    className="whitespace-pre-wrap text-5xl md:text-7xl font-bold tracking-tighter text-[#548164]"
+                  />
+                  <span className="text-lg md:text-2xl font-semibold text-gray-700 mt-1">
+                    Total check-ins 🥳
+                  </span>
+                </>
+              )}
             </div>
             <div className="mx-auto mt-4 text-3xl font-bold tracking-tight md:text-5xl text-center">
               Manage events
