@@ -16,20 +16,21 @@ export default function Page() {
 
   return (
     <div className="flex min-h-svh w-full justify-center p-6 md:p-10 ">
-      <div className="max-w-sm flex flex-col">
-        <span className="text-2xl font-bold mb-2">
-          Select your participants for Lucky Draw 🎁
+      <div className="flex flex-col max-w-2xl w-full">
+        <span className="text-3xl font-bold">Select participants 💁🏼‍♀️</span>
+        <span className="text-md text-muted-foreground mb-2">
+          You can select multiple events, then click "create" below when ready!
         </span>
         <EventCheckbox
           selectedEventIds={selectedEventIds}
           onChange={setSelectedEventIds}
         />
         <Button
-          className="mt-4"
+          className="mt-3 w-sm self-center"
           onClick={handleStart}
           disabled={selectedEventIds.length === 0}
         >
-          Start
+          Create
         </Button>
       </div>
     </div>

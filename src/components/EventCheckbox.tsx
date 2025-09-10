@@ -73,10 +73,14 @@ const EventCheckbox = ({ selectedEventIds, onChange }: Props) => {
   };
 
   if (errorMessage)
-    return <p className="text-red-500 text-sm text-center">{errorMessage}</p>;
+    return (
+      <p className="text-red-500 text-sm text-center self-center">
+        {errorMessage}
+      </p>
+    );
   if (loading) {
     return (
-      <div className="w-full max-w-sm flex flex-col gap-3 mt-5">
+      <div className="w-full max-w-sm flex flex-col gap-3 mt-5 self-center">
         {Array.from({ length: 3 }).map((_, idx) => (
           <div
             key={idx}
@@ -96,13 +100,13 @@ const EventCheckbox = ({ selectedEventIds, onChange }: Props) => {
   }
   if (events.length === 0)
     return (
-      <p className="text-muted-foreground text-sm text-center">
+      <p className="text-muted-foreground text-sm text-center self-center">
         No events found
       </p>
     );
 
   return (
-    <div className="w-full max-w-sm flex flex-col gap-3 mt-5">
+    <div className="w-full max-w-sm flex flex-col gap-2 mt-5 self-center">
       {events.map((ev) => {
         const isChecked = selectedEventIds.includes(ev.id);
 
