@@ -56,7 +56,7 @@ export default function Page() {
   };
 
   return (
-    <div className="flex min-h-svh w-full justify-center p-6 md:p-10 ">
+    <div className="flex w-full justify-center p-6 md:p-10 ">
       <Card className="flex flex-col max-w-lg w-full p-6 gap-0">
         <span className="text-3xl font-bold mb-3">Create Lucky Draw</span>
         <div className="mb-3">
