@@ -28,19 +28,14 @@ docker rmi paypal-events
 **Step 2: Create the new migration file at `prisma/migration`**
 
 ```bash
-npx prisma migrate dev --name <name of migration>
+npx prisma migrate diff \
+  --from-url "direct_url" \
+  --to-schema-datamodel prisma/schema.prisma \
+  --script > prisma/custom_migrations/migration_name.sql
 ```
 
-💡 Note: Insert the name of the migration eg: add_user_table
+💡 Note: replace "migration_name" and "direct_url"
 
-**Step 3: Execute the relevant migration files to the production database**
+**Step 3: Remove the irrelevant sql in the new migration file**
 
-```bash
-npx prisma migrate deploy
-```
-
-**OPTIONAL: Seed the database with dummy data according to `prisma/seed.js`**
-
-```bash
-npx prisma db seed
-```
+**Step 4: Apply the sql file to supabase console**

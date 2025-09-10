@@ -90,3 +90,11 @@ enum GroupingStrategy {
   roundRobin
   maxGroupCapacity
 }
+
+model events_portal_luckydraw {
+  id        Int      @id(map: "events_portal_luckydraw_pkey") @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  createdBy String
+  eventIds  Int[]    @default([])
+}
