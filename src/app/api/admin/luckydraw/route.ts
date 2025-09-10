@@ -10,10 +10,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(
-      { luckyDraws, count: luckyDraws.length },
-      { status: 200 }
-    );
+    return NextResponse.json({ luckyDraws }, { status: 200 });
   } catch (error) {
     console.error("Failed to fetch lucky draws:", error);
     return NextResponse.json(
