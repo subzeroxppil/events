@@ -389,10 +389,10 @@ const CheckIn = ({ className }: CheckInProps) => {
     4: "Fuschia",
     5: "Purple",
     6: "Green",
-    7: "Blue",
+    7: "Light Blue",
     8: "Orange",
     9: "Yellow",
-    10: "Royal Blue",
+    10: "Dark Blue",
   };
   //////////
 
