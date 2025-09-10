@@ -58,6 +58,23 @@ export async function GET(
       )
     );
 
+    // Get winners for this lucky draw (commented out for now since table might not exist)
+    const winners = await prisma.events_portal_luckydraw_winners.findMany({
+      where: { luckydrawId: luckydrawIdNum },
+      include: {
+        events_portal_user: {
+          select: {
+            workId: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const winnerWorkIds = winners.map(
+      (winner) => winner.events_portal_user.workId
+    );
+
     return NextResponse.json({
       luckyDraw: {
         id: luckyDraw.id,
@@ -68,6 +85,7 @@ export async function GET(
       },
       participants: uniqueWorkIds,
       participantCount: uniqueWorkIds.length,
+      winners: winnerWorkIds, // winnerWorkIds when table is available
     });
   } catch (error) {
     console.error("Error fetching lucky draw participants:", error);

@@ -132,6 +132,12 @@ export default function Page() {
 
       setPrizes(allAttendees);
 
+      // Set existing winners from API response
+      if (data.winners && Array.isArray(data.winners)) {
+        console.log("data.winners", data.winners);
+        setWinners(data.winners);
+      }
+
       // max 50
       const reproducedPrizeList = createRepeatedPrizeList(
         allAttendees,
