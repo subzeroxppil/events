@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -12,6 +12,17 @@ import "@/app/globals.css";
 import confetti from "canvas-confetti";
 import ghostAnimationData from "@/app/assets/ghost-animation.json";
 import Lottie from "lottie-react";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 type LuckyDraw = {
   id: number;
@@ -23,12 +34,14 @@ type LuckyDraw = {
 
 export default function Page() {
   const params = useParams();
+  const router = useRouter();
 
   const luckydrawId = Array.isArray(params?.luckydrawId)
     ? params.luckydrawId[0]
     : params?.luckydrawId;
 
   const [initialLoading, setInitialLoading] = useState(true);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState("");
   const [prizes, setPrizes] = useState<{ text: string }[]>([]);
   const [start, setStart] = useState(false);
@@ -294,6 +307,27 @@ export default function Page() {
     }, 5000);
   };
 
+  const handleDeleteLuckyDraw = async () => {
+    if (!luckydrawId) return;
+
+    try {
+      setDeleteLoading(true);
+      const res = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete lucky draw");
+
+      router.push("/admin/luckydraw");
+      toast.success("Lucky draw deleted");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error deleting lucky draw");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   const triggerConfetti = () => {
     const end = Date.now() + 3 * 1000; // 3 seconds
     const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
@@ -372,9 +406,39 @@ export default function Page() {
       ) : (
         <div className="flex flex-col gap-4">
           <Card className="p-10 pb-15  border-0 shadow-none w-screen max-w-[1500px] overflow-hidden">
-            <div className="flex flex-col items-center text-center mt-20">
+            <div className="flex w-full justify-end gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant={"outline"}>Delete Lucky Draw</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete lucky draw?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete your lucky draw and all data
+                      related to it.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <Button
+                      variant="destructive"
+                      onClick={handleDeleteLuckyDraw}
+                      className="w-full sm:w-[75px]"
+                      disabled={deleteLoading}
+                    >
+                      {deleteLoading ? <LoadingSpinner /> : "Delete"}
+                    </Button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+            <div className="flex flex-col items-center text-center mt-15">
               <div className="flex items-center">
                 <span className="text-[60px] font-bold">Lucky Draw 🎁</span>
+              </div>
+              <div className="text-muted-foreground mb-4">
+                {prizes.length} participant{prizes.length === 1 ? "" : "s"}
               </div>
               <Card className="p-10 mt-2 flex flex-col items-center shadow-none border-0">
                 <div className="flex flex-col gap-8 items-center">

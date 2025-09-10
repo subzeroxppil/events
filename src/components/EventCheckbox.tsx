@@ -102,7 +102,7 @@ const EventCheckbox = ({ selectedEventIds, onChange }: Props) => {
     );
 
   return (
-    <div className="w-full max-w-sm flex flex-col gap-2 mt-2">
+    <div className="w-full flex flex-col gap-2 mt-2">
       {events.map((ev) => {
         const isChecked = selectedEventIds.includes(ev.id);
 

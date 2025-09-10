@@ -78,6 +78,56 @@ export async function GET(
   }
 }
 
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ luckydrawId: string }> }
+): Promise<Response> {
+  try {
+    const { luckydrawId } = await params;
+    const luckydrawIdNum = Number(luckydrawId);
+
+    if (isNaN(luckydrawIdNum)) {
+      return NextResponse.json(
+        { message: "Invalid luckydrawId" },
+        { status: 400 }
+      );
+    }
+
+    // Check if lucky draw exists
+    const existingLuckyDraw = await prisma.events_portal_luckydraw.findUnique({
+      where: { id: luckydrawIdNum },
+    });
+
+    if (!existingLuckyDraw) {
+      return NextResponse.json(
+        { message: "Lucky draw not found" },
+        { status: 404 }
+      );
+    }
+
+    // Delete any winners associated with this lucky draw (if table exists)
+    await prisma.events_portal_luckydraw_winners.deleteMany({
+      where: { luckydrawId: luckydrawIdNum },
+    });
+
+    // Delete the lucky draw
+    await prisma.events_portal_luckydraw.delete({
+      where: { id: luckydrawIdNum },
+    });
+
+    return NextResponse.json(
+      { message: "Lucky draw deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting lucky draw:", error);
+    return NextResponse.json(
+      { message: "Failed to delete lucky draw" },
+      { status: 500 }
+    );
+  }
+}
+
 // sample response
 // {
 //   "luckyDraw": {
