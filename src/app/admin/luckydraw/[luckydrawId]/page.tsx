@@ -457,7 +457,7 @@ export default function Page() {
   };
 
   return (
-    <div className="flex w-full justify-center h-full">
+    <div className="flex w-full justify-center h-full max-w-[2000px] self-center">
       {initialLoading ? (
         <LoadingSpinner className="mt-5" />
       ) : prizes.length === 0 ? (
@@ -491,23 +491,28 @@ export default function Page() {
                 <SheetContent>
                   <SheetHeader>
                     <SheetTitle>Lucky Draw Winners</SheetTitle>
-                    <SheetDescription>
+                    {/* <SheetDescription>
                       List of all winners from this lucky draw session
-                    </SheetDescription>
+                    </SheetDescription> */}
                   </SheetHeader>
                   <div className="mt-6">
                     {winners.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-8 text-center">
-                        <div className="text-4xl mb-2">🎁</div>
-                        <p className="text-muted-foreground">
-                          No winners yet! Start the lucky draw to see winners
-                          here.
-                        </p>
+                      <div className="w-full py-30 flex flex-col items-center">
+                        <Lottie
+                          animationData={ghostAnimationData}
+                          className="h-[170px]"
+                        />
+                        <span className="text-muted-foreground text-sm text-center">
+                          No winners yet! Start the lucky draw to see winners.
+                        </span>
                       </div>
                     ) : (
                       <div className="space-y-3">
                         <p className="text-sm text-muted-foreground mb-4">
-                          Total winners: {winners.length}
+                          Total winners:{" "}
+                          <span className="text-black font-semibold">
+                            {winners.length}
+                          </span>
                         </p>
                         {winners.map((winner, index) => (
                           <div

@@ -24,6 +24,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { groupingStrategyTooltips } from "@/app/utils/common";
+import BackButton from "@/components/BackButton";
 
 export default function Page() {
   const [title, setTitle] = useState("");
@@ -203,6 +204,7 @@ export default function Page() {
   return (
     <div className="flex w-full justify-center p-6 md:p-10 h-full">
       <div className="flex flex-col gap-4 w-full max-w-xl">
+        <BackButton className="self-start" />
         <Card className="w-full p-6">
           <div className="flex flex-col items-center text-center">
             <CalendarPlus size={50} />
