@@ -244,8 +244,11 @@ export default function LuckyDrawCY() {
     const totalDistance = spinDistance + adjustmentDistance;
     const finalPosition = startPos + totalDistance;
 
+    // Store the winner for later use
+    const actualWinner = newSpinnerItems[validIndex];
+    
     // Smooth single-phase animation with gentle deceleration
-    animateSpinnerSmooth(startPos, finalPosition, 7500, newSpinnerItems[validIndex]);
+    animateSpinnerSmooth(startPos, finalPosition, 7500, actualWinner);
   };
 
   const animateSpinnerSmooth = (
@@ -292,8 +295,12 @@ export default function LuckyDrawCY() {
       if (progress < 1) {
         animationRef.current = requestAnimationFrame(animate);
       } else {
+        // Set to exact final position
         setCurrentPosition(to);
-        handleSpinComplete(winner);
+        // Small delay to ensure position is set before determining winner
+        setTimeout(() => {
+          handleSpinComplete(winner);
+        }, 100);
       }
     };
 
@@ -555,7 +562,6 @@ export default function LuckyDrawCY() {
                 const isVisible = distanceFromCenter < ITEM_HEIGHT * 8;
 
                 const opacity = isCenter ? 1 : isNearCenter ? 0.95 : isVisible ? 0.8 : 0.5;
-                const scale = isCenter ? 1.12 : 1;
                 const blur = distanceFromCenter > ITEM_HEIGHT * 6
                   ? Math.min(0.5, (distanceFromCenter - ITEM_HEIGHT * 6) * 0.001)
                   : 0;
@@ -567,18 +573,16 @@ export default function LuckyDrawCY() {
                     style={{
                       top: `${itemTop}px`,
                       opacity,
-                      transform: `scale(${scale})`,
                       filter: blur > 0 ? `blur(${blur}px)` : 'none',
                       transition: isIdleAnimating || isSpinning ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      willChange: 'transform, opacity, filter'
+                      willChange: 'opacity, filter'
                     }}
                   >
                     {/* Glassmorphic card container */}
                     <div
                       className={cn(
                         "relative px-10 py-4 rounded-2xl",
-                        "transition-all duration-300",
-                        isCenter && "animate-pulse"
+                        "transition-all duration-300"
                       )}
                       style={{
                         background: isCenter
@@ -596,6 +600,7 @@ export default function LuckyDrawCY() {
                           : isNearCenter
                             ? '0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 10px rgba(255, 255, 255, 0.3)'
                             : '0 4px 16px 0 rgba(31, 38, 135, 0.1)',
+                        transform: isCenter ? 'scale(1.12)' : 'scale(1)',
                         willChange: 'transform'
                       }}
                     >
