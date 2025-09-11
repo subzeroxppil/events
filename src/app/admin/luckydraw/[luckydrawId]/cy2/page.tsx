@@ -367,7 +367,7 @@ export default function LuckyDrawCY2() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Top Controls - minimal floating buttons */}
-      <div className="absolute top-6 left-6 z-20">
+      <div className="absolute top-20 left-6 z-20">
         <Button
           variant="ghost"
           onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy`)}
@@ -378,7 +378,7 @@ export default function LuckyDrawCY2() {
         </Button>
       </div>
 
-      <div className="absolute top-6 right-6 z-20">
+      <div className="absolute top-20 right-6 z-20">
         <Button
           variant="ghost"
           onClick={() => setShowWinners(!showWinners)}
@@ -417,13 +417,12 @@ export default function LuckyDrawCY2() {
                     className="w-[200px] h-full flex items-center justify-center flex-shrink-0"
                   >
                     <span
-                      className={`font-light tracking-wide transition-all duration-200 ${
-                        isCenter 
-                          ? 'text-gray-900 text-2xl' 
+                      className={`font-light tracking-wide transition-all duration-200 ${isCenter
+                          ? 'text-gray-900 text-2xl'
                           : isClose
-                          ? 'text-gray-400 text-xl'
-                          : 'text-gray-300 text-lg'
-                      }`}
+                            ? 'text-gray-400 text-xl'
+                            : 'text-gray-300 text-lg'
+                        }`}
                       style={{
                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                       }}
@@ -450,8 +449,8 @@ export default function LuckyDrawCY2() {
                 relative px-16 py-6 
                 font-light tracking-[0.3em] uppercase text-lg
                 transition-all duration-500 ease-out
-                ${isSpinning 
-                  ? 'bg-gray-900 text-white cursor-wait' 
+                ${isSpinning
+                  ? 'bg-gray-900 text-white cursor-wait'
                   : 'bg-white text-gray-900 hover:bg-gray-900 hover:text-white cursor-pointer'
                 }
                 border border-gray-900
@@ -478,43 +477,44 @@ export default function LuckyDrawCY2() {
                 }
               }}
             >
-              {/* Button text with fade transition */}
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={isSpinning ? 'spinning' : 'idle'}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="relative z-10"
-                >
-                  {isSpinning ? 'Spinning' : 'Spin'}
-                </motion.span>
-              </AnimatePresence>
+              {/* Button content container */}
+              <div className="relative flex items-center justify-center gap-3">
+                {/* Button text with fade transition */}
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={isSpinning ? 'spinning' : 'idle'}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative z-10"
+                  >
+                    {isSpinning ? 'Spinning' : 'Spin'}
+                  </motion.span>
+                </AnimatePresence>
 
-              {/* Animated loading dots when spinning */}
-              {isSpinning && (
-                <motion.div className="absolute inset-0 flex items-center justify-end pr-16">
-                  <div className="flex gap-1">
+                {/* Animated loading dots when spinning */}
+                {isSpinning && (
+                  <div className="flex gap-1.5">
                     {[0, 1, 2].map((i) => (
                       <motion.div
                         key={i}
                         className="w-1.5 h-1.5 bg-white rounded-full"
                         animate={{
                           opacity: [0.3, 1, 0.3],
-                          scale: [0.8, 1.2, 0.8]
+                          y: [0, -3, 0]
                         }}
                         transition={{
                           duration: 1.4,
                           repeat: Infinity,
-                          delay: i * 0.2,
+                          delay: i * 0.15,
                           ease: "easeInOut"
                         }}
                       />
                     ))}
                   </div>
-                </motion.div>
-              )}
+                )}
+              </div>
 
               {/* Subtle scan line effect when spinning */}
               {isSpinning && (
