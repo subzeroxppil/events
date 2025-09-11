@@ -488,14 +488,14 @@ export default function Page() {
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent>
+                <SheetContent className="pl-3 pr-0">
                   <SheetHeader>
                     <SheetTitle>Lucky Draw Winners</SheetTitle>
                     {/* <SheetDescription>
                       List of all winners from this lucky draw session
                     </SheetDescription> */}
                   </SheetHeader>
-                  <div className="mt-6">
+                  <div className="mt-6 h-full overflow-y-auto pr-3">
                     {winners.length === 0 ? (
                       <div className="w-full py-30 flex flex-col items-center">
                         <Lottie
@@ -507,7 +507,7 @@ export default function Page() {
                         </span>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <p className="text-sm text-muted-foreground mb-4">
                           Total winners:{" "}
                           <span className="text-black font-semibold">
