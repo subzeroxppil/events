@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Trophy, X } from "lucide-react";
+import { ArrowLeft, Trophy, X, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
 type Winner = {
@@ -41,7 +41,7 @@ export default function LuckyDrawCY2() {
   const [showWinner, setShowWinner] = useState(false);
   const [showWinners, setShowWinners] = useState(false);
 
-  // Vertical spinner states
+  // Horizontal spinner states
   const [spinnerItems, setSpinnerItems] = useState<string[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const animationRef = useRef<number | null>(null);
@@ -152,8 +152,8 @@ export default function LuckyDrawCY2() {
     }
 
     // Start animation
-    const itemHeight = 80; // Adjusted for minimal design
-    const targetPos = validIndex * itemHeight;
+    const itemWidth = 200; // Width per item
+    const targetPos = validIndex * itemWidth;
 
     setCurrentPosition(0);
 
@@ -228,7 +228,7 @@ export default function LuckyDrawCY2() {
     // Ensure perfect center alignment for winner
     const winnerIndex = spinnerItems.findIndex(item => item === winner);
     if (winnerIndex !== -1) {
-      setCurrentPosition(winnerIndex * 80);
+      setCurrentPosition(winnerIndex * 200);
     }
 
     // Trigger effects
@@ -302,9 +302,9 @@ export default function LuckyDrawCY2() {
         const delta = (now - lastTime) / 1000; // Convert to seconds
         lastTime = now;
 
-        idlePosition += 20 * delta; // 20 pixels per second (slower for minimal design)
-        if (idlePosition >= spinnerItems.length * 80) {
-          idlePosition = idlePosition % (spinnerItems.length * 80);
+        idlePosition += 30 * delta; // 30 pixels per second
+        if (idlePosition >= spinnerItems.length * 200) {
+          idlePosition = idlePosition % (spinnerItems.length * 200);
         }
         setCurrentPosition(idlePosition);
         idleAnimationRef.current = requestAnimationFrame(animateIdle);
@@ -334,7 +334,7 @@ export default function LuckyDrawCY2() {
 
   if (initialLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <LoadingSpinner />
       </div>
     );
@@ -342,72 +342,74 @@ export default function LuckyDrawCY2() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-red-500">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Minimal Header */}
-      <div className="p-6 flex justify-between items-center border-b bg-white">
+      <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-20">
         <Button
           variant="ghost"
           onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy`)}
-          className="gap-2"
+          className="text-gray-600 hover:text-gray-900"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to CY View
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
         </Button>
         
-        <h1 className="text-xl font-medium text-gray-900">
+        <h1 className="text-sm font-light text-gray-600 tracking-wide uppercase">
           {luckyDraw?.name}
         </h1>
 
         <Button
-          variant="outline"
+          variant="ghost"
           onClick={() => setShowWinners(!showWinners)}
-          className="gap-2"
+          className="text-gray-600 hover:text-gray-900"
         >
-          <Trophy className="w-4 h-4" />
+          <Trophy className="w-4 h-4 mr-2" />
           Winners ({winners.length})
         </Button>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="max-w-2xl w-full">
-          {/* Spinner Container */}
-          <div className="relative h-[400px] overflow-hidden bg-white rounded-lg border">
+      {/* Main Content - Centered Horizontal Spinner */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full relative">
+          {/* Horizontal Spinner Container */}
+          <div className="relative h-32 overflow-hidden w-full">
             <div
-              className="absolute w-full"
+              className="absolute flex items-center h-full"
               style={{
-                transform: `translateY(calc(200px - ${currentPosition}px))`,
-                willChange: 'transform'
+                transform: `translateX(calc(50vw - ${currentPosition}px - 100px))`,
+                willChange: 'transform',
+                transition: isSpinning ? 'none' : 'transform 0.1s linear'
               }}
             >
               {spinnerItems.map((item, index) => {
-                const itemPosition = index * 80;
-                const distanceFromCenter = Math.abs(itemPosition - currentPosition) / 80;
-                const isCenter = distanceFromCenter < 0.5;
-                const opacity = isCenter ? 1 : Math.max(0.2, 1 - distanceFromCenter * 0.15);
+                const itemPosition = index * 200;
+                const distanceFromCenter = Math.abs(itemPosition - currentPosition);
+                const isCenter = distanceFromCenter < 100;
+                const isNear = distanceFromCenter < 300;
 
                 return (
                   <div
                     key={`${item}-${index}`}
-                    className="h-20 flex items-center justify-center px-4"
-                    style={{
-                      opacity,
-                      transition: isSpinning ? 'none' : 'opacity 0.3s ease-out'
-                    }}
+                    className="w-[200px] h-full flex items-center justify-center flex-shrink-0"
                   >
                     <span
-                      className={`font-mono transition-all duration-300 ${
+                      className={`font-light tracking-wide transition-all duration-300 ${
                         isCenter 
-                          ? 'text-3xl font-semibold text-gray-900' 
-                          : 'text-xl text-gray-500'
+                          ? 'text-gray-900 text-2xl' 
+                          : isNear
+                          ? 'text-gray-500 text-xl'
+                          : 'text-gray-300 text-lg'
                       }`}
+                      style={{
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                      }}
                     >
                       {item}
                     </span>
@@ -416,21 +418,21 @@ export default function LuckyDrawCY2() {
               })}
             </div>
 
-            {/* Center Indicator Line */}
-            <div className="absolute inset-0 flex items-center pointer-events-none">
-              <div className="w-full h-px bg-blue-500" />
+            {/* Center Indicator - Arrow pointing up */}
+            <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
+              <ChevronUp className="w-8 h-8 text-gray-900" strokeWidth={1} />
             </div>
           </div>
 
           {/* SPIN Button */}
-          <div className="mt-8 flex justify-center">
+          <div className="mt-16 flex justify-center">
             <Button
               onClick={handleSpin}
               disabled={isSpinning || participants.length === 0}
-              size="lg"
-              className="px-12 py-6 text-xl font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+              variant="outline"
+              className="px-8 py-3 text-sm font-light tracking-widest uppercase border-gray-300 hover:border-gray-900 hover:bg-gray-50 transition-colors"
             >
-              {isSpinning ? 'SPINNING...' : 'SPIN'}
+              {isSpinning ? 'Spinning' : 'Spin'}
             </Button>
           </div>
         </div>
@@ -446,7 +448,7 @@ export default function LuckyDrawCY2() {
             className="fixed right-0 top-0 h-full w-80 bg-white shadow-xl border-l z-50"
           >
             <div className="p-6 border-b flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Winners</h2>
+              <h2 className="text-lg font-light">Winners</h2>
               <Button
                 variant="ghost"
                 size="icon"
@@ -457,15 +459,15 @@ export default function LuckyDrawCY2() {
             </div>
             <div className="p-6 space-y-3 overflow-y-auto h-[calc(100vh-80px)]">
               {winners.length === 0 ? (
-                <p className="text-center text-gray-500">No winners yet</p>
+                <p className="text-center text-gray-500 font-light">No winners yet</p>
               ) : (
                 winners.map((winner, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-3 border rounded-lg"
                   >
                     <div>
-                      <div className="font-medium">{winner.workId}</div>
+                      <div className="font-light">{winner.workId}</div>
                       <div className="text-xs text-gray-500">
                         {new Date(winner.wonAt).toLocaleTimeString("en-SG", {
                           hour: "2-digit",
@@ -477,7 +479,7 @@ export default function LuckyDrawCY2() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteWinner(winner.workId)}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-gray-500 hover:text-red-600"
                     >
                       Remove
                     </Button>
@@ -496,19 +498,25 @@ export default function LuckyDrawCY2() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 flex items-center justify-center z-40 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 flex items-center justify-center z-40"
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
+              className="absolute inset-0 bg-white/90"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-xl p-12 shadow-2xl"
+              className="relative"
             >
               <div className="text-center">
-                <div className="text-sm uppercase tracking-widest text-gray-500 mb-4">
-                  Winner
+                <div className="text-xs uppercase tracking-[0.3em] text-gray-500 mb-4">
+                  Congratulations
                 </div>
-                <div className="text-5xl font-bold text-gray-900">
+                <div className="text-6xl font-light text-gray-900 tracking-wide">
                   {currentWinner}
                 </div>
               </div>
