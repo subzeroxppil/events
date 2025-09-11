@@ -35,6 +35,7 @@ type LuckyDraw = {
 
 const BASE_COLORS = ["#173066", "#509bff", "#0463ce", "#63cbfb"];
 const ITEM_HEIGHT = 96; // Height of each name card
+const SPIN_DURATION_MS = 7500; // Duration of spin animation in milliseconds (7.5 seconds default)
 
 // Add shimmer animation
 const shimmerKeyframes = `
@@ -88,7 +89,6 @@ export default function LuckyDrawCY() {
   const spinnerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
   const idleAnimationRef = useRef<number | null>(null);
-  const targetIndexRef = useRef<number | null>(null);
   const [isIdleAnimating, setIsIdleAnimating] = useState(false);
 
   // Audio refs
@@ -180,9 +180,6 @@ export default function LuckyDrawCY() {
   const handleSpin = async () => {
     if (isSpinning || participants.length === 0) return;
 
-    // Get current position
-    let startPos = currentPosition;
-
     // Cancel idle animation
     if (idleAnimationRef.current) {
       cancelAnimationFrame(idleAnimationRef.current);
@@ -199,23 +196,23 @@ export default function LuckyDrawCY() {
     setSpinnerItems(newSpinnerItems);
 
     // Find a valid winner (not already won)
-    let validIndex = -1;
-    let attempts = 0;
-    while (attempts < 20) {
-      const candidateIndex = 40 + Math.floor(Math.random() * 20);
-      const candidate = newSpinnerItems[candidateIndex];
-      if (!winners.some(w => w.workId === candidate)) {
-        validIndex = candidateIndex;
-        break;
+    let winnerIndex = -1;
+    const availableIndices = [];
+    
+    // Collect all valid indices
+    for (let i = 0; i < newSpinnerItems.length; i++) {
+      if (!winners.some(w => w.workId === newSpinnerItems[i])) {
+        availableIndices.push(i);
       }
-      attempts++;
+    }
+    
+    if (availableIndices.length > 0) {
+      winnerIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+    } else {
+      winnerIndex = Math.floor(newSpinnerItems.length / 2); // Fallback
     }
 
-    if (validIndex === -1) {
-      validIndex = 50; // Fallback
-    }
-
-    targetIndexRef.current = validIndex;
+    const intendedWinner = newSpinnerItems[winnerIndex];
 
     // Play spin sound
     if (spinSound.current) {
@@ -223,32 +220,19 @@ export default function LuckyDrawCY() {
       spinSound.current.play();
     }
 
-    // Calculate spin distance for smooth infinite rotation
+    // Calculate spin to land exactly on winner index
     const baseHeight = newSpinnerItems.length * ITEM_HEIGHT;
-
-    // Spin multiple times for effect (3-5 full rotations)
-    const spins = 3 + Math.random() * 2;
-    const spinDistance = spins * baseHeight;
-
-    // Calculate where the winner item needs to be positioned
-    // We want the winner item to be centered at the viewport center
-    const targetOffset = validIndex * ITEM_HEIGHT;
-    const currentOffset = startPos % baseHeight;
-
-    // Calculate the shortest forward distance to the target
-    let adjustmentDistance = targetOffset - currentOffset;
-    if (adjustmentDistance < 0) {
-      adjustmentDistance += baseHeight;
-    }
-
-    const totalDistance = spinDistance + adjustmentDistance;
-    const finalPosition = startPos + totalDistance;
-
-    // Store the winner for later use
-    const actualWinner = newSpinnerItems[validIndex];
+    const spins = 3 + Math.random() * 2; // 3-5 rotations
     
-    // Smooth single-phase animation with gentle deceleration
-    animateSpinnerSmooth(startPos, finalPosition, 7500, actualWinner);
+    // Calculate exact position to center the winner
+    const targetPosition = (spins * baseHeight) + (winnerIndex * ITEM_HEIGHT);
+    
+    // Start from current position or 0
+    const startPos = 0;
+    setCurrentPosition(startPos);
+    
+    // Animate to final position
+    animateSpinnerSmooth(startPos, targetPosition, SPIN_DURATION_MS, intendedWinner);
   };
 
   const animateSpinnerSmooth = (
@@ -297,10 +281,15 @@ export default function LuckyDrawCY() {
       } else {
         // Set to exact final position
         setCurrentPosition(to);
-        // Small delay to ensure position is set before determining winner
-        setTimeout(() => {
-          handleSpinComplete(winner);
-        }, 100);
+        
+        // Wait a frame to ensure position is updated, then determine actual center item
+        requestAnimationFrame(() => {
+          const baseHeight = spinnerItems.length * ITEM_HEIGHT;
+          const finalWrappedPos = baseHeight === 0 ? 0 : ((to % baseHeight) + baseHeight) % baseHeight;
+          const centerIndex = Math.round(finalWrappedPos / ITEM_HEIGHT) % spinnerItems.length;
+          const actualCenterWinner = spinnerItems[centerIndex];
+          handleSpinComplete(actualCenterWinner || winner);
+        });
       }
     };
 
@@ -407,7 +396,7 @@ export default function LuckyDrawCY() {
     }, 250);
   };
 
-  // Idle animation - continuous slow rotation
+  // Simple idle animation
   useEffect(() => {
     if (!isSpinning && spinnerItems.length > 0 && !showWinner) {
       setIsIdleAnimating(true);
@@ -420,15 +409,10 @@ export default function LuckyDrawCY() {
         }
 
         const now = performance.now();
-        const delta = (now - lastTime) / 1000; // seconds
+        const delta = (now - lastTime) / 1000;
         lastTime = now;
 
-        // Smooth continuous motion
-        setCurrentPosition(prev => {
-          const newPos = prev + (40 * delta); // pixels per second
-          // Let it accumulate infinitely, we'll handle wrapping in render
-          return newPos;
-        });
+        setCurrentPosition(prev => prev + (30 * delta)); // Slower idle speed
 
         idleAnimationRef.current = requestAnimationFrame(animateIdle);
       };
@@ -534,7 +518,7 @@ export default function LuckyDrawCY() {
               }}
             >
               {(() => {
-                // Pre-calculate which item is closest to center
+                // Find which item is in the center
                 const viewportCenter = wrappedPosition + ITEM_HEIGHT / 2;
                 let centerItem = null;
                 let minDistance = Infinity;
@@ -550,21 +534,17 @@ export default function LuckyDrawCY() {
                 
                 return renderedItems.map((item) => {
                   const itemTop = item.position;
-                  const itemBottom = itemTop + ITEM_HEIGHT;
+                  const itemCenter = itemTop + ITEM_HEIGHT / 2;
+                  const distanceFromCenter = Math.abs(itemCenter - viewportCenter);
                   
-                  // Only the pre-calculated center item gets scaled
-                  const isCenter = item === centerItem;
-                const distanceFromCenter = Math.min(
-                  Math.abs(itemTop - viewportCenter),
-                  Math.abs(itemBottom - viewportCenter)
-                );
-                const isNearCenter = distanceFromCenter < ITEM_HEIGHT * 2;
-                const isVisible = distanceFromCenter < ITEM_HEIGHT * 8;
+                  // Only the exact center item gets special treatment
+                  const isCenter = item === centerItem && distanceFromCenter < 5;
+                  const isVisible = distanceFromCenter < ITEM_HEIGHT * 8;
 
-                const opacity = isCenter ? 1 : isNearCenter ? 0.95 : isVisible ? 0.8 : 0.5;
-                const blur = distanceFromCenter > ITEM_HEIGHT * 6
-                  ? Math.min(0.5, (distanceFromCenter - ITEM_HEIGHT * 6) * 0.001)
-                  : 0;
+                  const opacity = isCenter ? 1 : isVisible ? 0.8 : 0.4;
+                  const blur = distanceFromCenter > ITEM_HEIGHT * 6
+                    ? Math.min(0.5, (distanceFromCenter - ITEM_HEIGHT * 6) * 0.001)
+                    : 0;
 
                 return (
                   <div
@@ -585,22 +565,16 @@ export default function LuckyDrawCY() {
                         "transition-all duration-300"
                       )}
                       style={{
-                        background: isCenter
-                          ? 'rgba(255, 255, 255, 0.95)'
-                          : isNearCenter
-                            ? 'rgba(255, 255, 255, 0.8)'
-                            : 'rgba(255, 255, 255, 0.6)',
+                        background: 'rgba(255, 255, 255, 0.8)',
                         backdropFilter: 'blur(20px)',
                         WebkitBackdropFilter: 'blur(20px)',
                         border: isCenter
                           ? `2px solid ${BASE_COLORS[1]}`
                           : '1px solid rgba(255, 255, 255, 0.3)',
                         boxShadow: isCenter
-                          ? `0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 40px ${BASE_COLORS[1]}30, inset 0 0 20px rgba(255, 255, 255, 0.5)`
-                          : isNearCenter
-                            ? '0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 10px rgba(255, 255, 255, 0.3)'
-                            : '0 4px 16px 0 rgba(31, 38, 135, 0.1)',
-                        transform: isCenter ? 'scale(1.12)' : 'scale(1)',
+                          ? `0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 40px ${BASE_COLORS[1]}30`
+                          : '0 4px 16px 0 rgba(31, 38, 135, 0.1)',
+                        transform: isCenter ? 'scale(1.15)' : 'scale(1)',
                         willChange: 'transform'
                       }}
                     >
@@ -612,14 +586,10 @@ export default function LuckyDrawCY() {
                         )}
                         style={{
                           color: isCenter ? '#000000' : '#6B7280',  // Black for center, grey for others
-                          fontSize: isCenter ? '2.25rem' : isNearCenter ? '1.875rem' : '1.5rem',
-                          fontWeight: isCenter ? 800 : isNearCenter ? 600 : 500,
+                          fontSize: isCenter ? '2.25rem' : '1.5rem',
+                          fontWeight: isCenter ? 800 : 500,
                           letterSpacing: isCenter ? '0.02em' : '0.01em',
-                          textShadow: isCenter
-                            ? '0 2px 8px rgba(0,0,0,0.1)'
-                            : isNearCenter
-                              ? '0 1px 3px rgba(0,0,0,0.05)'
-                              : 'none',
+                          textShadow: isCenter ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
                           willChange: 'transform'
                         }}
                       >
