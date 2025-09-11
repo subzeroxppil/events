@@ -69,7 +69,6 @@ export default function LuckyDrawCY() {
   const animationRef = useRef<number | null>(null);
   const idleAnimationRef = useRef<number | null>(null);
   const targetIndexRef = useRef<number | null>(null);
-  const idlePositionRef = useRef<number>(0);
   const [isIdleAnimating, setIsIdleAnimating] = useState(false);
 
   // Audio refs
@@ -127,12 +126,8 @@ export default function LuckyDrawCY() {
       const extendedList = createExtendedList(uniqueParticipants, 200);
       setSpinnerItems(extendedList);
 
-      // Set initial position to middle of the tripled array for better wrapping
-      if (extendedList.length > 0) {
-        const initialPos = extendedList.length * ITEM_HEIGHT;
-        setCurrentPosition(initialPos);
-        idlePositionRef.current = initialPos;
-      }
+      // Start at position 0
+      setCurrentPosition(0);
 
       if (data.winners && Array.isArray(data.winners)) {
         setWinners(data.winners);
@@ -160,8 +155,8 @@ export default function LuckyDrawCY() {
   const handleSpin = async () => {
     if (isSpinning || participants.length === 0) return;
 
-    // Get current position from idle animation
-    let startPos = idlePositionRef.current || currentPosition;
+    // Get current position
+    let startPos = currentPosition;
 
     // Cancel idle animation
     if (idleAnimationRef.current) {
@@ -173,9 +168,6 @@ export default function LuckyDrawCY() {
     setIsSpinning(true);
     setShowWinner(false);
     setError("");
-
-    // Sync state position from idle animation for a seamless transition
-    setCurrentPosition(startPos);
 
     // Reset and shuffle spinner items
     const newSpinnerItems = createExtendedList(participants, 200);
@@ -206,19 +198,19 @@ export default function LuckyDrawCY() {
       spinSound.current.play();
     }
 
-    // Calculate precise final position for the winner to be centered
-    const N = newSpinnerItems.length;
-    const baseHeight = N * ITEM_HEIGHT;
-
-    // Ensure we start from the middle section of the tripled array
-    const middleOffset = baseHeight;
-    const targetPosition = middleOffset + (validIndex * ITEM_HEIGHT);
+    // Calculate spin distance for smooth infinite rotation
+    const baseHeight = newSpinnerItems.length * ITEM_HEIGHT;
     
-    // Always spin forward with multiple rotations for effect
-    const minSpins = 3;
-    const extraSpins = Math.random() * 2;
-    const totalSpins = minSpins + extraSpins;
-    const totalDistance = (totalSpins * baseHeight) + (targetPosition - (startPos % baseHeight));
+    // Spin multiple times for effect (3-5 full rotations)
+    const spins = 3 + Math.random() * 2;
+    const spinDistance = spins * baseHeight;
+    
+    // Add the distance to land on the winner
+    const targetOffset = validIndex * ITEM_HEIGHT;
+    const currentOffset = startPos % baseHeight;
+    const adjustmentDistance = targetOffset - currentOffset + (currentOffset > targetOffset ? baseHeight : 0);
+    
+    const totalDistance = spinDistance + adjustmentDistance;
     const finalPosition = startPos + totalDistance;
 
     // Smooth single-phase animation with gentle deceleration
@@ -317,10 +309,6 @@ export default function LuckyDrawCY() {
       console.error("Error recording winner:", error);
     }
 
-    // Keep the final position and ensure idle animation resumes from here
-    const finalPos = currentPosition;
-    idlePositionRef.current = finalPos;
-
     // Trigger effects
     triggerFireworks();
     setShowWinner(true);
@@ -329,8 +317,6 @@ export default function LuckyDrawCY() {
     // Auto-hide winner after 3 seconds
     setTimeout(() => {
       setShowWinner(false);
-      // Resume from the current position for smooth continuation
-      idlePositionRef.current = finalPos;
     }, 3000);
   };
 
@@ -387,8 +373,7 @@ export default function LuckyDrawCY() {
   useEffect(() => {
     if (!isSpinning && spinnerItems.length > 0 && !showWinner) {
       setIsIdleAnimating(true);
-      let idlePosition = currentPosition;
-      let lastTime = Date.now();
+      let lastTime = performance.now();
 
       const animateIdle = () => {
         if (isSpinning || showWinner || spinnerItems.length === 0) {
@@ -396,24 +381,16 @@ export default function LuckyDrawCY() {
           return;
         }
 
-        const now = Date.now();
+        const now = performance.now();
         const delta = (now - lastTime) / 1000; // seconds
         lastTime = now;
 
         // Smooth continuous motion
-        idlePosition += 40 * delta; // pixels per second
-        const baseHeight = spinnerItems.length * ITEM_HEIGHT;
-        
-        // Wrap within the tripled array, keeping position in middle section
-        if (baseHeight > 0) {
-          // When we go past the end of middle section, wrap back
-          if (idlePosition > baseHeight * 2) {
-            idlePosition = baseHeight + (idlePosition % baseHeight);
-          }
-        }
-
-        idlePositionRef.current = idlePosition;
-        setCurrentPosition(idlePosition);
+        setCurrentPosition(prev => {
+          const newPos = prev + (40 * delta); // pixels per second
+          // Let it accumulate infinitely, we'll handle wrapping in render
+          return newPos;
+        });
 
         idleAnimationRef.current = requestAnimationFrame(animateIdle);
       };
@@ -446,19 +423,29 @@ export default function LuckyDrawCY() {
 
   // Derived values for infinite scroll
   const BASE_HEIGHT = spinnerItems.length * ITEM_HEIGHT;
-  // Keep position within the tripled range for smooth infinite scroll
-  const normalizedPosition = BASE_HEIGHT === 0
-    ? 0
-    : currentPosition % (BASE_HEIGHT * 3);
+  // Use modulo to create infinite wrapping
+  const wrappedPosition = BASE_HEIGHT === 0 ? 0 : ((currentPosition % BASE_HEIGHT) + BASE_HEIGHT) % BASE_HEIGHT;
 
-  // Tripled array for seamless infinite scrolling
-  const renderedItems = useMemo(
-    () => (spinnerItems.length ? [...spinnerItems, ...spinnerItems, ...spinnerItems] : []),
-    [spinnerItems]
-  );
-
-  // For now, render all items to ensure visibility
-  const TRIPLE_BASE_HEIGHT = BASE_HEIGHT * 3;
+  // Calculate visible range and render items with wrapping
+  const visibleRange = 20; // Number of items to render above and below center
+  const centerIndex = BASE_HEIGHT > 0 ? Math.floor(wrappedPosition / ITEM_HEIGHT) : 0;
+  
+  const renderedItems = useMemo(() => {
+    if (spinnerItems.length === 0) return [];
+    const items = [];
+    const totalItems = spinnerItems.length;
+    
+    for (let i = -visibleRange; i <= visibleRange; i++) {
+      const absoluteIndex = centerIndex + i;
+      const wrappedIndex = ((absoluteIndex % totalItems) + totalItems) % totalItems;
+      items.push({
+        text: spinnerItems[wrappedIndex],
+        position: absoluteIndex * ITEM_HEIGHT,
+        key: `${absoluteIndex}-${spinnerItems[wrappedIndex]}`
+      });
+    }
+    return items;
+  }, [spinnerItems, centerIndex, ITEM_HEIGHT]);
   
   if (initialLoading) {
     return (
@@ -503,15 +490,14 @@ export default function LuckyDrawCY() {
               ref={spinnerRef}
               className="absolute w-full"
               style={{
-                transform: `translateY(calc(50vh - ${normalizedPosition}px - 48px))`,
+                transform: `translateY(calc(50vh - ${wrappedPosition}px - 48px))`,
                 willChange: 'transform',
-                transition: 'none', // Remove transition to prevent jittering
-                height: `${TRIPLE_BASE_HEIGHT}px`
+                transition: 'none' // Remove transition to prevent jittering
               }}
             >
-              {renderedItems.map((text, i) => {
-                const itemTop = i * ITEM_HEIGHT;
-                const viewportCenter = normalizedPosition;
+              {renderedItems.map((item) => {
+                const itemTop = item.position;
+                const viewportCenter = wrappedPosition;
                 const distanceFromCenter = Math.abs(itemTop - viewportCenter);
 
                 const isCenter = distanceFromCenter < ITEM_HEIGHT * 0.5;
@@ -526,7 +512,7 @@ export default function LuckyDrawCY() {
 
                 return (
                   <div
-                    key={`row-${i}`}
+                    key={item.key}
                     className="absolute left-0 right-0 h-24 w-full flex items-center justify-center px-12"
                     style={{
                       top: `${itemTop}px`,
@@ -592,7 +578,7 @@ export default function LuckyDrawCY() {
                           willChange: 'transform'
                         }}
                       >
-                        {text}
+                        {item.text}
                       </span>
                     </div>
                   </div>
