@@ -501,18 +501,24 @@ export default function LuckyDrawCY() {
               ref={spinnerRef}
               className="absolute w-full"
               style={{
-                transform: `translateY(calc(50vh - ${wrappedPosition}px - ${ITEM_HEIGHT / 2}px))`,
+                transform: `translateY(calc(50vh - ${wrappedPosition + ITEM_HEIGHT / 2}px))`,
                 willChange: 'transform',
                 transition: 'none' // Remove transition to prevent jittering
               }}
             >
               {renderedItems.map((item) => {
                 const itemTop = item.position;
-                const viewportCenter = wrappedPosition;
-                // Check distance from item's top to viewport center (where the line is)
-                const distanceFromCenter = Math.abs(itemTop - viewportCenter);
-
-                const isCenter = distanceFromCenter < ITEM_HEIGHT * 0.5;
+                // The center line is at the viewport center
+                // We need to check if this item's vertical range contains the center
+                const itemBottom = itemTop + ITEM_HEIGHT;
+                const viewportCenter = wrappedPosition + ITEM_HEIGHT / 2;
+                
+                // Item is at center if the viewport center falls within its bounds
+                const isCenter = itemTop <= viewportCenter && viewportCenter <= itemBottom;
+                const distanceFromCenter = Math.min(
+                  Math.abs(itemTop - viewportCenter),
+                  Math.abs(itemBottom - viewportCenter)
+                );
                 const isNearCenter = distanceFromCenter < ITEM_HEIGHT * 2;
                 const isVisible = distanceFromCenter < ITEM_HEIGHT * 8;
 
@@ -642,28 +648,27 @@ export default function LuckyDrawCY() {
           </div>
         </div>
 
-        {/* Previous Winner and Winners Button - Bottom Left */}
-        <div className="absolute left-8 bottom-8 z-40 flex flex-col gap-4">
-          {/* Previous Winner Display */}
+        {/* Previous Winner - Left Side Center */}
+        <div className="absolute left-8 top-1/2 -translate-y-1/2 z-40">
           <AnimatePresence mode="wait">
             {winners.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                className="p-4 rounded-xl backdrop-blur-md bg-white/80 border border-white/50 shadow-lg"
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                className="p-6 rounded-xl backdrop-blur-md bg-white/80 border border-white/50 shadow-lg"
                 style={{
                   backdropFilter: 'blur(16px)',
                   WebkitBackdropFilter: 'blur(16px)',
                 }}
               >
-                <div className="text-xs uppercase tracking-widest mb-1 leading-tight font-medium text-gray-500">
+                <div className="text-xs uppercase tracking-widest mb-2 leading-tight font-medium text-gray-500">
                   Previous Winner
                 </div>
-                <div className="text-lg font-bold text-gray-900">
+                <div className="text-xl font-bold text-gray-900">
                   {winners[winners.length - 1].workId}
                 </div>
-                <div className="text-xs mt-1 tracking-wide leading-relaxed text-gray-500">
+                <div className="text-xs mt-2 tracking-wide leading-relaxed text-gray-500">
                   {new Date(winners[winners.length - 1].wonAt).toLocaleTimeString("en-SG", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -672,8 +677,10 @@ export default function LuckyDrawCY() {
               </motion.div>
             )}
           </AnimatePresence>
-          
-          {/* Winners Sheet Button */}
+        </div>
+
+        {/* Winners Button - Bottom Left */}
+        <div className="absolute left-8 bottom-8 z-40">
           <Sheet>
             <SheetTrigger asChild>
               <Button
