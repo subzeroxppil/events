@@ -697,7 +697,7 @@ export default function LuckyDrawCY() {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -30 }}
-                className="p-6 rounded-xl backdrop-blur-sm bg-white/70 border border-gray-200 shadow-lg"
+                className="p-6 rounded-xl backdrop-blur-sm"
               >
                 <div className="text-xs uppercase tracking-widest mb-2 leading-tight font-medium text-gray-500">
                   Previous Winner
