@@ -7,7 +7,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import GradualBlur from "@/components/GradualBlur";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, LayoutGrid } from "lucide-react";
+import { Moon, Sun, LayoutGrid, Trophy } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import {
   Sheet,
@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
+import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
+import { cn } from "@/lib/utils";
 
 type Winner = {
   workId: string;
@@ -32,6 +34,8 @@ type LuckyDraw = {
   createdBy: string;
 };
 
+const BASE_COLORS = ["#173066", "#509bff", "#0463ce", "#63cbfb"];
+
 export default function LuckyDrawCY() {
   const params = useParams();
   const router = useRouter();
@@ -40,7 +44,7 @@ export default function LuckyDrawCY() {
     ? params.luckydrawId[0]
     : params?.luckydrawId;
 
-  // Theme state
+  // Theme state - local only
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Core states
@@ -56,7 +60,6 @@ export default function LuckyDrawCY() {
   // Vertical spinner states
   const [spinnerItems, setSpinnerItems] = useState<string[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
-  const [targetPosition, setTargetPosition] = useState(0);
   const spinnerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
   const idleAnimationRef = useRef<number | null>(null);
@@ -66,16 +69,15 @@ export default function LuckyDrawCY() {
   const celebrateSound = useRef<HTMLAudioElement | null>(null);
   const applauseSound = useRef<HTMLAudioElement | null>(null);
 
-  // Initialize theme from localStorage
+  // Initialize theme from localStorage (page-specific)
   useEffect(() => {
-    const savedTheme = localStorage.getItem("luckydraw-theme");
+    const savedTheme = localStorage.getItem("luckydraw-cy-theme");
     setIsDarkMode(savedTheme === "dark");
   }, []);
 
-  // Save theme preference
+  // Save theme preference (page-specific)
   useEffect(() => {
-    localStorage.setItem("luckydraw-theme", isDarkMode ? "dark" : "light");
-    document.documentElement.classList.toggle("dark", isDarkMode);
+    localStorage.setItem("luckydraw-cy-theme", isDarkMode ? "dark" : "light");
   }, [isDarkMode]);
 
   // Initialize audio
@@ -109,13 +111,11 @@ export default function LuckyDrawCY() {
       ) as string[];
 
       setParticipants(uniqueParticipants);
-      console.log("Loaded participants:", uniqueParticipants.length, uniqueParticipants.slice(0, 5));
 
       // Create extended list for spinner
       const extendedList = createExtendedList(uniqueParticipants, 100);
       setSpinnerItems(extendedList);
-      console.log("Created spinner items:", extendedList.length);
-      
+
       // Set initial position to show some items
       setCurrentPosition(0);
 
@@ -182,15 +182,13 @@ export default function LuckyDrawCY() {
     }
 
     // Start animation - calculate position to center the winner
-    // We want the winner to be in the exact center of the viewport
     const itemHeight = 96; // h-24 = 96px
     const targetPos = validIndex * itemHeight;
 
     setCurrentPosition(0);
-    setTargetPosition(targetPos);
 
-    // Animate the spinner
-    animateSpinner(0, targetPos, 8000, () => {
+    // Animate the spinner with improved smoothness
+    animateSpinner(0, targetPos, 6000, () => {
       handleSpinComplete(newSpinnerItems[validIndex]);
     });
   };
@@ -208,8 +206,8 @@ export default function LuckyDrawCY() {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Easing function for deceleration
-      const easeOut = 1 - Math.pow(1 - progress, 3);
+      // Smoother easing function
+      const easeOut = 1 - Math.pow(1 - progress, 4);
       const currentPos = from + (to - from) * easeOut;
 
       setCurrentPosition(currentPos);
@@ -273,7 +271,7 @@ export default function LuckyDrawCY() {
     setShowWinner(true);
     setIsSpinning(false);
 
-    // Auto-hide winner after 3 seconds and resume idle animation
+    // Auto-hide winner after 3 seconds
     setTimeout(() => {
       setShowWinner(false);
     }, 3000);
@@ -328,47 +326,26 @@ export default function LuckyDrawCY() {
     }, 250);
   };
 
-  // Idle animation with magnetic snap
+  // Improved idle animation with smooth continuous motion
   useEffect(() => {
-    if (!isSpinning && spinnerItems.length > 0) {
-      if (showWinner) {
-        // Magnetic snap to exact center when winner is shown
-        const winnerIndex = spinnerItems.findIndex(item => item === currentWinner);
-        if (winnerIndex !== -1) {
-          const targetPos = winnerIndex * 96;
-          // Smooth snap to center
-          const currentPos = currentPosition;
-          const diff = targetPos - currentPos;
-          if (Math.abs(diff) > 1) {
-            const animateSnap = () => {
-              setCurrentPosition(prev => {
-                const step = diff * 0.1; // Smooth easing
-                const newPos = prev + step;
-                if (Math.abs(targetPos - newPos) < 1) {
-                  return targetPos;
-                }
-                requestAnimationFrame(animateSnap);
-                return newPos;
-              });
-            };
-            animateSnap();
-          }
+    if (!isSpinning && spinnerItems.length > 0 && !showWinner) {
+      let idlePosition = currentPosition;
+      let lastTime = Date.now();
+
+      const animateIdle = () => {
+        const now = Date.now();
+        const delta = (now - lastTime) / 1000; // Convert to seconds
+        lastTime = now;
+
+        idlePosition += 30 * delta; // 30 pixels per second
+        if (idlePosition >= spinnerItems.length * 96) {
+          idlePosition = idlePosition % (spinnerItems.length * 96);
         }
-      } else {
-        // Continuous idle spinning
-        let idlePosition = currentPosition;
-
-        const animateIdle = () => {
-          idlePosition += 0.3; // Slow continuous movement
-          if (idlePosition >= spinnerItems.length * 96) {
-            idlePosition = 0;
-          }
-          setCurrentPosition(idlePosition);
-          idleAnimationRef.current = requestAnimationFrame(animateIdle);
-        };
-
+        setCurrentPosition(idlePosition);
         idleAnimationRef.current = requestAnimationFrame(animateIdle);
-      }
+      };
+
+      idleAnimationRef.current = requestAnimationFrame(animateIdle);
     }
 
     return () => {
@@ -376,7 +353,7 @@ export default function LuckyDrawCY() {
         cancelAnimationFrame(idleAnimationRef.current);
       }
     };
-  }, [isSpinning, spinnerItems.length, showWinner, currentWinner]);
+  }, [isSpinning, spinnerItems.length, showWinner]);
 
   // Cleanup
   useEffect(() => {
@@ -389,23 +366,6 @@ export default function LuckyDrawCY() {
       }
     };
   }, []);
-
-  const themeStyles = {
-    gradient: isDarkMode
-      ? "from-slate-950 via-indigo-950 to-slate-950"
-      : "from-slate-50 via-indigo-50 to-blue-50",
-    card: isDarkMode
-      ? "bg-slate-900/80 backdrop-blur-2xl border border-white/10 shadow-2xl"
-      : "bg-white/80 backdrop-blur-2xl border border-slate-200/50 shadow-xl",
-    spinnerCard: isDarkMode
-      ? "bg-slate-900/90 backdrop-blur-xl border border-white/20"
-      : "bg-white/95 backdrop-blur-xl border border-slate-200/60",
-    text: isDarkMode ? "text-white" : "text-slate-900",
-    mutedText: isDarkMode ? "text-slate-400" : "text-slate-600",
-    primaryColor: isDarkMode ? "#818cf8" : "#6366f1",
-    secondaryColor: isDarkMode ? "#a5b4fc" : "#8b5cf6",
-    accentColor: isDarkMode ? "#c7d2fe" : "#a78bfa",
-  };
 
   if (initialLoading) {
     return (
@@ -424,308 +384,347 @@ export default function LuckyDrawCY() {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${themeStyles.gradient} relative overflow-hidden`}>
-      {/* Animated background orbs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className={`absolute -top-40 -left-40 w-80 h-80 rounded-full ${isDarkMode ? 'bg-indigo-800/20' : 'bg-indigo-400/20'} blur-3xl animate-pulse`} />
-        <div className={`absolute top-1/2 -right-40 w-96 h-96 rounded-full ${isDarkMode ? 'bg-purple-800/20' : 'bg-purple-400/20'} blur-3xl animate-pulse animation-delay-2000`} />
-        <div className={`absolute -bottom-40 left-1/3 w-80 h-80 rounded-full ${isDarkMode ? 'bg-blue-800/20' : 'bg-blue-400/20'} blur-3xl animate-pulse animation-delay-4000`} />
+    <div className={cn("min-h-screen relative overflow-hidden", isDarkMode ? "dark bg-black" : "bg-white")}>
+      {/* PayPal colors background with ripple effect */}
+      <div className="absolute inset-0">
+        <BackgroundRippleEffect
+          rows={20}
+          cols={40}
+          cellSize={40}
+        />
+        {/* Custom gradient overlay with PayPal colors */}
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            background: `radial-gradient(circle at 20% 50%, ${BASE_COLORS[0]}40 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, ${BASE_COLORS[1]}40 0%, transparent 50%),
+                        radial-gradient(circle at 40% 20%, ${BASE_COLORS[2]}40 0%, transparent 50%),
+                        radial-gradient(circle at 90% 10%, ${BASE_COLORS[3]}40 0%, transparent 50%)`
+          }}
+        />
       </div>
 
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
         <BackButton />
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => router.push(`/admin/luckydraw/${luckydrawId}`)}
-            className={`${themeStyles.card} ${themeStyles.text} hover:bg-white/10 transition-all duration-300`}
-          >
-            <LayoutGrid className="w-4 h-4 mr-2" />
-            Classic View
-          </Button>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                className={`${themeStyles.card} ${themeStyles.text} hover:bg-white/10 transition-all duration-300 relative`}
-              >
-                Winners
-                {winners.length > 0 && (
-                  <span className="ml-2 px-2 py-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-full text-xs font-semibold">
-                    {winners.length}
-                  </span>
-                )}
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Lucky Draw Winners</SheetTitle>
-              </SheetHeader>
-              <div className="mt-6 space-y-3">
-                {winners.length === 0 ? (
-                  <p className="text-center text-muted-foreground">No winners yet</p>
-                ) : (
-                  winners.map((winner, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs">
-                          {new Date(winner.wonAt).toLocaleTimeString("en-SG", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        <span className="font-medium">{winner.workId}</span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteWinner(winner.workId)}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className={`${themeStyles.card} ${themeStyles.text} hover:bg-white/10 transition-all duration-300`}
-          >
-            <motion.div
-              initial={false}
-              animate={{ rotate: isDarkMode ? 180 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </motion.div>
-          </Button>
+          <h1 className={cn(
+            "text-2xl font-bold",
+            isDarkMode ? "text-white" : "text-gray-900"
+          )}>
+            {luckyDraw?.name}
+          </h1>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="min-h-screen flex items-center justify-center px-8 py-20">
-        <div className="flex gap-8 items-center h-[75vh] w-full max-w-7xl">
+      {/* Main Content - Full height spinner */}
+      <div className="min-h-screen flex items-center justify-center relative">
+        {/* Spinner Container - Full height, no card */}
+        <div className="relative w-full max-w-3xl h-screen overflow-hidden">
+          {/* GradualBlur for smooth melting effect */}
+          <GradualBlur
+            position="top"
+            height="8rem"
+            strength={3}
+            divCount={8}
+            opacity={0.9}
+            exponential={true}
+            style={{ zIndex: 30 }}
+          />
+          <GradualBlur
+            position="bottom"
+            height="8rem"
+            strength={3}
+            divCount={8}
+            opacity={0.9}
+            exponential={true}
+            style={{ zIndex: 30 }}
+          />
 
-          {/* Last Winner Display - Left Side */}
-          <div className="flex-shrink-0 w-72">
-            <AnimatePresence mode="wait">
-              {winners.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, x: -30, scale: 0.95 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: -30, scale: 0.95 }}
-                  transition={{ type: "spring", damping: 20 }}
-                  className={`h-40 rounded-2xl ${themeStyles.card} p-6 flex flex-col justify-center`}
-                >
-                  <div className={`text-xs uppercase tracking-widest ${themeStyles.mutedText} mb-3 font-medium`}>
-                    Previous Winner
-                  </div>
-                  <motion.div
-                    key={winners[winners.length - 1].workId}
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className={`text-2xl font-semibold bg-gradient-to-r ${isDarkMode ? 'from-indigo-400 to-purple-400' : 'from-indigo-600 to-purple-600'} bg-clip-text text-transparent`}
-                  >
-                    {winners[winners.length - 1].workId}
-                  </motion.div>
-                  <div className={`text-xs ${themeStyles.mutedText} mt-2 font-light`}>
-                    {new Date(winners[winners.length - 1].wonAt).toLocaleTimeString("en-SG", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
-                </motion.div>
+          {/* Center Indicator - Glassmorphic card for the centered name */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+            <motion.div
+              className={cn(
+                "px-12 py-6 rounded-2xl",
+                "backdrop-blur-xl bg-white/10 dark:bg-black/20",
+                "border border-white/20 dark:border-white/10",
+                "shadow-2xl"
               )}
-            </AnimatePresence>
+              animate={{
+                boxShadow: [
+                  "0 0 20px rgba(80, 155, 255, 0.3)",
+                  "0 0 40px rgba(4, 99, 206, 0.3)",
+                  "0 0 20px rgba(80, 155, 255, 0.3)"
+                ]
+              }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              <div className="flex items-center gap-4">
+                <div className={cn(
+                  "w-1 h-12 rounded-full",
+                  "bg-gradient-to-b from-[#509bff] to-[#0463ce]"
+                )} />
+                <div className="w-96" /> {/* Space for the name */}
+                <div className={cn(
+                  "w-1 h-12 rounded-full",
+                  "bg-gradient-to-b from-[#509bff] to-[#0463ce]"
+                )} />
+              </div>
+            </motion.div>
           </div>
 
-          {/* Spinner Container - Center */}
-          <div className={`flex-1 relative rounded-3xl ${themeStyles.spinnerCard} overflow-hidden max-w-2xl mx-auto shadow-2xl h-full min-h-[600px]`}>
-            {/* GradualBlur for melting effect */}
-            <GradualBlur
-              position="top"
-              height="6rem"
-              strength={2}
-              divCount={6}
-              opacity={0.7}
-              exponential={true}
-              style={{ zIndex: 30 }}
-            />
-            <GradualBlur
-              position="bottom"
-              height="6rem"
-              strength={2}
-              divCount={6}
-              opacity={0.7}
-              exponential={true}
-              style={{ zIndex: 30 }}
-            />
+          {/* Vertical Spinner - Full Height */}
+          <div className="relative h-full flex items-center justify-center">
+            <div
+              ref={spinnerRef}
+              className="absolute w-full"
+              style={{
+                transform: `translateY(calc(50vh - ${currentPosition}px - 48px))`,
+                willChange: 'transform'
+              }}
+            >
+              {spinnerItems.map((item, index) => {
+                const itemPosition = index * 96;
+                const distanceFromCenter = Math.abs(itemPosition - currentPosition) / 96;
+                const isCenter = distanceFromCenter < 0.5;
+                const isNearCenter = distanceFromCenter < 2;
+                const opacity = isCenter ? 1 : isNearCenter ? 0.7 : Math.max(0.3, 1 - distanceFromCenter * 0.1);
+                const scale = isCenter ? 1.1 : Math.max(0.9, 1 - distanceFromCenter * 0.02);
+                const blur = distanceFromCenter > 10 ? 2 : distanceFromCenter > 6 ? 0.5 : 0;
 
-            {/* Center Indicator */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-              <div className="w-full h-20 relative">
-                <motion.div
-                  className={`absolute inset-0 bg-gradient-to-r from-transparent ${isDarkMode ? 'via-indigo-500/20' : 'via-indigo-400/30'} to-transparent`}
-                  animate={{ opacity: [0.3, 0.6, 0.3] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-                <div className={`absolute left-4 top-1/2 -translate-y-1/2 w-1 h-12 ${isDarkMode ? 'bg-indigo-400' : 'bg-indigo-500'} rounded-full`} />
-                <div className={`absolute right-4 top-1/2 -translate-y-1/2 w-1 h-12 ${isDarkMode ? 'bg-indigo-400' : 'bg-indigo-500'} rounded-full`} />
-              </div>
-            </div>
-
-            {/* Vertical Spinner - Full Height */}
-            <div className="relative h-full flex items-center justify-center px-8">
-              {/* Add subtle pattern background for visibility */}
-              <div className="absolute inset-0 opacity-5">
-                <div className="h-full w-full" style={{
-                  backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, ${isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'} 35px, ${isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'} 70px)`
-                }} />
-              </div>
-              <div
-                ref={spinnerRef}
-                className="absolute w-full z-10"
-                style={{
-                  transform: `translateY(calc(50% - ${currentPosition}px - 48px))`, // Center alignment
-                  transition: isSpinning ? 'none' : 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
-                }}
-              >
-                {/* Debug info - remove after testing */}
-                {spinnerItems.length === 0 && (
-                  <div className="h-24 flex items-center justify-center text-red-500 font-bold">
-                    No participants loaded
-                  </div>
-                )}
-                {spinnerItems.map((item, index) => {
-                  const itemPosition = index * 96;
-                  const distanceFromCenter = Math.abs(itemPosition - currentPosition) / 96;
-                  const isCenter = distanceFromCenter < 0.5;
-                  const isNearCenter = distanceFromCenter < 2;
-                  const opacity = isCenter ? 1 : isNearCenter ? 0.8 : Math.max(0.6, 1 - distanceFromCenter * 0.05);
-                  const scale = isCenter ? 1.05 : Math.max(0.95, 1 - distanceFromCenter * 0.01);
-                  const blur = distanceFromCenter > 8 ? 1 : distanceFromCenter > 5 ? 0.2 : 0;
-
-                  return (
-                    <motion.div
-                      key={`${item}-${index}`}
-                      className={`h-24 flex items-center justify-center px-8`}
-                      initial={false}
-                      animate={{
-                        opacity,
-                        scale,
-                        filter: `blur(${blur}px)`,
-                      }}
-                      transition={{
-                        duration: isSpinning ? 0.1 : 0.5,
-                        ease: "easeOut",
-                      }}
+                return (
+                  <div
+                    key={`${item}-${index}`}
+                    className="h-24 flex items-center justify-center px-8"
+                    style={{
+                      opacity,
+                      transform: `scale(${scale})`,
+                      filter: `blur(${blur}px)`,
+                      fontSize: isCenter ? '2.5rem' : isNearCenter ? '1.875rem' : '1.5rem',
+                      fontWeight: isCenter ? '700' : isNearCenter ? '600' : '400',
+                      transition: isSpinning ? 'none' : 'all 0.3s ease-out'
+                    }}
+                  >
+                    <span
+                      className={cn(
+                        "transition-all duration-300",
+                        isCenter
+                          ? "text-transparent bg-clip-text bg-gradient-to-r from-[#173066] via-[#0463ce] to-[#509bff]"
+                          : isNearCenter
+                            ? isDarkMode ? "text-white/80" : "text-gray-800"
+                            : isDarkMode ? "text-white/40" : "text-gray-500"
+                      )}
                       style={{
-                        fontSize: isCenter ? '2.5rem' : isNearCenter ? '1.875rem' : '1.375rem',
-                        fontWeight: isCenter ? '700' : isNearCenter ? '500' : '400',
+                        textShadow: isCenter
+                          ? `0 0 30px ${BASE_COLORS[1]}80`
+                          : 'none'
                       }}
                     >
-                      <span
-                        className={`transition-all duration-300 font-bold tracking-wide ${isCenter
-                          ? `bg-gradient-to-r ${isDarkMode ? 'from-indigo-300 via-purple-300 to-pink-300' : 'from-indigo-600 via-purple-600 to-pink-600'} bg-clip-text text-transparent`
-                          : isNearCenter
-                            ? isDarkMode ? 'text-white/90' : 'text-slate-800'
-                            : isDarkMode ? 'text-slate-300/60' : 'text-slate-700/60'
-                          }`}
-                        style={{
-                          textShadow: isCenter
-                            ? isDarkMode
-                              ? '0 0 40px rgba(129, 140, 248, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)'
-                              : '0 0 30px rgba(99, 102, 241, 0.3), 0 2px 8px rgba(0, 0, 0, 0.1)'
-                            : isNearCenter
-                              ? isDarkMode
-                                ? '0 2px 8px rgba(0, 0, 0, 0.5)'
-                                : '0 1px 3px rgba(0, 0, 0, 0.1)'
-                              : 'none',
-                          letterSpacing: isCenter ? '0.02em' : '0'
-                        }}
-                      >
-                        {item}
-                      </span>
-                    </motion.div>
-                  );
-                })}
-              </div>
+                      {item}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
+        </div>
 
-          {/* Right Side - Spin Button */}
-          <div className="flex-shrink-0 w-72 flex flex-col justify-center items-center gap-8">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Button
-                onClick={handleSpin}
-                disabled={isSpinning || participants.length === 0}
-                size="lg"
-                className={`group relative overflow-hidden bg-gradient-to-br ${isDarkMode ? 'from-indigo-500 to-purple-600' : 'from-indigo-600 to-purple-700'} hover:from-indigo-600 hover:to-purple-700 text-white px-20 py-10 text-2xl font-semibold rounded-2xl shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+        {/* Previous Winner - Left Side */}
+        <div className="absolute left-8 top-1/2 -translate-y-1/2">
+          <AnimatePresence mode="wait">
+            {winners.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                className={cn(
+                  "p-6 rounded-2xl",
+                  "backdrop-blur-xl bg-white/10 dark:bg-black/20",
+                  "border border-white/20 dark:border-white/10"
+                )}
               >
-                <motion.span
-                  className="relative z-10 tracking-wider"
-                  animate={isSpinning ? { opacity: [1, 0.5, 1] } : {}}
-                  transition={{ duration: 1, repeat: isSpinning ? Infinity : 0 }}
-                >
-                  {isSpinning ? 'SPINNING' : 'SPIN'}
-                </motion.span>
+                <div className={cn(
+                  "text-xs uppercase tracking-widest mb-2",
+                  isDarkMode ? "text-white/60" : "text-gray-600"
+                )}>
+                  Previous Winner
+                </div>
+                <div className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#173066] to-[#509bff]">
+                  {winners[winners.length - 1].workId}
+                </div>
+                <div className={cn(
+                  "text-xs mt-2",
+                  isDarkMode ? "text-white/40" : "text-gray-500"
+                )}>
+                  {new Date(winners[winners.length - 1].wonAt).toLocaleTimeString("en-SG", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Controls - Right Side with SPIN button and config below */}
+        <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col items-center gap-6">
+          {/* SPIN Button */}
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button
+              onClick={handleSpin}
+              disabled={isSpinning || participants.length === 0}
+              size="lg"
+              className={cn(
+                "group relative overflow-hidden",
+                "px-20 py-10 text-3xl font-bold rounded-2xl",
+                "bg-gradient-to-br from-[#173066] via-[#0463ce] to-[#509bff]",
+                "hover:from-[#0463ce] hover:to-[#173066]",
+                "text-white shadow-2xl",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                "transition-all duration-300"
+              )}
+            >
+              <span className="relative z-10 tracking-wider">
+                {isSpinning ? 'SPINNING' : 'SPIN'}
+              </span>
+              {isSpinning && (
                 <motion.div
-                  className="absolute inset-0 bg-white"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 0.1 }}
-                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 bg-white/20"
+                  animate={{ opacity: [0, 0.3, 0] }}
+                  transition={{ duration: 1, repeat: Infinity }}
                 />
-              </Button>
-            </motion.div>
+              )}
+            </Button>
+          </motion.div>
+
+          {/* Config buttons below SPIN */}
+          <div className="flex flex-col gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => router.push(`/admin/luckydraw/${luckydrawId}`)}
+              className={cn(
+                "backdrop-blur-xl bg-white/10 dark:bg-black/20",
+                "border border-white/20 dark:border-white/10",
+                "hover:bg-white/20 dark:hover:bg-black/30",
+                isDarkMode ? "text-white" : "text-gray-800"
+              )}
+            >
+              <LayoutGrid className="w-4 h-4 mr-2" />
+              Classic View
+            </Button>
+
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "backdrop-blur-xl bg-white/10 dark:bg-black/20",
+                    "border border-white/20 dark:border-white/10",
+                    "hover:bg-white/20 dark:hover:bg-black/30",
+                    isDarkMode ? "text-white" : "text-gray-800",
+                    "relative"
+                  )}
+                >
+                  <Trophy className="w-4 h-4 mr-2" />
+                  Winners
+                  {winners.length > 0 && (
+                    <span className="ml-2 px-2 py-0.5 bg-gradient-to-r from-[#173066] to-[#509bff] text-white rounded-full text-xs font-semibold">
+                      {winners.length}
+                    </span>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Lucky Draw Winners</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 space-y-3">
+                  {winners.length === 0 ? (
+                    <p className="text-center text-muted-foreground">No winners yet</p>
+                  ) : (
+                    winners.map((winner, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs">
+                            {new Date(winner.wonAt).toLocaleTimeString("en-SG", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                          <span className="font-medium">{winner.workId}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteWinner(winner.workId)}
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className={cn(
+                "backdrop-blur-xl bg-white/10 dark:bg-black/20",
+                "border border-white/20 dark:border-white/10",
+                "hover:bg-white/20 dark:hover:bg-black/30",
+                isDarkMode ? "text-white" : "text-gray-800"
+              )}
+            >
+              <motion.div
+                initial={false}
+                animate={{ rotate: isDarkMode ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+              </motion.div>
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Winner Display with Framer Motion */}
+      {/* Winner Display */}
       <AnimatePresence>
         {showWinner && currentWinner && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
             className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
           >
             <motion.div
-              className="absolute inset-0 backdrop-blur-sm"
+              className="absolute inset-0 backdrop-blur-md"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             />
             <motion.div
-              initial={{ scale: 0.8, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: -20 }}
-              transition={{
-                type: "spring",
-                damping: 15,
-                stiffness: 300
-              }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
               className="text-center relative"
             >
               <motion.div
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
-                className={`text-lg font-medium uppercase tracking-[0.4em] ${themeStyles.mutedText} mb-4`}
+                className={cn(
+                  "text-lg font-medium uppercase tracking-[0.4em] mb-4",
+                  isDarkMode ? "text-white/60" : "text-gray-600"
+                )}
               >
                 Congratulations
               </motion.div>
@@ -740,11 +739,11 @@ export default function LuckyDrawCY() {
                 }}
                 className="relative"
               >
-                <div className={`text-7xl font-bold bg-gradient-to-r ${isDarkMode ? 'from-indigo-400 via-purple-400 to-pink-400' : 'from-indigo-600 via-purple-600 to-pink-600'} bg-clip-text text-transparent`}>
+                <div className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#173066] via-[#0463ce] to-[#509bff]">
                   {currentWinner}
                 </div>
                 <motion.div
-                  className={`absolute -inset-4 bg-gradient-to-r ${isDarkMode ? 'from-indigo-500/20 via-purple-500/20 to-pink-500/20' : 'from-indigo-500/10 via-purple-500/10 to-pink-500/10'} blur-2xl rounded-full`}
+                  className="absolute -inset-4 bg-gradient-to-r from-[#509bff]/20 via-[#0463ce]/20 to-[#173066]/20 blur-2xl rounded-full"
                   animate={{
                     scale: [1, 1.2, 1],
                     opacity: [0.5, 0.8, 0.5]
@@ -755,12 +754,6 @@ export default function LuckyDrawCY() {
                   }}
                 />
               </motion.div>
-              <motion.div
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
-                className={`mt-6 h-0.5 bg-gradient-to-r from-transparent ${isDarkMode ? 'via-indigo-400' : 'via-indigo-600'} to-transparent`}
-              />
             </motion.div>
           </motion.div>
         )}
