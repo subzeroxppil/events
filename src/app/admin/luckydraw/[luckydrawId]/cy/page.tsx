@@ -19,10 +19,16 @@ import {
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Settings, RotateCcw } from "lucide-react";
 
 type Winner = {
   workId: string;
   wonAt: string;
+};
+
+type AnimationSettings = {
+  duration: number;
+  easeExponent: number;
 };
 
 type LuckyDraw = {
@@ -35,7 +41,12 @@ type LuckyDraw = {
 
 const BASE_COLORS = ["#173066", "#509bff", "#0463ce", "#63cbfb"];
 const ITEM_HEIGHT = 96; // Height of each name card
-const SPIN_DURATION_MS = 7500; // Duration of spin animation in milliseconds (7.5 seconds default)
+
+// Default animation settings
+const DEFAULT_SETTINGS: AnimationSettings = {
+  duration: 11000, // Duration in milliseconds
+  easeExponent: 6, // Higher = more dramatic slowdown
+};
 
 // Add shimmer animation
 const shimmerKeyframes = `
@@ -82,6 +93,10 @@ export default function LuckyDrawCY() {
   const [error, setError] = useState("");
   const [currentWinner, setCurrentWinner] = useState<string | null>(null);
   const [showWinner, setShowWinner] = useState(false);
+
+  // Animation settings
+  const [animationSettings, setAnimationSettings] = useState<AnimationSettings>(DEFAULT_SETTINGS);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Vertical spinner states - INDEX BASED SYSTEM
   const [spinnerItems, setSpinnerItems] = useState<string[]>([]);
@@ -232,7 +247,7 @@ export default function LuckyDrawCY() {
     const totalIndices = Math.floor(spins) * totalItems + winnerIndex;
 
     // Animate through indices - totalIndices already points to winnerIndex after spins
-    animateSpinnerByIndex(0, totalIndices, SPIN_DURATION_MS, intendedWinner, newSpinnerItems);
+    animateSpinnerByIndex(0, totalIndices, animationSettings.duration, intendedWinner, newSpinnerItems);
   };
 
   const animateSpinnerByIndex = (
@@ -251,10 +266,10 @@ export default function LuckyDrawCY() {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Aggressive easing that starts slowing down early for maximum suspense
+      // Configurable easing that starts slowing down early for maximum suspense
       // This creates a long, drawn-out deceleration that builds tension
-      const easeOut = 1 - Math.pow(1 - progress, 6); // Sextic ease-out for early and dramatic deceleration
-      
+      const easeOut = 1 - Math.pow(1 - progress, animationSettings.easeExponent);
+
       const currentProgress = fromIndex + (totalIndices * easeOut);
 
       // Update center index and animation offset for smooth visual
@@ -264,10 +279,13 @@ export default function LuckyDrawCY() {
       setCenterIndex(wholeIndex % itemsArray.length);
       setAnimationOffset(fractionalPart * ITEM_HEIGHT);
 
-      // Fade out sound gradually as the spin slows down (starting early)
-      if (spinSound.current && progress > 0.5 && !soundFading) {
+      // Fade out sound automatically based on easing curve - start when spin becomes noticeably slow
+      const autoSoundFadeStart = animationSettings.easeExponent >= 5 ? 0.5 : 0.6;
+      const autoSoundFadeDuration = animationSettings.easeExponent >= 5 ? 0.5 : 0.4;
+
+      if (spinSound.current && progress > autoSoundFadeStart && !soundFading) {
         soundFading = true;
-        const fadeOutDurationMs = duration * 0.5; // last 50% for very gradual fade
+        const fadeOutDurationMs = duration * autoSoundFadeDuration;
         const steps = 20;
         const stepMs = Math.max(16, Math.floor(fadeOutDurationMs / steps));
         const decrement = 1 / steps;
@@ -685,6 +703,92 @@ export default function LuckyDrawCY() {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Settings Button - Bottom Right */}
+        <div className="absolute right-8 bottom-8 z-40">
+          <Sheet open={showSettings} onOpenChange={setShowSettings}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                className="backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg"
+                style={{
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                }}
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Animation Settings</SheetTitle>
+              </SheetHeader>
+              <div className="mt-6 space-y-6 pb-6">
+                {/* Duration Setting */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Duration: {(animationSettings.duration / 1000).toFixed(1)}s
+                  </label>
+                  <input
+                    type="range"
+                    min="3000"
+                    max="20000"
+                    step="500"
+                    value={animationSettings.duration}
+                    onChange={(e) => setAnimationSettings(prev => ({
+                      ...prev,
+                      duration: parseInt(e.target.value)
+                    }))}
+                    className="w-full"
+                    disabled={isSpinning}
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    3s - 20s
+                  </div>
+                </div>
+
+                {/* Ease Exponent Setting */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Slowdown Intensity: {animationSettings.easeExponent}
+                  </label>
+                  <input
+                    type="range"
+                    min="2"
+                    max="10"
+                    step="1"
+                    value={animationSettings.easeExponent}
+                    onChange={(e) => setAnimationSettings(prev => ({
+                      ...prev,
+                      easeExponent: parseInt(e.target.value)
+                    }))}
+                    className="w-full"
+                    disabled={isSpinning}
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    2 = gentle slowdown, 10 = dramatic slowdown
+                  </div>
+                </div>
+
+                {/* Reset Button */}
+                <Button
+                  variant="outline"
+                  onClick={() => setAnimationSettings(DEFAULT_SETTINGS)}
+                  disabled={isSpinning}
+                  className="w-full"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Reset to Default
+                </Button>
+
+                <div className="text-xs text-muted-foreground">
+                  Sound timing automatically adjusts to match the spin animation.
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
 
         {/* Winners Button - Bottom Left */}
