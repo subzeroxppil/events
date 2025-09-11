@@ -418,10 +418,10 @@ export default function LuckyDrawCY2() {
                   >
                     <span
                       className={`font-light tracking-wide transition-all duration-200 ${isCenter
-                          ? 'text-gray-900 text-2xl'
-                          : isClose
-                            ? 'text-gray-400 text-xl'
-                            : 'text-gray-300 text-lg'
+                        ? 'text-gray-900 text-2xl'
+                        : isClose
+                          ? 'text-gray-400 text-xl'
+                          : 'text-gray-300 text-lg'
                         }`}
                       style={{
                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -449,31 +449,34 @@ export default function LuckyDrawCY2() {
                 relative px-16 py-6 
                 font-light tracking-[0.3em] uppercase text-lg
                 transition-all duration-500 ease-out
+                bg-background
                 ${isSpinning
-                  ? 'bg-gray-900 text-white cursor-wait'
-                  : 'bg-white text-gray-900 hover:bg-gray-900 hover:text-white cursor-pointer'
+                  ? 'cursor-wait'
+                  : 'cursor-pointer hover:scale-105'
                 }
-                border border-gray-900
+                border-2
                 disabled:opacity-30 disabled:cursor-not-allowed
                 overflow-hidden
               `}
-              whileHover={!isSpinning ? { scale: 1.02 } : {}}
+              style={{
+                color: isSpinning ? '#0070ba' : '#003087',
+                borderColor: isSpinning ? '#009cde' : '#0070ba',
+              }}
+              whileHover={!isSpinning ? {
+                scale: 1.02,
+                color: '#0070ba',
+                borderColor: '#009cde'
+              } : {}}
               whileTap={!isSpinning ? { scale: 0.98 } : {}}
               initial={false}
               animate={isSpinning ? {
-                boxShadow: [
-                  "0 0 0 0 rgba(0,0,0,0.1)",
-                  "0 0 20px 10px rgba(0,0,0,0.1)",
-                  "0 0 0 0 rgba(0,0,0,0.1)"
-                ]
-              } : {
-                boxShadow: "0 0 0 0 rgba(0,0,0,0)"
-              }}
+                borderColor: ['#0070ba', '#009cde', '#0070ba']
+              } : {}}
               transition={{
-                boxShadow: {
-                  duration: 1.5,
+                borderColor: {
+                  duration: 2.0,
                   repeat: isSpinning ? Infinity : 0,
-                  ease: "easeInOut"
+                  ease: "linear"
                 }
               }}
             >
@@ -499,7 +502,8 @@ export default function LuckyDrawCY2() {
                     {[0, 1, 2].map((i) => (
                       <motion.div
                         key={i}
-                        className="w-1.5 h-1.5 bg-white rounded-full"
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: '#0070ba' }}
                         animate={{
                           opacity: [0.3, 1, 0.3],
                           y: [0, -3, 0]
