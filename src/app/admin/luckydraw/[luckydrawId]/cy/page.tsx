@@ -390,8 +390,11 @@ export default function LuckyDrawCY() {
       ? "from-slate-950 via-indigo-950 to-slate-950"
       : "from-slate-50 via-indigo-50 to-blue-50",
     card: isDarkMode
-      ? "bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl"
-      : "bg-white/40 backdrop-blur-2xl border border-white/50 shadow-xl",
+      ? "bg-slate-900/80 backdrop-blur-2xl border border-white/10 shadow-2xl"
+      : "bg-white/80 backdrop-blur-2xl border border-slate-200/50 shadow-xl",
+    spinnerCard: isDarkMode
+      ? "bg-slate-900/90 backdrop-blur-xl border border-white/20"
+      : "bg-white/95 backdrop-blur-xl border border-slate-200/60",
     text: isDarkMode ? "text-white" : "text-slate-900",
     mutedText: isDarkMode ? "text-slate-400" : "text-slate-600",
     primaryColor: isDarkMode ? "#818cf8" : "#6366f1",
@@ -542,23 +545,23 @@ export default function LuckyDrawCY() {
           </div>
 
           {/* Spinner Container - Center */}
-          <div className={`flex-1 relative rounded-3xl ${themeStyles.card} overflow-hidden max-w-2xl mx-auto`}>
+          <div className={`flex-1 relative rounded-3xl ${themeStyles.spinnerCard} overflow-hidden max-w-2xl mx-auto shadow-2xl`}>
             {/* GradualBlur for melting effect */}
-            <GradualBlur 
-              position="top" 
-              height="12rem" 
-              strength={4} 
-              divCount={10}
-              opacity={1}
+            <GradualBlur
+              position="top"
+              height="8rem"
+              strength={3}
+              divCount={8}
+              opacity={0.9}
               exponential={true}
               style={{ zIndex: 30 }}
             />
-            <GradualBlur 
-              position="bottom" 
-              height="12rem" 
-              strength={4} 
-              divCount={10}
-              opacity={1}
+            <GradualBlur
+              position="bottom"
+              height="8rem"
+              strength={3}
+              divCount={8}
+              opacity={0.9}
               exponential={true}
               style={{ zIndex: 30 }}
             />
@@ -577,7 +580,13 @@ export default function LuckyDrawCY() {
             </div>
 
             {/* Vertical Spinner - Full Height */}
-            <div className="relative h-full flex items-center justify-center px-12">
+            <div className="relative h-full flex items-center justify-center px-8">
+              {/* Add subtle pattern background for visibility */}
+              <div className="absolute inset-0 opacity-5">
+                <div className="h-full w-full" style={{
+                  backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 35px, ${isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'} 35px, ${isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'} 70px)`
+                }} />
+              </div>
               <div
                 ref={spinnerRef}
                 className="absolute w-full"
@@ -591,9 +600,9 @@ export default function LuckyDrawCY() {
                   const distanceFromCenter = Math.abs(itemPosition - currentPosition) / 96;
                   const isCenter = distanceFromCenter < 0.3;
                   const isNearCenter = distanceFromCenter < 1;
-                  const opacity = isCenter ? 1 : isNearCenter ? 0.8 : Math.max(0.15, 1 - distanceFromCenter * 0.15);
-                  const scale = isCenter ? 1 : Math.max(0.85, 1 - distanceFromCenter * 0.03);
-                  const blur = distanceFromCenter > 4 ? 2 : distanceFromCenter > 2 ? 0.5 : 0;
+                  const opacity = isCenter ? 1 : isNearCenter ? 0.9 : Math.max(0.4, 1 - distanceFromCenter * 0.1);
+                  const scale = isCenter ? 1.05 : Math.max(0.92, 1 - distanceFromCenter * 0.015);
+                  const blur = distanceFromCenter > 5 ? 1 : distanceFromCenter > 3 ? 0.3 : 0;
 
                   return (
                     <motion.div
@@ -610,16 +619,16 @@ export default function LuckyDrawCY() {
                         ease: "easeOut",
                       }}
                       style={{
-                        fontSize: isCenter ? '2.25rem' : isNearCenter ? '1.75rem' : '1.25rem',
+                        fontSize: isCenter ? '2.5rem' : isNearCenter ? '1.875rem' : '1.375rem',
                         fontWeight: isCenter ? '700' : isNearCenter ? '500' : '400',
                       }}
                     >
                       <span
-                        className={`transition-all duration-300 font-semibold ${isCenter
-                            ? `bg-gradient-to-r ${isDarkMode ? 'from-indigo-300 via-purple-300 to-pink-300' : 'from-indigo-600 via-purple-600 to-pink-600'} bg-clip-text text-transparent`
-                            : isNearCenter
-                              ? isDarkMode ? 'text-white' : 'text-slate-800'
-                              : isDarkMode ? 'text-slate-400' : 'text-slate-600'
+                        className={`transition-all duration-300 font-bold tracking-wide ${isCenter
+                          ? `bg-gradient-to-r ${isDarkMode ? 'from-indigo-300 via-purple-300 to-pink-300' : 'from-indigo-600 via-purple-600 to-pink-600'} bg-clip-text text-transparent`
+                          : isNearCenter
+                            ? isDarkMode ? 'text-white/90' : 'text-slate-800'
+                            : isDarkMode ? 'text-slate-300/60' : 'text-slate-700/60'
                           }`}
                         style={{
                           textShadow: isCenter
@@ -627,10 +636,10 @@ export default function LuckyDrawCY() {
                               ? '0 0 40px rgba(129, 140, 248, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)'
                               : '0 0 30px rgba(99, 102, 241, 0.3), 0 2px 8px rgba(0, 0, 0, 0.1)'
                             : isNearCenter
-                            ? isDarkMode
-                              ? '0 2px 8px rgba(0, 0, 0, 0.5)'
-                              : '0 1px 3px rgba(0, 0, 0, 0.1)'
-                            : 'none',
+                              ? isDarkMode
+                                ? '0 2px 8px rgba(0, 0, 0, 0.5)'
+                                : '0 1px 3px rgba(0, 0, 0, 0.1)'
+                              : 'none',
                           letterSpacing: isCenter ? '0.02em' : '0'
                         }}
                       >
@@ -670,17 +679,6 @@ export default function LuckyDrawCY() {
                 />
               </Button>
             </motion.div>
-
-            <div className={`text-center ${themeStyles.card} rounded-2xl px-8 py-4`}>
-              <motion.div
-                className="text-3xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent"
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                {participants.length}
-              </motion.div>
-              <div className={`text-xs uppercase tracking-widest ${themeStyles.mutedText} mt-1`}>participants</div>
-            </div>
           </div>
         </div>
       </div>
