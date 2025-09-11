@@ -83,9 +83,10 @@ export default function LuckyDrawCY() {
   const [currentWinner, setCurrentWinner] = useState<string | null>(null);
   const [showWinner, setShowWinner] = useState(false);
 
-  // Vertical spinner states
+  // Vertical spinner states - INDEX BASED SYSTEM
   const [spinnerItems, setSpinnerItems] = useState<string[]>([]);
-  const [currentPosition, setCurrentPosition] = useState(0);
+  const [centerIndex, setCenterIndex] = useState(0); // Track which index is at center
+  const [animationOffset, setAnimationOffset] = useState(0); // For smooth animations
   const spinnerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
   const idleAnimationRef = useRef<number | null>(null);
@@ -151,8 +152,9 @@ export default function LuckyDrawCY() {
       const extendedList = createExtendedList(uniqueParticipants, 200);
       setSpinnerItems(extendedList);
 
-      // Start at position 0
-      setCurrentPosition(0);
+      // Start at index 0
+      setCenterIndex(0);
+      setAnimationOffset(0);
 
       if (data.winners && Array.isArray(data.winners)) {
         setWinners(data.winners);
@@ -220,39 +222,45 @@ export default function LuckyDrawCY() {
       spinSound.current.play();
     }
 
-    // Calculate spin to land exactly on winner index
-    const baseHeight = newSpinnerItems.length * ITEM_HEIGHT;
+    // Reset to start position
+    setCenterIndex(0);
+    setAnimationOffset(0);
+
+    // Calculate total indices to spin through
+    const totalItems = newSpinnerItems.length;
     const spins = 3 + Math.random() * 2; // 3-5 rotations
+    const totalIndices = Math.floor(spins * totalItems) + winnerIndex;
 
-    // Calculate exact position to center the winner
-    const targetPosition = (spins * baseHeight) + (winnerIndex * ITEM_HEIGHT);
-
-    // Start from current position or 0
-    const startPos = 0;
-    setCurrentPosition(startPos);
-
-    // Animate to final position
-    animateSpinnerSmooth(startPos, targetPosition, SPIN_DURATION_MS, intendedWinner);
+    // Animate through indices
+    animateSpinnerByIndex(0, totalIndices, SPIN_DURATION_MS, winnerIndex, intendedWinner);
   };
 
-  const animateSpinnerSmooth = (
-    from: number,
-    to: number,
+  const animateSpinnerByIndex = (
+    fromIndex: number,
+    toIndex: number,
     duration: number,
+    finalIndex: number,
     winner: string
   ) => {
     const startTime = Date.now();
     let soundFading = false;
+    const totalIndices = toIndex - fromIndex;
 
     const animate = () => {
       const now = Date.now();
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Simpler, smoother easing (easeOutCubic)
+      // Smooth easing (easeOutCubic)
       const easeOut = 1 - Math.pow(1 - progress, 3);
-      const currentPos = from + (to - from) * easeOut;
-      setCurrentPosition(currentPos);
+      const currentProgress = fromIndex + (totalIndices * easeOut);
+
+      // Update center index and animation offset for smooth visual
+      const wholeIndex = Math.floor(currentProgress);
+      const fractionalPart = currentProgress - wholeIndex;
+
+      setCenterIndex(wholeIndex % spinnerItems.length);
+      setAnimationOffset(fractionalPart * ITEM_HEIGHT);
 
       // Fade out sound gradually near the end
       if (spinSound.current && progress > 0.8 && !soundFading) {
@@ -279,17 +287,10 @@ export default function LuckyDrawCY() {
       if (progress < 1) {
         animationRef.current = requestAnimationFrame(animate);
       } else {
-        // Set to exact final position
-        setCurrentPosition(to);
-
-        // Wait a frame to ensure position is updated, then determine actual center item
-        requestAnimationFrame(() => {
-          const baseHeight = spinnerItems.length * ITEM_HEIGHT;
-          const finalWrappedPos = baseHeight === 0 ? 0 : ((to % baseHeight) + baseHeight) % baseHeight;
-          const centerIndex = Math.round(finalWrappedPos / ITEM_HEIGHT) % spinnerItems.length;
-          const actualCenterWinner = spinnerItems[centerIndex];
-          handleSpinComplete(actualCenterWinner || winner);
-        });
+        // Snap to exact final index
+        setCenterIndex(finalIndex);
+        setAnimationOffset(0); // Reset offset for perfect alignment
+        handleSpinComplete(winner);
       }
     };
 
@@ -396,10 +397,11 @@ export default function LuckyDrawCY() {
     }, 250);
   };
 
-  // Simple idle animation
+  // Simple idle animation - index based
   useEffect(() => {
     if (!isSpinning && spinnerItems.length > 0 && !showWinner) {
       setIsIdleAnimating(true);
+      let accumulatedOffset = 0;
       let lastTime = performance.now();
 
       const animateIdle = () => {
@@ -412,7 +414,16 @@ export default function LuckyDrawCY() {
         const delta = (now - lastTime) / 1000;
         lastTime = now;
 
-        setCurrentPosition(prev => prev + (30 * delta)); // Slower idle speed
+        // Accumulate offset
+        accumulatedOffset += (30 * delta); // Slower idle speed in pixels
+
+        // When we've moved more than one item height, jump to next index
+        if (accumulatedOffset >= ITEM_HEIGHT) {
+          setCenterIndex(prev => (prev + 1) % spinnerItems.length);
+          accumulatedOffset = accumulatedOffset % ITEM_HEIGHT;
+        }
+
+        setAnimationOffset(accumulatedOffset);
 
         idleAnimationRef.current = requestAnimationFrame(animateIdle);
       };
@@ -420,6 +431,9 @@ export default function LuckyDrawCY() {
       idleAnimationRef.current = requestAnimationFrame(animateIdle);
     } else {
       setIsIdleAnimating(false);
+      if (!isSpinning) {
+        setAnimationOffset(0); // Reset offset when not animating
+      }
     }
 
     return () => {
@@ -443,14 +457,8 @@ export default function LuckyDrawCY() {
     };
   }, []);
 
-  // Derived values for infinite scroll
-  const BASE_HEIGHT = spinnerItems.length * ITEM_HEIGHT;
-  // Use modulo to create infinite wrapping
-  const wrappedPosition = BASE_HEIGHT === 0 ? 0 : ((currentPosition % BASE_HEIGHT) + BASE_HEIGHT) % BASE_HEIGHT;
-
-  // Calculate visible range and render items with wrapping
+  // Calculate visible items based on center index
   const visibleRange = 20; // Number of items to render above and below center
-  const centerIndex = BASE_HEIGHT > 0 ? Math.floor(wrappedPosition / ITEM_HEIGHT) : 0;
 
   const renderedItems = useMemo(() => {
     if (spinnerItems.length === 0) return [];
@@ -462,12 +470,12 @@ export default function LuckyDrawCY() {
       const wrappedIndex = ((absoluteIndex % totalItems) + totalItems) % totalItems;
       items.push({
         text: spinnerItems[wrappedIndex],
-        position: absoluteIndex * ITEM_HEIGHT,
+        offset: i, // Offset from center (-20 to +20)
         key: `${absoluteIndex}-${spinnerItems[wrappedIndex]}`
       });
     }
     return items;
-  }, [spinnerItems, centerIndex, ITEM_HEIGHT]);
+  }, [spinnerItems, centerIndex]);
 
   if (initialLoading) {
     return (
@@ -510,97 +518,79 @@ export default function LuckyDrawCY() {
           <div className="relative h-full flex items-center justify-center overflow-hidden">
             <div
               ref={spinnerRef}
-              className="absolute w-full top-0 left-0"
+              className="absolute w-full"
               style={{
-                transform: `translateY(calc(50vh - ${wrappedPosition + ITEM_HEIGHT / 2}px))`,
+                top: '50%',
+                transform: `translateY(calc(-50% - ${animationOffset}px))`,
                 willChange: 'transform',
-                transition: 'none' // Remove transition to prevent jittering
+                transition: 'none'
               }}
             >
-              {(() => {
-                // Find which item is in the center
-                const viewportCenter = wrappedPosition + ITEM_HEIGHT / 2;
-                let centerItem = null;
-                let minDistance = Infinity;
+              {renderedItems.map((item) => {
+                // Calculate position based on offset from center
+                const itemPosition = item.offset * ITEM_HEIGHT;
+                const distanceFromCenter = Math.abs(item.offset);
 
-                for (const item of renderedItems) {
-                  const itemCenter = item.position + ITEM_HEIGHT / 2;
-                  const distance = Math.abs(itemCenter - viewportCenter);
-                  if (distance < minDistance) {
-                    minDistance = distance;
-                    centerItem = item;
-                  }
-                }
+                // Item at offset 0 is the center item
+                const isCenter = item.offset === 0;
+                const isNearCenter = distanceFromCenter <= 2;
 
-                return renderedItems.map((item) => {
-                  const itemTop = item.position;
-                  const itemCenter = itemTop + ITEM_HEIGHT / 2;
-                  const distanceFromCenter = Math.abs(itemCenter - viewportCenter);
+                // Visual properties based on distance
+                const scale = isCenter ? 1.15 : isNearCenter ? 1.05 : 1;
+                const opacity = isCenter ? 1 : Math.max(0.3, 1 - (distanceFromCenter * 0.05));
+                const blur = distanceFromCenter > 8 ? Math.min(1, (distanceFromCenter - 8) * 0.1) : 0;
 
-                  // Check if this item is in the center zone (more lenient)
-                  const isCenter = item === centerItem && distanceFromCenter < ITEM_HEIGHT / 4;
-                  const isVisible = distanceFromCenter < ITEM_HEIGHT * 8;
-
-                  // Smooth scale based on distance
-                  const scale = isCenter ? 1.15 : 1;
-                  const opacity = isCenter ? 1 : isVisible ? 0.8 : 0.4;
-                  const blur = distanceFromCenter > ITEM_HEIGHT * 6
-                    ? Math.min(0.5, (distanceFromCenter - ITEM_HEIGHT * 6) * 0.001)
-                    : 0;
-
-                  return (
+                return (
+                  <div
+                    key={item.key}
+                    className="absolute left-0 right-0 h-24 w-full flex items-center justify-center px-12"
+                    style={{
+                      top: `${itemPosition}px`,
+                      opacity,
+                      filter: blur > 0 ? `blur(${blur}px)` : 'none',
+                      transform: `translateX(-50%) translateX(50%) scale(${scale})`,
+                      transition: isIdleAnimating || isSpinning ? 'none' : 'all 0.2s ease-out',
+                      willChange: 'transform, opacity, filter'
+                    }}
+                  >
+                    {/* Glassmorphic card container */}
                     <div
-                      key={item.key}
-                      className="absolute left-0 right-0 h-24 w-full flex items-center justify-center px-12"
+                      className={cn(
+                        "relative px-10 py-4 rounded-2xl",
+                        "transition-all duration-300"
+                      )}
                       style={{
-                        top: `${itemTop}px`,
-                        opacity,
-                        filter: blur > 0 ? `blur(${blur}px)` : 'none',
-                        transform: `scale(${scale})`,
-                        transition: isIdleAnimating || isSpinning ? 'none' : 'all 0.2s ease-out',
-                        willChange: 'transform, opacity, filter'
+                        background: 'rgba(255, 255, 255, 0.8)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: isCenter
+                          ? `2px solid ${BASE_COLORS[1]}`
+                          : '1px solid rgba(255, 255, 255, 0.3)',
+                        boxShadow: isCenter
+                          ? `0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 40px ${BASE_COLORS[1]}30`
+                          : '0 4px 16px 0 rgba(31, 38, 135, 0.1)'
                       }}
                     >
-                      {/* Glassmorphic card container */}
-                      <div
+                      <span
                         className={cn(
-                          "relative px-10 py-4 rounded-2xl",
-                          "transition-all duration-300"
+                          "relative z-10 font-semibold transition-all duration-300 block text-center",
+                          isCenter && "font-bold"
                         )}
                         style={{
-                          background: 'rgba(255, 255, 255, 0.8)',
-                          backdropFilter: 'blur(20px)',
-                          WebkitBackdropFilter: 'blur(20px)',
-                          border: isCenter
-                            ? `2px solid ${BASE_COLORS[1]}`
-                            : '1px solid rgba(255, 255, 255, 0.3)',
-                          boxShadow: isCenter
-                            ? `0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 40px ${BASE_COLORS[1]}30`
-                            : '0 4px 16px 0 rgba(31, 38, 135, 0.1)'
+                          color: isCenter ? '#000000' : '#6B7280',
+                          fontSize: isCenter ? '2.25rem' : '1.5rem',
+                          fontWeight: isCenter ? 800 : 500,
+                          letterSpacing: isCenter ? '0.02em' : '0.01em',
+                          textShadow: isCenter ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                          willChange: 'transform'
                         }}
                       >
-
-                        <span
-                          className={cn(
-                            "relative z-10 font-semibold transition-all duration-300 block text-center",
-                            isCenter && "font-bold"
-                          )}
-                          style={{
-                            color: isCenter ? '#000000' : '#6B7280',  // Black for center, grey for others
-                            fontSize: isCenter ? '2.25rem' : '1.5rem',
-                            fontWeight: isCenter ? 800 : 500,
-                            letterSpacing: isCenter ? '0.02em' : '0.01em',
-                            textShadow: isCenter ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
-                            willChange: 'transform'
-                          }}
-                        >
-                          {formatDisplayName(item.text)}
-                        </span>
-                      </div>
+                        {formatDisplayName(item.text)}
+                      </span>
                     </div>
-                  );
-                });
-              })()}
+                  </div>
+                );
+              })}
             </div>
 
             {/* GradualBlur for smooth melting effect - positioned absolutely */}
@@ -766,24 +756,6 @@ export default function LuckyDrawCY() {
             >
               {isSpinning ? 'Spinning...' : 'Spin'}
             </span>
-
-            {/* Subtle loading indicator when spinning */}
-            {isSpinning && (
-              <motion.div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: 'conic-gradient(from 0deg, transparent, rgba(59, 130, 246, 0.1), transparent)',
-                }}
-                animate={{
-                  rotate: 360
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-              />
-            )}
           </button>
         </div>
       </div>
