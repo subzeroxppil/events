@@ -198,14 +198,14 @@ export default function LuckyDrawCY() {
     // Find a valid winner (not already won)
     let winnerIndex = -1;
     const availableIndices = [];
-    
+
     // Collect all valid indices
     for (let i = 0; i < newSpinnerItems.length; i++) {
       if (!winners.some(w => w.workId === newSpinnerItems[i])) {
         availableIndices.push(i);
       }
     }
-    
+
     if (availableIndices.length > 0) {
       winnerIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
     } else {
@@ -223,14 +223,14 @@ export default function LuckyDrawCY() {
     // Calculate spin to land exactly on winner index
     const baseHeight = newSpinnerItems.length * ITEM_HEIGHT;
     const spins = 3 + Math.random() * 2; // 3-5 rotations
-    
+
     // Calculate exact position to center the winner
     const targetPosition = (spins * baseHeight) + (winnerIndex * ITEM_HEIGHT);
-    
+
     // Start from current position or 0
     const startPos = 0;
     setCurrentPosition(startPos);
-    
+
     // Animate to final position
     animateSpinnerSmooth(startPos, targetPosition, SPIN_DURATION_MS, intendedWinner);
   };
@@ -281,7 +281,7 @@ export default function LuckyDrawCY() {
       } else {
         // Set to exact final position
         setCurrentPosition(to);
-        
+
         // Wait a frame to ensure position is updated, then determine actual center item
         requestAnimationFrame(() => {
           const baseHeight = spinnerItems.length * ITEM_HEIGHT;
@@ -522,7 +522,7 @@ export default function LuckyDrawCY() {
                 const viewportCenter = wrappedPosition + ITEM_HEIGHT / 2;
                 let centerItem = null;
                 let minDistance = Infinity;
-                
+
                 for (const item of renderedItems) {
                   const itemCenter = item.position + ITEM_HEIGHT / 2;
                   const distance = Math.abs(itemCenter - viewportCenter);
@@ -531,74 +531,75 @@ export default function LuckyDrawCY() {
                     centerItem = item;
                   }
                 }
-                
+
                 return renderedItems.map((item) => {
                   const itemTop = item.position;
                   const itemCenter = itemTop + ITEM_HEIGHT / 2;
                   const distanceFromCenter = Math.abs(itemCenter - viewportCenter);
-                  
-                  // Only the exact center item gets special treatment
-                  const isCenter = item === centerItem && distanceFromCenter < 5;
+
+                  // Check if this item is in the center zone (more lenient)
+                  const isCenter = item === centerItem && distanceFromCenter < ITEM_HEIGHT / 4;
                   const isVisible = distanceFromCenter < ITEM_HEIGHT * 8;
 
+                  // Smooth scale based on distance
+                  const scale = isCenter ? 1.15 : 1;
                   const opacity = isCenter ? 1 : isVisible ? 0.8 : 0.4;
                   const blur = distanceFromCenter > ITEM_HEIGHT * 6
                     ? Math.min(0.5, (distanceFromCenter - ITEM_HEIGHT * 6) * 0.001)
                     : 0;
 
-                return (
-                  <div
-                    key={item.key}
-                    className="absolute left-0 right-0 h-24 w-full flex items-center justify-center px-12"
-                    style={{
-                      top: `${itemTop}px`,
-                      opacity,
-                      filter: blur > 0 ? `blur(${blur}px)` : 'none',
-                      transition: isIdleAnimating || isSpinning ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      willChange: 'opacity, filter'
-                    }}
-                  >
-                    {/* Glassmorphic card container */}
+                  return (
                     <div
-                      className={cn(
-                        "relative px-10 py-4 rounded-2xl",
-                        "transition-all duration-300"
-                      )}
+                      key={item.key}
+                      className="absolute left-0 right-0 h-24 w-full flex items-center justify-center px-12"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.8)',
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
-                        border: isCenter
-                          ? `2px solid ${BASE_COLORS[1]}`
-                          : '1px solid rgba(255, 255, 255, 0.3)',
-                        boxShadow: isCenter
-                          ? `0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 40px ${BASE_COLORS[1]}30`
-                          : '0 4px 16px 0 rgba(31, 38, 135, 0.1)',
-                        transform: isCenter ? 'scale(1.15)' : 'scale(1)',
-                        willChange: 'transform'
+                        top: `${itemTop}px`,
+                        opacity,
+                        filter: blur > 0 ? `blur(${blur}px)` : 'none',
+                        transform: `scale(${scale})`,
+                        transition: isIdleAnimating || isSpinning ? 'none' : 'all 0.2s ease-out',
+                        willChange: 'transform, opacity, filter'
                       }}
                     >
-
-                      <span
+                      {/* Glassmorphic card container */}
+                      <div
                         className={cn(
-                          "relative z-10 font-semibold transition-all duration-300 block text-center",
-                          isCenter && "font-bold"
+                          "relative px-10 py-4 rounded-2xl",
+                          "transition-all duration-300"
                         )}
                         style={{
-                          color: isCenter ? '#000000' : '#6B7280',  // Black for center, grey for others
-                          fontSize: isCenter ? '2.25rem' : '1.5rem',
-                          fontWeight: isCenter ? 800 : 500,
-                          letterSpacing: isCenter ? '0.02em' : '0.01em',
-                          textShadow: isCenter ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
-                          willChange: 'transform'
+                          background: 'rgba(255, 255, 255, 0.8)',
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)',
+                          border: isCenter
+                            ? `2px solid ${BASE_COLORS[1]}`
+                            : '1px solid rgba(255, 255, 255, 0.3)',
+                          boxShadow: isCenter
+                            ? `0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 40px ${BASE_COLORS[1]}30`
+                            : '0 4px 16px 0 rgba(31, 38, 135, 0.1)'
                         }}
                       >
-                        {formatDisplayName(item.text)}
-                      </span>
+
+                        <span
+                          className={cn(
+                            "relative z-10 font-semibold transition-all duration-300 block text-center",
+                            isCenter && "font-bold"
+                          )}
+                          style={{
+                            color: isCenter ? '#000000' : '#6B7280',  // Black for center, grey for others
+                            fontSize: isCenter ? '2.25rem' : '1.5rem',
+                            fontWeight: isCenter ? 800 : 500,
+                            letterSpacing: isCenter ? '0.02em' : '0.01em',
+                            textShadow: isCenter ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                            willChange: 'transform'
+                          }}
+                        >
+                          {formatDisplayName(item.text)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                );
-              });
+                  );
+                });
               })()}
             </div>
 
@@ -735,74 +736,55 @@ export default function LuckyDrawCY() {
           </Sheet>
         </div>
 
-        {/* SPIN Button - Right Side, More Glassmorphic */}
-        <div className="absolute right-8 top-1/2 -translate-y-1/2 z-40">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+        {/* SPIN Button - Minimal, Contemporary Design */}
+        <div className="absolute right-12 top-1/2 -translate-y-1/2 z-40">
+          <button
+            onClick={handleSpin}
+            disabled={isSpinning || participants.length === 0}
+            className={cn(
+              "relative group",
+              "px-12 py-5",
+              "bg-white/90 backdrop-blur-sm",
+              "border border-gray-200",
+              "rounded-full",
+              "transition-all duration-200 ease-out",
+              "hover:bg-gray-50",
+              "hover:border-gray-300",
+              "hover:shadow-lg",
+              "active:scale-95",
+              "disabled:opacity-40 disabled:cursor-not-allowed",
+              "disabled:hover:bg-white/90 disabled:hover:shadow-none"
+            )}
           >
-            <button
-              onClick={handleSpin}
-              disabled={isSpinning || participants.length === 0}
+            <span
               className={cn(
-                "group relative overflow-hidden",
-                "px-16 py-8 text-2xl font-bold rounded-3xl",
-                "disabled:opacity-50 disabled:cursor-not-allowed",
-                "transition-all duration-300",
-                "hover:shadow-2xl hover:scale-105",
-                "active:scale-95"
+                "font-medium text-sm tracking-wider uppercase",
+                "transition-colors duration-200",
+                isSpinning ? "text-blue-600" : "text-gray-700",
+                "group-hover:text-gray-900"
               )}
-              style={{
-                background: isSpinning
-                  ? 'rgba(255, 255, 255, 0.95)'
-                  : 'rgba(255, 255, 255, 0.25)',
-                backdropFilter: 'blur(24px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-                border: `2px solid ${isSpinning ? BASE_COLORS[2] : 'rgba(255, 255, 255, 0.18)'}`,
-                boxShadow: isSpinning
-                  ? `0 20px 40px -10px rgba(0, 0, 0, 0.3), 0 0 40px ${BASE_COLORS[2]}40, inset 0 0 30px rgba(255, 255, 255, 0.6)`
-                  : `0 12px 32px -8px rgba(0, 0, 0, 0.25), inset 0 2px 16px rgba(255, 255, 255, 0.5), inset 0 -2px 8px rgba(0, 0, 0, 0.1)`,
-              }}
             >
-              {/* Glass shine effect */}
-              <div
-                className="absolute inset-0 rounded-3xl"
+              {isSpinning ? 'Spinning...' : 'Spin'}
+            </span>
+
+            {/* Subtle loading indicator when spinning */}
+            {isSpinning && (
+              <motion.div
+                className="absolute inset-0 rounded-full"
                 style={{
-                  background: 'linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.3) 50%, transparent 60%)',
-                  transform: 'translateX(-100%)',
-                  animation: !isSpinning ? 'shine 3s ease-in-out infinite' : 'none'
+                  background: 'conic-gradient(from 0deg, transparent, rgba(59, 130, 246, 0.1), transparent)',
+                }}
+                animate={{
+                  rotate: 360
+                }}
+                transition={{
+                  duration: 1,
+                  repeat: Infinity,
+                  ease: "linear"
                 }}
               />
-
-              {/* Text */}
-              <span
-                className="relative z-10 tracking-[0.2em] leading-none font-black"
-                style={{
-                  color: isSpinning ? BASE_COLORS[2] : BASE_COLORS[0],
-                  textShadow: isSpinning
-                    ? '0 2px 8px rgba(0,0,0,0.2)'
-                    : '0 2px 12px rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.3)',
-                }}
-              >
-                {isSpinning ? 'SPINNING' : 'SPIN'}
-              </span>
-
-              {/* Pulse effect when spinning */}
-              {isSpinning && (
-                <motion.div
-                  className="absolute inset-0 rounded-3xl"
-                  style={{
-                    background: `radial-gradient(circle at center, ${BASE_COLORS[2]}20, transparent 70%)`,
-                  }}
-                  animate={{
-                    opacity: [0.3, 0.6, 0.3],
-                    scale: [1, 1.05, 1]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              )}
-            </button>
-          </motion.div>
+            )}
+          </button>
         </div>
       </div>
 
