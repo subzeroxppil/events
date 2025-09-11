@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import GradualBlur from "@/components/GradualBlur";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, LayoutGrid, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import {
   Sheet,
@@ -33,18 +33,14 @@ type LuckyDraw = {
   createdBy: string;
 };
 
-const BASE_COLORS = ["#173066", "#509bff", "#0463ce", "#63cbfb"];
 
 export default function LuckyDrawCY() {
   const params = useParams();
-  const router = useRouter();
 
   const luckydrawId = Array.isArray(params?.luckydrawId)
     ? params.luckydrawId[0]
     : params?.luckydrawId;
 
-  // Theme state - local only
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Core states
   const [initialLoading, setInitialLoading] = useState(true);
@@ -123,16 +119,6 @@ export default function LuckyDrawCY() {
     return () => window.removeEventListener("resize", handleResize);
   }, [isSpinning, spinnerItems.length, showWinner, currentPosition]);
 
-  // Initialize theme from localStorage (page-specific)
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("luckydraw-cy-theme");
-    setIsDarkMode(savedTheme === "dark");
-  }, []);
-
-  // Save theme preference (page-specific)
-  useEffect(() => {
-    localStorage.setItem("luckydraw-cy-theme", isDarkMode ? "dark" : "light");
-  }, [isDarkMode]);
 
   // Initialize audio
   useEffect(() => {
@@ -187,8 +173,14 @@ export default function LuckyDrawCY() {
   const createExtendedList = (items: string[], targetLength: number): string[] => {
     if (items.length === 0) return [];
     const result = [];
-    while (result.length < targetLength) {
+    // Create enough copies to ensure smooth infinite scrolling
+    const minCopies = Math.ceil(targetLength / items.length);
+    for (let i = 0; i < minCopies; i++) {
       result.push(...[...items].sort(() => Math.random() - 0.5));
+    }
+    // Ensure we always have exactly targetLength items
+    while (result.length < targetLength) {
+      result.push(...items);
     }
     return result.slice(0, targetLength);
   };
@@ -275,8 +267,6 @@ export default function LuckyDrawCY() {
       const anticipation = (i: number) => {
         if (i >= stepCount) {
           // Final snap to exact center position
-          const normalizedTargetIndex = (Math.floor((to / itemHeight2)) % spinnerItems.length);
-          const centerIndex = normalizedTargetIndex; // already integer index
           const finalPos = Math.round((to / itemHeight2)) * itemHeight2; // align to exact row
           setCurrentPosition(finalPos);
           handleSpinComplete(newSpinnerItems[validIndex]);
@@ -497,10 +487,11 @@ export default function LuckyDrawCY() {
     : ((currentPosition % BASE_HEIGHT) + BASE_HEIGHT) % BASE_HEIGHT;
   const displayOffset = BASE_HEIGHT; // show the middle copy in a tripled track
 
-  const renderedItems = useMemo(
-    () => (spinnerItems.length ? [...spinnerItems, ...spinnerItems, ...spinnerItems] : []),
-    [spinnerItems]
-  );
+  const renderedItems = useMemo(() => {
+    if (spinnerItems.length === 0) return [];
+    // Create 5 copies for smoother infinite scrolling
+    return [...spinnerItems, ...spinnerItems, ...spinnerItems, ...spinnerItems, ...spinnerItems];
+  }, [spinnerItems]);
 
   if (initialLoading) {
     return (
@@ -519,29 +510,19 @@ export default function LuckyDrawCY() {
   }
 
   return (
-    <div className={cn("min-h-screen relative overflow-hidden", isDarkMode ? "dark bg-black" : "bg-white")}>
-      {/* PayPal colors background with ripple effect */}
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Glassmorphic background elements */}
       <div className="absolute inset-0 z-0">
-        {/* Custom gradient overlay with PayPal colors */}
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            background: `radial-gradient(circle at 20% 50%, ${BASE_COLORS[0]}40 0%, transparent 50%),
-                        radial-gradient(circle at 80% 80%, ${BASE_COLORS[1]}40 0%, transparent 50%),
-                        radial-gradient(circle at 40% 20%, ${BASE_COLORS[2]}40 0%, transparent 50%),
-                        radial-gradient(circle at 90% 10%, ${BASE_COLORS[3]}40 0%, transparent 50%)`
-          }}
-        />
+        <div className="absolute top-20 left-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
+        <div className="absolute top-40 right-20 w-72 h-72 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
       </div>
 
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-40">
         <BackButton />
         <div className="flex items-center gap-3">
-          <h1 className={cn(
-            "text-2xl font-bold tracking-tight leading-tight",
-            isDarkMode ? "text-white" : "text-gray-900"
-          )}>
+          <h1 className="text-2xl font-bold tracking-tight leading-tight text-gray-900">
             {luckyDraw?.name}
           </h1>
         </div>
@@ -585,11 +566,12 @@ export default function LuckyDrawCY() {
                   >
                     <div
                       className={cn(
-                        "px-8 py-3 rounded-xl shadow-2xl",
-                        "backdrop-blur-xl bg-white/10 dark:bg-black/20",
-                        "border border-white/20 dark:border-white/10",
+                        "px-8 py-3 rounded-2xl",
+                        "backdrop-blur-md bg-white/40",
+                        "border border-white/50",
+                        "shadow-lg",
                         isCenter
-                          ? "ring-2 ring-offset-0 ring-[#509bff]/60"
+                          ? "ring-2 ring-offset-0 ring-blue-400/50 bg-white/60"
                           : ""
                       )}
                     >
@@ -597,10 +579,10 @@ export default function LuckyDrawCY() {
                         className={cn(
                           "transition-all duration-200",
                           isCenter
-                            ? "text-transparent bg-clip-text bg-gradient-to-r from-[#173066] via-[#0463ce] to-[#509bff] tracking-wide"
+                            ? "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 font-bold"
                             : isNearCenter
-                              ? isDarkMode ? "text-white/90 tracking-normal" : "text-gray-800 tracking-normal"
-                              : isDarkMode ? "text-white/50 tracking-normal" : "text-gray-600 tracking-normal"
+                              ? "text-gray-700 font-semibold"
+                              : "text-gray-500"
                         )}
                         style={{
                           fontSize: isCenter ? '2.25rem' : isNearCenter ? '1.9rem' : '1.5rem',
@@ -608,7 +590,7 @@ export default function LuckyDrawCY() {
                           lineHeight: isCenter ? '1.1' : isNearCenter ? '1.2' : '1.3',
                           letterSpacing: isCenter ? '0.025em' : isNearCenter ? '0.01em' : '0',
                           textShadow: isCenter
-                            ? `0 0 30px ${BASE_COLORS[1]}80, 0 2px 4px rgba(0,0,0,0.2)`
+                            ? '0 0 30px rgba(99, 102, 241, 0.5), 0 2px 4px rgba(0,0,0,0.2)'
                             : isNearCenter
                               ? '0 1px 2px rgba(0,0,0,0.1)'
                               : 'none'
@@ -648,9 +630,10 @@ export default function LuckyDrawCY() {
               }}
             />
 
-            {/* Center Indicator - single line */}
+            {/* Center Indicator - glassmorphic line */}
             <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none z-30">
-              <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#509bff] to-transparent opacity-80" />
+              <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-60" />
+              <div className="absolute inset-x-0 -top-1 h-4 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent blur-sm" />
             </div>
           </div>
         </div>
@@ -663,25 +646,15 @@ export default function LuckyDrawCY() {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -30 }}
-                className={cn(
-                  "p-6 rounded-2xl",
-                  "backdrop-blur-xl bg-white/10 dark:bg-black/20",
-                  "border border-white/20 dark:border-white/10"
-                )}
+                className="p-6 rounded-2xl backdrop-blur-md bg-white/50 border border-white/60 shadow-xl"
               >
-                <div className={cn(
-                  "text-xs uppercase tracking-widest mb-2 leading-tight font-medium",
-                  isDarkMode ? "text-white/60" : "text-gray-600"
-                )}>
+                <div className="text-xs uppercase tracking-widest mb-2 leading-tight font-medium text-gray-600">
                   Previous Winner
                 </div>
-                <div className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#173066] to-[#509bff] tracking-wide leading-tight">
+                <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
                   {winners[winners.length - 1].workId}
                 </div>
-                <div className={cn(
-                  "text-xs mt-2 tracking-wide leading-relaxed",
-                  isDarkMode ? "text-white/40" : "text-gray-500"
-                )}>
+                <div className="text-xs mt-2 tracking-wide leading-relaxed text-gray-500">
                   {new Date(winners[winners.length - 1].wonAt).toLocaleTimeString("en-SG", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -692,7 +665,7 @@ export default function LuckyDrawCY() {
           </AnimatePresence>
         </div>
 
-        {/* Controls - Right Side with SPIN button and config below */}
+        {/* Controls - Right Side with SPIN button and Winners sheet */}
         <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col items-center gap-6 z-40">
           {/* SPIN Button */}
           <motion.div
@@ -705,15 +678,16 @@ export default function LuckyDrawCY() {
               size="lg"
               className={cn(
                 "group relative overflow-hidden",
-                "px-20 py-10 text-3xl font-bold rounded-2xl",
-                "bg-gradient-to-br from-[#173066] via-[#0463ce] to-[#509bff]",
-                "hover:from-[#0463ce] hover:to-[#173066]",
+                "px-16 py-8 text-2xl font-bold rounded-2xl",
+                "bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600",
+                "hover:from-blue-600 hover:to-purple-700",
                 "text-white shadow-2xl",
+                "backdrop-blur-sm border border-white/20",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
                 "transition-all duration-300"
               )}
             >
-              <span className="relative z-10 tracking-widest leading-none font-extrabold">
+              <span className="relative z-10 tracking-wider leading-none font-bold">
                 {isSpinning ? 'SPINNING' : 'SPIN'}
               </span>
               {isSpinning && (
@@ -726,113 +700,57 @@ export default function LuckyDrawCY() {
             </Button>
           </motion.div>
 
-          {/* Config buttons below SPIN */}
-          <div className="flex flex-col gap-3">
-            <Button
-              variant="ghost"
-              onClick={() => router.push(`/admin/luckydraw/${luckydrawId}`)}
-              className={cn(
-                "backdrop-blur-xl bg-white/10 dark:bg-black/20",
-                "border border-white/20 dark:border-white/10",
-                "hover:bg-white/20 dark:hover:bg-black/30",
-                isDarkMode ? "text-white" : "text-gray-800"
-              )}
-            >
-              <LayoutGrid className="w-4 h-4 mr-2" />
-              Classic View
-            </Button>
-
-            <Button
-              variant="ghost"
-              onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy2`)}
-              className={cn(
-                "backdrop-blur-xl bg-white/10 dark:bg-black/20",
-                "border border-white/20 dark:border-white/10",
-                "hover:bg-white/20 dark:hover:bg-black/30",
-                isDarkMode ? "text-white" : "text-gray-800"
-              )}
-            >
-              <LayoutGrid className="w-4 h-4 mr-2" />
-              Minimal View
-            </Button>
-
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "backdrop-blur-xl bg-white/10 dark:bg-black/20",
-                    "border border-white/20 dark:border-white/10",
-                    "hover:bg-white/20 dark:hover:bg-black/30",
-                    isDarkMode ? "text-white" : "text-gray-800",
-                    "relative"
-                  )}
-                >
-                  <Trophy className="w-4 h-4 mr-2" />
-                  Winners
-                  {winners.length > 0 && (
-                    <span className="ml-2 px-2 py-0.5 bg-gradient-to-r from-[#173066] to-[#509bff] text-white rounded-full text-xs font-semibold">
-                      {winners.length}
-                    </span>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Lucky Draw Winners</SheetTitle>
-                </SheetHeader>
-                <div className="mt-6 space-y-3">
-                  {winners.length === 0 ? (
-                    <p className="text-center text-muted-foreground">No winners yet</p>
-                  ) : (
-                    winners.map((winner, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 border rounded-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs tracking-wide leading-relaxed font-medium text-muted-foreground">
-                            {new Date(winner.wonAt).toLocaleTimeString("en-SG", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                          <span className="font-semibold tracking-wide leading-tight">{winner.workId}</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteWinner(winner.workId)}
-                        >
-                          <Trash2 size={16} />
-                        </Button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className={cn(
-                "backdrop-blur-xl bg-white/10 dark:bg-black/20",
-                "border border-white/20 dark:border-white/10",
-                "hover:bg-white/20 dark:hover:bg-black/30",
-                isDarkMode ? "text-white" : "text-gray-800"
-              )}
-            >
-              <motion.div
-                initial={false}
-                animate={{ rotate: isDarkMode ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
+          {/* Winners Sheet */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                className="backdrop-blur-md bg-white/40 border border-white/60 hover:bg-white/50 text-gray-700 shadow-lg relative"
               >
-                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-              </motion.div>
-            </Button>
-          </div>
+                <Trophy className="w-4 h-4 mr-2" />
+                Winners
+                {winners.length > 0 && (
+                  <span className="ml-2 px-2 py-0.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-xs font-semibold">
+                    {winners.length}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Lucky Draw Winners</SheetTitle>
+              </SheetHeader>
+              <div className="mt-6 space-y-3">
+                {winners.length === 0 ? (
+                  <p className="text-center text-muted-foreground">No winners yet</p>
+                ) : (
+                  winners.map((winner, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs tracking-wide leading-relaxed font-medium text-muted-foreground">
+                          {new Date(winner.wonAt).toLocaleTimeString("en-SG", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        <span className="font-semibold tracking-wide leading-tight">{winner.workId}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteWinner(winner.workId)}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
 
@@ -861,10 +779,7 @@ export default function LuckyDrawCY() {
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
-                className={cn(
-                  "text-lg font-semibold uppercase tracking-[0.4em] mb-4 leading-tight",
-                  isDarkMode ? "text-white/60" : "text-gray-600"
-                )}
+                className="text-lg font-semibold uppercase tracking-[0.3em] mb-4 leading-tight text-gray-700"
               >
                 Congratulations
               </motion.div>
@@ -879,11 +794,11 @@ export default function LuckyDrawCY() {
                 }}
                 className="relative"
               >
-                <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#173066] via-[#0463ce] to-[#509bff] tracking-wide leading-none">
+                <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 tracking-wide leading-none">
                   {currentWinner}
                 </div>
                 <motion.div
-                  className="absolute -inset-4 bg-gradient-to-r from-[#509bff]/20 via-[#0463ce]/20 to-[#173066]/20 blur-2xl rounded-full"
+                  className="absolute -inset-4 bg-gradient-to-r from-blue-400/30 via-indigo-400/30 to-purple-400/30 blur-2xl rounded-full"
                   animate={{
                     scale: [1, 1.2, 1],
                     opacity: [0.5, 0.8, 0.5]
