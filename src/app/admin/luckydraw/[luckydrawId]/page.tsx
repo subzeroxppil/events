@@ -482,6 +482,13 @@ export default function Page() {
                 <Sparkles className="w-4 h-4 mr-2" />
                 Vertical
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy2`)}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Minimal
+              </Button>
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline">

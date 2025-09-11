@@ -624,6 +624,20 @@ export default function LuckyDrawCY() {
               Classic View
             </Button>
 
+            <Button
+              variant="ghost"
+              onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy2`)}
+              className={cn(
+                "backdrop-blur-xl bg-white/10 dark:bg-black/20",
+                "border border-white/20 dark:border-white/10",
+                "hover:bg-white/20 dark:hover:bg-black/30",
+                isDarkMode ? "text-white" : "text-gray-800"
+              )}
+            >
+              <LayoutGrid className="w-4 h-4 mr-2" />
+              Minimal View
+            </Button>
+
             <Sheet>
               <SheetTrigger asChild>
                 <Button
