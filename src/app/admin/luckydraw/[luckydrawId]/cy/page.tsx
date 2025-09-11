@@ -153,8 +153,8 @@ export default function LuckyDrawCY() {
 
       setParticipants(uniqueParticipants);
 
-      // Create extended list for spinner
-      const extendedList = createExtendedList(uniqueParticipants, 100);
+      // Create extended list for spinner - more items for seamless scrolling
+      const extendedList = createExtendedList(uniqueParticipants, 200);
       setSpinnerItems(extendedList);
 
       // Set initial position to show some items
@@ -211,7 +211,7 @@ export default function LuckyDrawCY() {
     setCurrentPosition(startPos);
 
     // Reset and shuffle spinner items
-    const newSpinnerItems = createExtendedList(participants, 100);
+    const newSpinnerItems = createExtendedList(participants, 200);
     setSpinnerItems(newSpinnerItems);
 
     // Find a valid winner (not already won)
@@ -237,48 +237,83 @@ export default function LuckyDrawCY() {
     if (spinSound.current) {
       spinSound.current.currentTime = 1;
       spinSound.current.play();
-
-      const handleTimeUpdate = () => {
-        if (spinSound.current && spinSound.current.currentTime >= 10.5) {
-          spinSound.current.pause();
-          spinSound.current.removeEventListener("timeupdate", handleTimeUpdate);
-        }
-      };
-      spinSound.current.addEventListener("timeupdate", handleTimeUpdate);
     }
 
-    // Start animation - compute a target that lands with the item centered
+    // Calculate precise final position for the winner to be centered
     const itemHeight2 = 96; // h-24 = 96px
-
-    // Compute target row so that after spinning, the chosen index is exactly centered
-    const cycles = 6; // full loops for excitement
+    const cycles = 5 + Math.random() * 2; // 5-7 full loops for excitement
     const N = newSpinnerItems.length;
-    const baseRow = Math.round(startPos / itemHeight2);
-    const rowOffset = (validIndex - (baseRow % N) + N) % N; // rows to reach chosen index from current row
-    const targetRow = baseRow + cycles * N + rowOffset; // ensures k % N === validIndex
+    
+    // Calculate total distance to travel
+    const totalDistance = cycles * N * itemHeight2 + (validIndex * itemHeight2) - (startPos % (N * itemHeight2));
+    const finalPosition = startPos + totalDistance;
 
-    const from = startPos;
-    const to = targetRow * itemHeight2;
+    // Smooth single-phase animation with natural deceleration
+    animateSpinnerSmooth(startPos, finalPosition, 6000, newSpinnerItems[validIndex]);
+  };
 
-    // Main spin
-    animateSpinner(from, to, 4200, () => {
-      // Anticipation: small stepped bumps into the final center
-      const stepCount = 6;
-      const stepSize = itemHeight2 / stepCount;
-      const anticipation = (i: number) => {
-        if (i >= stepCount) {
-          // Final snap to exact center position
-          const finalPos = Math.round((to / itemHeight2)) * itemHeight2; // align to exact row
-          setCurrentPosition(finalPos);
-          handleSpinComplete(newSpinnerItems[validIndex]);
-          return;
+  const animateSpinnerSmooth = (
+    from: number,
+    to: number,
+    duration: number,
+    winner: string
+  ) => {
+    const startTime = Date.now();
+    let soundFading = false;
+
+    const animate = () => {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Custom easing for realistic wheel deceleration
+      // Fast start, gradual slowdown, very slow at the end
+      let easeOut;
+      if (progress < 0.5) {
+        // First half: moderate deceleration
+        easeOut = 1 - Math.pow(1 - (progress * 2), 2) / 2;
+      } else {
+        // Second half: strong deceleration with subtle bounce
+        const p = (progress - 0.5) * 2;
+        easeOut = 0.5 + 0.5 * (1 - Math.pow(1 - p, 4));
+        
+        // Add subtle oscillation near the end for realism
+        if (progress > 0.85) {
+          const oscillation = Math.sin((progress - 0.85) * Math.PI * 4) * 0.002 * (1 - progress);
+          easeOut += oscillation;
         }
-        const segmentTo = to + (i + 1) * stepSize;
-        animateSpinner(i === 0 ? to : to + i * stepSize, segmentTo, 120 + i * 40, () => anticipation(i + 1));
-      };
+      }
 
-      anticipation(0);
-    });
+      const currentPos = from + (to - from) * easeOut;
+      setCurrentPosition(currentPos);
+
+      // Fade out sound gradually as wheel slows
+      if (spinSound.current && progress > 0.7 && !soundFading) {
+        soundFading = true;
+        const fadeOutDuration = (duration * 0.3) / 1000; // Last 30% of animation
+        const fadeInterval = setInterval(() => {
+          if (spinSound.current) {
+            spinSound.current.volume = Math.max(0, spinSound.current.volume - 0.05);
+            if (spinSound.current.volume <= 0) {
+              spinSound.current.pause();
+              spinSound.current.currentTime = 0;
+              spinSound.current.volume = 1;
+              clearInterval(fadeInterval);
+            }
+          }
+        }, fadeOutDuration * 1000 / 20);
+      }
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        // Ensure exact final position
+        setCurrentPosition(to);
+        handleSpinComplete(winner);
+      }
+    };
+
+    animate();
   };
 
   const animateSpinner = (
@@ -313,10 +348,11 @@ export default function LuckyDrawCY() {
   const handleSpinComplete = async (winner: string) => {
     setCurrentWinner(winner);
 
-    // Stop spin sound
+    // Stop spin sound if still playing (should already be faded out)
     if (spinSound.current) {
       spinSound.current.pause();
       spinSound.current.currentTime = 0;
+      spinSound.current.volume = 1; // Reset volume for next spin
     }
 
     // Play celebration sounds
@@ -348,14 +384,7 @@ export default function LuckyDrawCY() {
       console.error("Error recording winner:", error);
     }
 
-    // Ensure perfect center alignment using modulo track
-    const index = spinnerItems.findIndex(item => item === winner);
-    if (index !== -1) {
-      const itemHeight = 96;
-      const currentCycles = Math.floor(currentPosition / (spinnerItems.length * itemHeight));
-      const finalPos = (currentCycles * spinnerItems.length + index) * itemHeight;
-      setCurrentPosition(finalPos);
-    }
+    // Position is already precise from animateSpinnerSmooth - no adjustment needed
 
     // Trigger effects
     triggerFireworks();
@@ -546,11 +575,14 @@ export default function LuckyDrawCY() {
                 const containerShift = displayOffset + normalizedPosition; // px
                 const itemTop = index * 96; // px
                 const distanceFromCenter = Math.abs(itemTop - containerShift) / 96;
-                const isCenter = distanceFromCenter < 0.8;  // Wider range for darkening
-                const isNearCenter = distanceFromCenter < 2;
-                const opacity = isCenter ? 1 : isNearCenter ? 0.9 : Math.max(0.5, 1 - distanceFromCenter * 0.1);
-                const scale = isCenter ? 1.05 : Math.max(0.98, 1 - distanceFromCenter * 0.01);
-                const blur = 0; // No blur effect
+                const isCenter = distanceFromCenter < 0.5;  // Tighter range for true center
+                const isNearCenter = distanceFromCenter < 1.5;
+                const isApproaching = distanceFromCenter < 3;
+                
+                // Enhanced visual feedback
+                const opacity = isCenter ? 1 : isNearCenter ? 0.95 : isApproaching ? 0.85 : Math.max(0.4, 1 - distanceFromCenter * 0.15);
+                const scale = isCenter ? 1.08 : isNearCenter ? 1.02 : Math.max(0.95, 1 - distanceFromCenter * 0.02);
+                const blur = isCenter ? 0 : isNearCenter ? 0 : Math.min(2, distanceFromCenter * 0.3);
 
                 return (
                   <div
@@ -559,40 +591,50 @@ export default function LuckyDrawCY() {
                     style={{
                       opacity,
                       transform: `scale(${scale})`,
-                      filter: `blur(${blur}px)`,
-                      transition: isSpinning ? 'none' : 'all 0.2s ease-out'
+                      filter: blur > 0 ? `blur(${blur}px)` : 'none',
+                      transition: isSpinning ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}
                   >
                     <div
                       className={cn(
                         "px-8 py-3 rounded-xl",
-                        "backdrop-blur-sm",
+                        "backdrop-blur-sm transition-all",
                         isCenter
-                          ? "bg-white/80 border-2 shadow-xl"
-                          : "bg-white/30 border border-white/40"
+                          ? "bg-white/90 border-2 shadow-2xl"
+                          : isNearCenter
+                            ? "bg-white/60 border border-white/60 shadow-lg"
+                            : "bg-white/20 border border-white/30"
                       )}
                       style={{
-                        borderColor: isCenter ? BASE_COLORS[2] : 'rgba(255,255,255,0.4)'
+                        borderColor: isCenter ? BASE_COLORS[1] : isNearCenter ? `${BASE_COLORS[2]}60` : 'rgba(255,255,255,0.3)',
+                        boxShadow: isCenter 
+                          ? `0 20px 40px -10px ${BASE_COLORS[1]}40, 0 10px 25px -5px rgba(0,0,0,0.1)`
+                          : isNearCenter
+                            ? '0 10px 20px -5px rgba(0,0,0,0.08)'
+                            : 'none'
                       }}
                     >
                       <span
                         className={cn(
-                          "transition-all duration-200",
+                          "transition-all duration-300",
                           isCenter
                             ? "font-bold"
                             : isNearCenter
-                              ? "text-gray-600 font-medium"
-                              : "text-gray-400"
+                              ? "text-gray-700 font-semibold"
+                              : "text-gray-500 font-medium"
                         )}
                         style={{
-                          color: isCenter ? BASE_COLORS[0] : undefined,
-                          fontSize: isCenter ? '2.25rem' : isNearCenter ? '1.9rem' : '1.5rem',
-                          fontWeight: isCenter ? 700 : isNearCenter ? 600 : 500,
-                          lineHeight: isCenter ? '1.1' : isNearCenter ? '1.2' : '1.3',
-                          letterSpacing: isCenter ? '0.025em' : isNearCenter ? '0.01em' : '0',
+                          color: isCenter ? BASE_COLORS[0] : isNearCenter ? BASE_COLORS[2] : undefined,
+                          fontSize: isCenter ? '2.5rem' : isNearCenter ? '2rem' : isApproaching ? '1.75rem' : '1.5rem',
+                          fontWeight: isCenter ? 800 : isNearCenter ? 600 : 500,
+                          lineHeight: '1.1',
+                          letterSpacing: isCenter ? '0.02em' : isNearCenter ? '0.01em' : '0',
                           textShadow: isCenter
-                            ? '0 2px 4px rgba(0,0,0,0.1)'
-                            : 'none'
+                            ? `0 2px 8px ${BASE_COLORS[1]}30`
+                            : isNearCenter
+                              ? '0 1px 3px rgba(0,0,0,0.1)'
+                              : 'none',
+                          transform: isCenter ? 'translateZ(0)' : 'none'
                         }}
                       >
                         {item}
@@ -629,9 +671,20 @@ export default function LuckyDrawCY() {
               }}
             />
 
-            {/* Center Indicator - accent line */}
+            {/* Center Indicator - enhanced accent line */}
             <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none z-30">
-              <div className="h-[2px] w-full" style={{ backgroundColor: `${BASE_COLORS[1]}40` }} />
+              <div className="relative">
+                {/* Main line */}
+                <div className="h-[3px] w-full" style={{ 
+                  background: `linear-gradient(90deg, transparent 0%, ${BASE_COLORS[1]}60 20%, ${BASE_COLORS[1]}80 50%, ${BASE_COLORS[1]}60 80%, transparent 100%)`,
+                  boxShadow: `0 0 20px ${BASE_COLORS[1]}30`
+                }} />
+                {/* Glow effect */}
+                <div className="absolute inset-0 h-[1px] w-full top-[1px]" style={{ 
+                  background: `linear-gradient(90deg, transparent 0%, ${BASE_COLORS[3]}40 20%, ${BASE_COLORS[3]}60 50%, ${BASE_COLORS[3]}40 80%, transparent 100%)`,
+                  filter: 'blur(4px)'
+                }} />
+              </div>
             </div>
           </div>
         </div>
