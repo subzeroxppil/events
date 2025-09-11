@@ -9,6 +9,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Trophy, X, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
+const formatDisplayName = (id: string | null | undefined): string => {
+  try {
+    if (!id) return "";
+    const beforeAt = id.includes("@") ? id.split("@")[0] : id;
+    const cleaned = beforeAt.replace(/[_\-.]+/g, " ").trim();
+    if (!cleaned) return beforeAt;
+    return cleaned
+      .split(" ")
+      .filter(Boolean)
+      .map((word) =>
+        word.length > 3
+          ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          : word.toUpperCase()
+      )
+      .join(" ");
+  } catch {
+    return String(id ?? "");
+  }
+};
+
 type Winner = {
   workId: string;
   wonAt: string;
@@ -427,7 +447,7 @@ export default function LuckyDrawCY2() {
                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                       }}
                     >
-                      {item}
+                      {formatDisplayName(item)}
                     </span>
                   </div>
                 );
@@ -583,7 +603,7 @@ export default function LuckyDrawCY2() {
                     className="flex items-center justify-between p-3 border rounded-lg"
                   >
                     <div>
-                      <div className="font-light">{winner.workId}</div>
+                      <div className="font-light">{formatDisplayName(winner.workId)}</div>
                       <div className="text-xs text-gray-500">
                         {new Date(winner.wonAt).toLocaleTimeString("en-SG", {
                           hour: "2-digit",
@@ -633,7 +653,7 @@ export default function LuckyDrawCY2() {
                   Congratulations
                 </div>
                 <div className="text-6xl font-light text-gray-900 tracking-wide">
-                  {currentWinner}
+                  {formatDisplayName(currentWinner)}
                 </div>
               </div>
             </motion.div>

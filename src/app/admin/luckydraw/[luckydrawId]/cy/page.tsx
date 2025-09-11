@@ -44,6 +44,26 @@ const shimmerKeyframes = `
   }
 `;
 
+const formatDisplayName = (id: string | null | undefined): string => {
+  try {
+    if (!id) return "";
+    const beforeAt = id.includes("@") ? id.split("@")[0] : id;
+    const cleaned = beforeAt.replace(/[_\-.]+/g, " ").trim();
+    if (!cleaned) return beforeAt;
+    return cleaned
+      .split(" ")
+      .filter(Boolean)
+      .map((word) =>
+        word.length > 3
+          ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          : word.toUpperCase()
+      )
+      .join(" ");
+  } catch {
+    return String(id ?? "");
+  }
+};
+
 export default function LuckyDrawCY() {
   const params = useParams();
 
@@ -506,16 +526,27 @@ export default function LuckyDrawCY() {
                 transition: 'none' // Remove transition to prevent jittering
               }}
             >
-              {renderedItems.map((item) => {
-                const itemTop = item.position;
-                // The center line is at the viewport center
-                // We need to check if this item's vertical range contains the center
-                const itemBottom = itemTop + ITEM_HEIGHT;
-                // Center of the viewport in container coordinates
+              {(() => {
+                // Pre-calculate which item is closest to center
                 const viewportCenter = wrappedPosition + ITEM_HEIGHT / 2;
-
-                // Item is at center if the viewport center falls within its bounds
-                const isCenter = itemTop <= viewportCenter && viewportCenter <= itemBottom;
+                let centerItem = null;
+                let minDistance = Infinity;
+                
+                for (const item of renderedItems) {
+                  const itemCenter = item.position + ITEM_HEIGHT / 2;
+                  const distance = Math.abs(itemCenter - viewportCenter);
+                  if (distance < minDistance) {
+                    minDistance = distance;
+                    centerItem = item;
+                  }
+                }
+                
+                return renderedItems.map((item) => {
+                  const itemTop = item.position;
+                  const itemBottom = itemTop + ITEM_HEIGHT;
+                  
+                  // Only the pre-calculated center item gets scaled
+                  const isCenter = item === centerItem;
                 const distanceFromCenter = Math.min(
                   Math.abs(itemTop - viewportCenter),
                   Math.abs(itemBottom - viewportCenter)
@@ -524,7 +555,7 @@ export default function LuckyDrawCY() {
                 const isVisible = distanceFromCenter < ITEM_HEIGHT * 8;
 
                 const opacity = isCenter ? 1 : isNearCenter ? 0.95 : isVisible ? 0.8 : 0.5;
-                const scale = isCenter ? 1.12 : isNearCenter ? 1.05 : 1;
+                const scale = isCenter ? 1.12 : 1;
                 const blur = distanceFromCenter > ITEM_HEIGHT * 6
                   ? Math.min(0.5, (distanceFromCenter - ITEM_HEIGHT * 6) * 0.001)
                   : 0;
@@ -568,16 +599,6 @@ export default function LuckyDrawCY() {
                         willChange: 'transform'
                       }}
                     >
-                      {/* Inner glow effect for center item */}
-                      {isCenter && (
-                        <div
-                          className="absolute inset-0 rounded-2xl"
-                          style={{
-                            background: `radial-gradient(circle at center, ${BASE_COLORS[3]}20, transparent)`,
-                            animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-                          }}
-                        />
-                      )}
 
                       <span
                         className={cn(
@@ -597,12 +618,13 @@ export default function LuckyDrawCY() {
                           willChange: 'transform'
                         }}
                       >
-                        {item.text}
+                        {formatDisplayName(item.text)}
                       </span>
                     </div>
                   </div>
                 );
-              })}
+              });
+              })()}
             </div>
 
             {/* GradualBlur for smooth melting effect - positioned absolutely */}
@@ -667,7 +689,7 @@ export default function LuckyDrawCY() {
                   Previous Winner
                 </div>
                 <div className="text-xl font-bold text-gray-900">
-                  {winners[winners.length - 1].workId}
+                  {formatDisplayName(winners[winners.length - 1].workId)}
                 </div>
                 <div className="text-xs mt-2 tracking-wide leading-relaxed text-gray-500">
                   {new Date(winners[winners.length - 1].wonAt).toLocaleTimeString("en-SG", {
@@ -721,7 +743,7 @@ export default function LuckyDrawCY() {
                             minute: "2-digit",
                           })}
                         </span>
-                        <span className="font-semibold tracking-wide leading-tight">{winner.workId}</span>
+                        <span className="font-semibold tracking-wide leading-tight">{formatDisplayName(winner.workId)}</span>
                       </div>
                       <Button
                         variant="ghost"
@@ -850,7 +872,7 @@ export default function LuckyDrawCY() {
                 className="relative"
               >
                 <div className="text-7xl font-bold tracking-tight leading-none" style={{ color: BASE_COLORS[0] }}>
-                  {currentWinner}
+                  {formatDisplayName(currentWinner)}
                 </div>
                 <motion.div
                   className="absolute -inset-4 blur-3xl rounded-full"
