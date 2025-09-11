@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -302,9 +302,11 @@ export default function LuckyDrawCY2() {
         const delta = (now - lastTime) / 1000; // Convert to seconds
         lastTime = now;
 
-        idlePosition += 30 * delta; // 30 pixels per second
-        if (idlePosition >= spinnerItems.length * 200) {
-          idlePosition = idlePosition % (spinnerItems.length * 200);
+        idlePosition += 40 * delta; // 40 pixels per second
+        const track = spinnerItems.length * 200;
+        if (track > 0) {
+          // wrap infinitely without resetting
+          idlePosition = ((idlePosition % track) + track) % track;
         }
         setCurrentPosition(idlePosition);
         idleAnimationRef.current = requestAnimationFrame(animateIdle);
@@ -348,51 +350,70 @@ export default function LuckyDrawCY2() {
     );
   }
 
+  // Derived values for infinite scroll
+  const ITEM_WIDTH = 200;
+  const BASE_WIDTH = spinnerItems.length * ITEM_WIDTH;
+  const normalizedPosition = BASE_WIDTH === 0
+    ? 0
+    : ((currentPosition % BASE_WIDTH) + BASE_WIDTH) % BASE_WIDTH;
+  const displayOffset = BASE_WIDTH; // show the middle copy in a tripled track
+
+  // Create tripled array for seamless infinite scrolling
+  const renderedItems = useMemo(
+    () => (spinnerItems.length ? [...spinnerItems, ...spinnerItems, ...spinnerItems] : []),
+    [spinnerItems]
+  );
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Minimal Header */}
-      <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-20">
-        <Button
-          variant="ghost"
-          onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy`)}
-          className="text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-        
-        <h1 className="text-sm font-light text-gray-600 tracking-wide uppercase">
-          {luckyDraw?.name}
-        </h1>
+      {/* Minimal Header - Fixed positioning with proper spacing */}
+      <div className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
+        <div className="px-6 py-4 flex justify-between items-center">
+          <Button
+            variant="ghost"
+            onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy`)}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          
+          <h1 className="text-sm font-light text-gray-600 tracking-wide uppercase">
+            {luckyDraw?.name}
+          </h1>
 
-        <Button
-          variant="ghost"
-          onClick={() => setShowWinners(!showWinners)}
-          className="text-gray-600 hover:text-gray-900"
-        >
-          <Trophy className="w-4 h-4 mr-2" />
-          Winners ({winners.length})
-        </Button>
+          <Button
+            variant="ghost"
+            onClick={() => setShowWinners(!showWinners)}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <Trophy className="w-4 h-4 mr-2" />
+            Winners ({winners.length})
+          </Button>
+        </div>
       </div>
 
       {/* Main Content - Centered Horizontal Spinner */}
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center pt-16">
         <div className="w-full relative">
           {/* Horizontal Spinner Container */}
           <div className="relative h-32 overflow-hidden w-full">
             <div
               className="absolute flex items-center h-full"
               style={{
-                transform: `translateX(calc(50vw - ${currentPosition}px - 100px))`,
+                transform: `translateX(calc(50vw - ${displayOffset + normalizedPosition}px - 100px))`,
                 willChange: 'transform',
-                transition: isSpinning ? 'none' : 'transform 0.1s linear'
+                transition: isSpinning ? 'none' : 'transform 0.05s linear'
               }}
             >
-              {spinnerItems.map((item, index) => {
-                const itemPosition = index * 200;
-                const distanceFromCenter = Math.abs(itemPosition - currentPosition);
-                const isCenter = distanceFromCenter < 100;
-                const isNear = distanceFromCenter < 300;
+              {renderedItems.map((item, index) => {
+                // Compute distance from center using wrapped position
+                const containerShift = displayOffset + normalizedPosition;
+                const itemLeft = index * ITEM_WIDTH;
+                const distanceFromCenter = Math.abs(itemLeft - containerShift);
+                // Much tighter threshold - only darken when very close to arrow
+                const isCenter = distanceFromCenter < 20;
+                const isClose = distanceFromCenter < 100;
 
                 return (
                   <div
@@ -400,11 +421,11 @@ export default function LuckyDrawCY2() {
                     className="w-[200px] h-full flex items-center justify-center flex-shrink-0"
                   >
                     <span
-                      className={`font-light tracking-wide transition-all duration-300 ${
+                      className={`font-light tracking-wide transition-all duration-200 ${
                         isCenter 
                           ? 'text-gray-900 text-2xl' 
-                          : isNear
-                          ? 'text-gray-500 text-xl'
+                          : isClose
+                          ? 'text-gray-400 text-xl'
                           : 'text-gray-300 text-lg'
                       }`}
                       style={{
@@ -420,7 +441,7 @@ export default function LuckyDrawCY2() {
 
             {/* Center Indicator - Arrow pointing up */}
             <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
-              <ChevronUp className="w-8 h-8 text-gray-900" strokeWidth={1} />
+              <ChevronUp className="w-6 h-6 text-gray-900" strokeWidth={1.5} />
             </div>
           </div>
 
