@@ -34,6 +34,7 @@ type LuckyDraw = {
 };
 
 const BASE_COLORS = ["#173066", "#509bff", "#0463ce", "#63cbfb"];
+const ITEM_HEIGHT = 96; // Height of each name card
 
 // Add shimmer animation
 const shimmerKeyframes = `
@@ -69,6 +70,7 @@ export default function LuckyDrawCY() {
   const idleAnimationRef = useRef<number | null>(null);
   const targetIndexRef = useRef<number | null>(null);
   const idlePositionRef = useRef<number>(0);
+  const [isIdleAnimating, setIsIdleAnimating] = useState(false);
 
   // Audio refs
   const spinSound = useRef<HTMLAudioElement | null>(null);
@@ -125,8 +127,12 @@ export default function LuckyDrawCY() {
       const extendedList = createExtendedList(uniqueParticipants, 200);
       setSpinnerItems(extendedList);
 
-      // Set initial position to show some items
-      setCurrentPosition(0);
+      // Set initial position to middle of the tripled array for better wrapping
+      if (extendedList.length > 0) {
+        const initialPos = extendedList.length * ITEM_HEIGHT;
+        setCurrentPosition(initialPos);
+        idlePositionRef.current = initialPos;
+      }
 
       if (data.winners && Array.isArray(data.winners)) {
         setWinners(data.winners);
@@ -155,7 +161,6 @@ export default function LuckyDrawCY() {
     if (isSpinning || participants.length === 0) return;
 
     // Get current position from idle animation
-    const itemHeight = 96;
     let startPos = idlePositionRef.current || currentPosition;
 
     // Cancel idle animation
@@ -163,6 +168,7 @@ export default function LuckyDrawCY() {
       cancelAnimationFrame(idleAnimationRef.current);
       idleAnimationRef.current = null;
     }
+    setIsIdleAnimating(false);
 
     setIsSpinning(true);
     setShowWinner(false);
@@ -201,22 +207,18 @@ export default function LuckyDrawCY() {
     }
 
     // Calculate precise final position for the winner to be centered
-    const itemHeight2 = ITEM_HEIGHT; // 96px
     const N = newSpinnerItems.length;
-    const baseHeight = N * itemHeight2;
+    const baseHeight = N * ITEM_HEIGHT;
 
-    // Work with normalized offsets to avoid large jumps and keep within tripled track
-    const startNormalized = baseHeight === 0
-      ? 0
-      : ((startPos % baseHeight) + baseHeight) % baseHeight;
-    const targetNormalized = validIndex * itemHeight2;
-
-    // Travel a modest number of loops for smoothness (about 0.8-1.2)
-    const loops = 0.8 + Math.random() * 0.4;
-
-    // Forward distance within a single base loop
-    const distanceWithinBase = ((targetNormalized - startNormalized + baseHeight) % baseHeight);
-    const totalDistance = loops * baseHeight + distanceWithinBase;
+    // Ensure we start from the middle section of the tripled array
+    const middleOffset = baseHeight;
+    const targetPosition = middleOffset + (validIndex * ITEM_HEIGHT);
+    
+    // Always spin forward with multiple rotations for effect
+    const minSpins = 3;
+    const extraSpins = Math.random() * 2;
+    const totalSpins = minSpins + extraSpins;
+    const totalDistance = (totalSpins * baseHeight) + (targetPosition - (startPos % baseHeight));
     const finalPosition = startPos + totalDistance;
 
     // Smooth single-phase animation with gentle deceleration
@@ -275,34 +277,6 @@ export default function LuckyDrawCY() {
     animationRef.current = requestAnimationFrame(animate);
   };
 
-  const animateSpinner = (
-    from: number,
-    to: number,
-    duration: number,
-    onComplete: () => void
-  ) => {
-    const startTime = Date.now();
-
-    const animate = () => {
-      const now = Date.now();
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Smoother easing function with easeOutCubic
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      const currentPos = from + (to - from) * easeOut;
-
-      setCurrentPosition(currentPos);
-
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      } else {
-        onComplete();
-      }
-    };
-
-    animate();
-  };
 
   const handleSpinComplete = async (winner: string) => {
     setCurrentWinner(winner);
@@ -343,7 +317,9 @@ export default function LuckyDrawCY() {
       console.error("Error recording winner:", error);
     }
 
-    // Position is already precise from animateSpinnerSmooth - no adjustment needed
+    // Keep the final position and ensure idle animation resumes from here
+    const finalPos = currentPosition;
+    idlePositionRef.current = finalPos;
 
     // Trigger effects
     triggerFireworks();
@@ -353,6 +329,8 @@ export default function LuckyDrawCY() {
     // Auto-hide winner after 3 seconds
     setTimeout(() => {
       setShowWinner(false);
+      // Resume from the current position for smooth continuation
+      idlePositionRef.current = finalPos;
     }, 3000);
   };
 
@@ -408,11 +386,13 @@ export default function LuckyDrawCY() {
   // Idle animation - continuous slow rotation
   useEffect(() => {
     if (!isSpinning && spinnerItems.length > 0 && !showWinner) {
+      setIsIdleAnimating(true);
       let idlePosition = currentPosition;
       let lastTime = Date.now();
 
       const animateIdle = () => {
         if (isSpinning || showWinner || spinnerItems.length === 0) {
+          setIsIdleAnimating(false);
           return;
         }
 
@@ -420,11 +400,16 @@ export default function LuckyDrawCY() {
         const delta = (now - lastTime) / 1000; // seconds
         lastTime = now;
 
-        // Smooth continuous motion similar to cy2
+        // Smooth continuous motion
         idlePosition += 40 * delta; // pixels per second
-        const track = spinnerItems.length * ITEM_HEIGHT;
-        if (track > 0) {
-          idlePosition = ((idlePosition % track) + track) % track;
+        const baseHeight = spinnerItems.length * ITEM_HEIGHT;
+        
+        // Wrap within the tripled array, keeping position in middle section
+        if (baseHeight > 0) {
+          // When we go past the end of middle section, wrap back
+          if (idlePosition > baseHeight * 2) {
+            idlePosition = baseHeight + (idlePosition % baseHeight);
+          }
         }
 
         idlePositionRef.current = idlePosition;
@@ -434,6 +419,8 @@ export default function LuckyDrawCY() {
       };
 
       idleAnimationRef.current = requestAnimationFrame(animateIdle);
+    } else {
+      setIsIdleAnimating(false);
     }
 
     return () => {
@@ -441,6 +428,7 @@ export default function LuckyDrawCY() {
         cancelAnimationFrame(idleAnimationRef.current);
         idleAnimationRef.current = null;
       }
+      setIsIdleAnimating(false);
     };
   }, [isSpinning, spinnerItems.length, showWinner]);
 
@@ -457,12 +445,11 @@ export default function LuckyDrawCY() {
   }, []);
 
   // Derived values for infinite scroll
-  const ITEM_HEIGHT = 96;
   const BASE_HEIGHT = spinnerItems.length * ITEM_HEIGHT;
+  // Keep position within the tripled range for smooth infinite scroll
   const normalizedPosition = BASE_HEIGHT === 0
     ? 0
-    : ((currentPosition % BASE_HEIGHT) + BASE_HEIGHT) % BASE_HEIGHT;
-  const displayOffset = BASE_HEIGHT; // show middle copy
+    : currentPosition % (BASE_HEIGHT * 3);
 
   // Tripled array for seamless infinite scrolling
   const renderedItems = useMemo(
@@ -516,16 +503,16 @@ export default function LuckyDrawCY() {
               ref={spinnerRef}
               className="absolute w-full"
               style={{
-                transform: `translateY(calc(50vh - ${displayOffset + normalizedPosition}px - 48px))`,
+                transform: `translateY(calc(50vh - ${normalizedPosition}px - 48px))`,
                 willChange: 'transform',
-                transition: isSpinning ? 'none' : 'transform 0.05s linear',
+                transition: 'none', // Remove transition to prevent jittering
                 height: `${TRIPLE_BASE_HEIGHT}px`
               }}
             >
               {renderedItems.map((text, i) => {
-                const containerShift = displayOffset + normalizedPosition;
                 const itemTop = i * ITEM_HEIGHT;
-                const distanceFromCenter = Math.abs(itemTop - containerShift);
+                const viewportCenter = normalizedPosition;
+                const distanceFromCenter = Math.abs(itemTop - viewportCenter);
 
                 const isCenter = distanceFromCenter < ITEM_HEIGHT * 0.5;
                 const isNearCenter = distanceFromCenter < ITEM_HEIGHT * 2;
@@ -546,7 +533,7 @@ export default function LuckyDrawCY() {
                       opacity,
                       transform: `scale(${scale})`,
                       filter: blur > 0 ? `blur(${blur}px)` : 'none',
-                      transition: isSpinning ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transition: isIdleAnimating || isSpinning ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       willChange: 'transform, opacity, filter'
                     }}
                   >
@@ -593,14 +580,14 @@ export default function LuckyDrawCY() {
                           isCenter && "font-bold"
                         )}
                         style={{
-                          color: isCenter ? BASE_COLORS[0] : isNearCenter ? BASE_COLORS[2] : '#4B5563',
+                          color: isCenter ? '#000000' : '#6B7280',  // Black for center, grey for others
                           fontSize: isCenter ? '2.25rem' : isNearCenter ? '1.875rem' : '1.5rem',
                           fontWeight: isCenter ? 800 : isNearCenter ? 600 : 500,
                           letterSpacing: isCenter ? '0.02em' : '0.01em',
                           textShadow: isCenter
-                            ? `0 2px 10px ${BASE_COLORS[1]}40`
+                            ? '0 2px 8px rgba(0,0,0,0.1)'
                             : isNearCenter
-                              ? '0 1px 3px rgba(0,0,0,0.1)'
+                              ? '0 1px 3px rgba(0,0,0,0.05)'
                               : 'none',
                           willChange: 'transform'
                         }}
