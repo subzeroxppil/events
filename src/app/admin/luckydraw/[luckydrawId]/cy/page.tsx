@@ -409,7 +409,7 @@ export default function LuckyDrawCY() {
     }, 250);
   };
 
-  // Simplified idle animation
+  // Idle animation - continuous slow rotation
   useEffect(() => {
     if (!isSpinning && spinnerItems.length > 0 && !showWinner) {
       const itemHeight = 96;
@@ -419,17 +419,19 @@ export default function LuckyDrawCY() {
 
       const idleSpeed = 30; // pixels per second
       let lastTime = performance.now();
-      let position = currentPosition;
+      let position = currentPosition || 0;
 
       const animate = () => {
-        if (isSpinning || showWinner) return;
+        if (isSpinning || showWinner || spinnerItems.length === 0) {
+          return;
+        }
 
         const now = performance.now();
         const delta = (now - lastTime) / 1000;
         lastTime = now;
 
         position += idleSpeed * delta;
-        if (position > baseHeight) {
+        if (position >= baseHeight) {
           position = position % baseHeight;
         }
 
@@ -448,7 +450,7 @@ export default function LuckyDrawCY() {
         idleAnimationRef.current = null;
       }
     };
-  }, [isSpinning, spinnerItems.length, showWinner]);
+  }, [isSpinning, spinnerItems, showWinner]); // Added spinnerItems to dependencies
 
   // Cleanup
   useEffect(() => {
@@ -709,70 +711,47 @@ export default function LuckyDrawCY() {
               disabled={isSpinning || participants.length === 0}
               className={cn(
                 "group relative overflow-hidden",
-                "px-20 py-10 text-3xl font-bold rounded-3xl",
+                "px-12 py-6 text-xl font-semibold rounded-2xl",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
                 "transition-all duration-300",
-                "hover:shadow-2xl"
+                "hover:shadow-xl hover:scale-105",
+                "active:scale-95"
               )}
               style={{
-                background: isSpinning
-                  ? `linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85))`
-                  : `linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8))`,
-                backdropFilter: 'blur(30px) saturate(200%)',
-                WebkitBackdropFilter: 'blur(30px) saturate(200%)',
-                border: `2px solid ${isSpinning ? BASE_COLORS[2] : BASE_COLORS[1]}`,
+                background: 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: `1.5px solid ${isSpinning ? BASE_COLORS[2] : 'rgba(255, 255, 255, 0.5)'}`,
                 boxShadow: isSpinning
-                  ? `0 30px 60px -15px rgba(0, 0, 0, 0.3), 0 0 60px ${BASE_COLORS[2]}40, inset 0 0 30px rgba(255, 255, 255, 0.6)`
-                  : `0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 50px ${BASE_COLORS[1]}30, inset 0 0 25px rgba(255, 255, 255, 0.5)`,
+                  ? `0 10px 30px -5px rgba(0, 0, 0, 0.2), 0 0 30px ${BASE_COLORS[2]}30`
+                  : `0 8px 24px -4px rgba(0, 0, 0, 0.15), inset 0 0 12px rgba(255, 255, 255, 0.5)`,
               }}
             >
-              {/* Gradient overlay */}
-              <div
-                className="absolute inset-0 rounded-3xl opacity-60"
-                style={{
-                  background: isSpinning
-                    ? `linear-gradient(135deg, ${BASE_COLORS[2]}20, ${BASE_COLORS[3]}20)`
-                    : `linear-gradient(135deg, ${BASE_COLORS[0]}20, ${BASE_COLORS[1]}20)`,
-                }}
-              />
-
               {/* Text */}
               <span
-                className="relative z-10 tracking-wider leading-none font-black"
+                className="relative z-10 tracking-widest leading-none font-bold"
                 style={{
                   color: isSpinning ? BASE_COLORS[2] : BASE_COLORS[0],
-                  textShadow: isSpinning
-                    ? `0 2px 10px ${BASE_COLORS[2]}40`
-                    : `0 2px 10px ${BASE_COLORS[0]}30`,
-                  letterSpacing: '0.1em'
+                  textShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  letterSpacing: '0.15em'
                 }}
               >
                 {isSpinning ? 'SPINNING' : 'SPIN'}
               </span>
 
-              {/* Pulse animation when spinning */}
+              {/* Subtle pulse when spinning */}
               {isSpinning && (
                 <motion.div
-                  className="absolute inset-0 rounded-3xl"
+                  className="absolute inset-0 rounded-2xl"
                   style={{
-                    background: `radial-gradient(circle at center, ${BASE_COLORS[3]}30, transparent)`,
+                    background: `linear-gradient(135deg, ${BASE_COLORS[2]}10, transparent)`,
                   }}
                   animate={{
-                    opacity: [0.3, 0.6, 0.3],
-                    scale: [1, 1.05, 1]
+                    opacity: [0.5, 1, 0.5]
                   }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
+                  transition={{ duration: 2, repeat: Infinity }}
                 />
               )}
-
-              {/* Shine effect */}
-              <div
-                className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                style={{
-                  background: 'linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.4) 50%, transparent 60%)',
-                  animation: !isSpinning ? 'shimmer 2s infinite' : 'none'
-                }}
-              />
             </button>
           </motion.div>
 
