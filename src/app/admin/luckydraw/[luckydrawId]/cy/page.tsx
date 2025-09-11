@@ -229,7 +229,7 @@ export default function LuckyDrawCY() {
     // Calculate total indices to spin through
     const totalItems = newSpinnerItems.length;
     const spins = 3 + Math.random() * 2; // 3-5 rotations
-    const totalIndices = Math.floor(spins * totalItems) + winnerIndex;
+    const totalIndices = Math.floor(spins) * totalItems + winnerIndex;
 
     // Animate through indices - totalIndices already points to winnerIndex after spins
     animateSpinnerByIndex(0, totalIndices, SPIN_DURATION_MS, intendedWinner, newSpinnerItems);
@@ -560,7 +560,7 @@ export default function LuckyDrawCY() {
                       opacity,
                       filter: blur > 0 ? `blur(${blur}px)` : 'none',
                       transform: `translateX(-50%) translateX(50%) scale(${scale})`,
-                      transition: isIdleAnimating || isSpinning ? 'none' : 'all 0.4s ease-out',  // Slower transition
+                      transition: isIdleAnimating || isSpinning ? 'none' : 'all 0.4s ease-out',
                       willChange: 'transform, opacity, filter'
                     }}
                   >
