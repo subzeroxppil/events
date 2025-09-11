@@ -109,10 +109,15 @@ export default function LuckyDrawCY() {
       ) as string[];
 
       setParticipants(uniqueParticipants);
+      console.log("Loaded participants:", uniqueParticipants.length, uniqueParticipants.slice(0, 5));
 
       // Create extended list for spinner
       const extendedList = createExtendedList(uniqueParticipants, 100);
       setSpinnerItems(extendedList);
+      console.log("Created spinner items:", extendedList.length);
+      
+      // Set initial position to show some items
+      setCurrentPosition(0);
 
       if (data.winners && Array.isArray(data.winners)) {
         setWinners(data.winners);
@@ -545,23 +550,23 @@ export default function LuckyDrawCY() {
           </div>
 
           {/* Spinner Container - Center */}
-          <div className={`flex-1 relative rounded-3xl ${themeStyles.spinnerCard} overflow-hidden max-w-2xl mx-auto shadow-2xl`}>
+          <div className={`flex-1 relative rounded-3xl ${themeStyles.spinnerCard} overflow-hidden max-w-2xl mx-auto shadow-2xl h-full min-h-[600px]`}>
             {/* GradualBlur for melting effect */}
             <GradualBlur
               position="top"
-              height="8rem"
-              strength={3}
-              divCount={8}
-              opacity={0.9}
+              height="6rem"
+              strength={2}
+              divCount={6}
+              opacity={0.7}
               exponential={true}
               style={{ zIndex: 30 }}
             />
             <GradualBlur
               position="bottom"
-              height="8rem"
-              strength={3}
-              divCount={8}
-              opacity={0.9}
+              height="6rem"
+              strength={2}
+              divCount={6}
+              opacity={0.7}
               exponential={true}
               style={{ zIndex: 30 }}
             />
@@ -589,20 +594,26 @@ export default function LuckyDrawCY() {
               </div>
               <div
                 ref={spinnerRef}
-                className="absolute w-full"
+                className="absolute w-full z-10"
                 style={{
                   transform: `translateY(calc(50% - ${currentPosition}px - 48px))`, // Center alignment
                   transition: isSpinning ? 'none' : 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
                 }}
               >
+                {/* Debug info - remove after testing */}
+                {spinnerItems.length === 0 && (
+                  <div className="h-24 flex items-center justify-center text-red-500 font-bold">
+                    No participants loaded
+                  </div>
+                )}
                 {spinnerItems.map((item, index) => {
                   const itemPosition = index * 96;
                   const distanceFromCenter = Math.abs(itemPosition - currentPosition) / 96;
-                  const isCenter = distanceFromCenter < 0.3;
-                  const isNearCenter = distanceFromCenter < 1;
-                  const opacity = isCenter ? 1 : isNearCenter ? 0.9 : Math.max(0.4, 1 - distanceFromCenter * 0.1);
-                  const scale = isCenter ? 1.05 : Math.max(0.92, 1 - distanceFromCenter * 0.015);
-                  const blur = distanceFromCenter > 5 ? 1 : distanceFromCenter > 3 ? 0.3 : 0;
+                  const isCenter = distanceFromCenter < 0.5;
+                  const isNearCenter = distanceFromCenter < 2;
+                  const opacity = isCenter ? 1 : isNearCenter ? 0.8 : Math.max(0.6, 1 - distanceFromCenter * 0.05);
+                  const scale = isCenter ? 1.05 : Math.max(0.95, 1 - distanceFromCenter * 0.01);
+                  const blur = distanceFromCenter > 8 ? 1 : distanceFromCenter > 5 ? 0.2 : 0;
 
                   return (
                     <motion.div
