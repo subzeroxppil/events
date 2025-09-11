@@ -251,8 +251,10 @@ export default function LuckyDrawCY() {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Smooth easing (easeOutCubic)
-      const easeOut = 1 - Math.pow(1 - progress, 3);
+      // Aggressive easing that starts slowing down early for maximum suspense
+      // This creates a long, drawn-out deceleration that builds tension
+      const easeOut = 1 - Math.pow(1 - progress, 6); // Sextic ease-out for early and dramatic deceleration
+      
       const currentProgress = fromIndex + (totalIndices * easeOut);
 
       // Update center index and animation offset for smooth visual
@@ -262,10 +264,10 @@ export default function LuckyDrawCY() {
       setCenterIndex(wholeIndex % itemsArray.length);
       setAnimationOffset(fractionalPart * ITEM_HEIGHT);
 
-      // Fade out sound gradually near the end
-      if (spinSound.current && progress > 0.8 && !soundFading) {
+      // Fade out sound gradually as the spin slows down (starting early)
+      if (spinSound.current && progress > 0.5 && !soundFading) {
         soundFading = true;
-        const fadeOutDurationMs = duration * 0.2; // last 20%
+        const fadeOutDurationMs = duration * 0.5; // last 50% for very gradual fade
         const steps = 20;
         const stepMs = Math.max(16, Math.floor(fadeOutDurationMs / steps));
         const decrement = 1 / steps;
@@ -293,13 +295,13 @@ export default function LuckyDrawCY() {
         const finalPosition = toIndex % itemsArray.length;
         setCenterIndex(finalPosition);
         setAnimationOffset(0); // Reset offset for perfect alignment
-        
+
         // Verify the actual winner at this position
         const actualWinnerAtPosition = itemsArray[finalPosition];
         if (actualWinnerAtPosition !== winner) {
           console.warn(`Mismatch! Expected: ${winner}, Got: ${actualWinnerAtPosition} at position ${finalPosition}`);
         }
-        
+
         // Always use the winner that was predetermined
         handleSpinComplete(winner);
       }
