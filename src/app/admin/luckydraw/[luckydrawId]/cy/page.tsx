@@ -231,15 +231,14 @@ export default function LuckyDrawCY() {
     const spins = 3 + Math.random() * 2; // 3-5 rotations
     const totalIndices = Math.floor(spins * totalItems) + winnerIndex;
 
-    // Animate through indices
-    animateSpinnerByIndex(0, totalIndices, SPIN_DURATION_MS, winnerIndex, intendedWinner);
+    // Animate through indices - totalIndices already points to winnerIndex after spins
+    animateSpinnerByIndex(0, totalIndices, SPIN_DURATION_MS, intendedWinner);
   };
 
   const animateSpinnerByIndex = (
     fromIndex: number,
     toIndex: number,
     duration: number,
-    finalIndex: number,
     winner: string
   ) => {
     const startTime = Date.now();
@@ -287,9 +286,14 @@ export default function LuckyDrawCY() {
       if (progress < 1) {
         animationRef.current = requestAnimationFrame(animate);
       } else {
-        // Snap to exact final index
-        setCenterIndex(finalIndex);
+        // Animation complete - we're at toIndex
+        // toIndex was calculated as (spins * totalItems) + winnerIndex
+        // So toIndex % totalItems should equal winnerIndex
+        const finalPosition = toIndex % spinnerItems.length;
+        setCenterIndex(finalPosition);
         setAnimationOffset(0); // Reset offset for perfect alignment
+        
+        // The item at finalPosition should be our intended winner
         handleSpinComplete(winner);
       }
     };
@@ -536,7 +540,7 @@ export default function LuckyDrawCY() {
                 const isNearCenter = distanceFromCenter <= 2;
 
                 // Visual properties based on distance
-                const scale = isCenter ? 1.15 : isNearCenter ? 1.05 : 1;
+                const scale = isCenter ? 1.08 : isNearCenter ? 1.02 : 1;  // Reduced scale
                 const opacity = isCenter ? 1 : Math.max(0.3, 1 - (distanceFromCenter * 0.05));
                 const blur = distanceFromCenter > 8 ? Math.min(1, (distanceFromCenter - 8) * 0.1) : 0;
 
@@ -549,7 +553,7 @@ export default function LuckyDrawCY() {
                       opacity,
                       filter: blur > 0 ? `blur(${blur}px)` : 'none',
                       transform: `translateX(-50%) translateX(50%) scale(${scale})`,
-                      transition: isIdleAnimating || isSpinning ? 'none' : 'all 0.2s ease-out',
+                      transition: isIdleAnimating || isSpinning ? 'none' : 'all 0.4s ease-out',  // Slower transition
                       willChange: 'transform, opacity, filter'
                     }}
                   >
