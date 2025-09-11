@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -60,10 +60,11 @@ export default function LuckyDrawCY() {
   // Vertical spinner states
   const [spinnerItems, setSpinnerItems] = useState<string[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
-  const spinnerRef = useRef<HTMLDivElement>(null);
+    const spinnerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
   const idleAnimationRef = useRef<number | null>(null);
-
+  const targetIndexRef = useRef<number | null>(null);
+  
   // Audio refs
   const spinSound = useRef<HTMLAudioElement | null>(null);
   const celebrateSound = useRef<HTMLAudioElement | null>(null);
@@ -167,6 +168,8 @@ export default function LuckyDrawCY() {
       validIndex = 50; // Fallback
     }
 
+    targetIndexRef.current = validIndex;
+
     // Play spin sound
     if (spinSound.current) {
       spinSound.current.currentTime = 1;
@@ -181,15 +184,39 @@ export default function LuckyDrawCY() {
       spinSound.current.addEventListener("timeupdate", handleTimeUpdate);
     }
 
-    // Start animation - calculate position to center the winner
+    // Start animation - compute a target that lands with the item centered
     const itemHeight = 96; // h-24 = 96px
-    const targetPos = validIndex * itemHeight;
 
-    setCurrentPosition(0);
+    // Compute target row so that after spinning, the chosen index is exactly centered
+    const cycles = 6; // full loops for excitement
+    const N = newSpinnerItems.length;
+    const baseRow = Math.round(currentPosition / itemHeight);
+    const rowOffset = (validIndex - (baseRow % N) + N) % N; // rows to reach chosen index from current row
+    const targetRow = baseRow + cycles * N + rowOffset; // ensures k % N === validIndex
 
-    // Animate the spinner with improved smoothness
-    animateSpinner(0, targetPos, 6000, () => {
-      handleSpinComplete(newSpinnerItems[validIndex]);
+    const from = currentPosition;
+    const to = targetRow * itemHeight;
+
+    // Main spin
+    animateSpinner(from, to, 4200, () => {
+      // Anticipation: small stepped bumps into the final center
+      const stepCount = 6;
+      const stepSize = itemHeight / stepCount;
+      const anticipation = (i: number) => {
+        if (i >= stepCount) {
+          // Final snap to exact center position
+          const normalizedTargetIndex = (Math.floor((to / itemHeight)) % spinnerItems.length);
+          const centerIndex = normalizedTargetIndex; // already integer index
+          const finalPos = Math.round((to / itemHeight)) * itemHeight; // align to exact row
+          setCurrentPosition(finalPos);
+          handleSpinComplete(newSpinnerItems[validIndex]);
+          return;
+        }
+        const segmentTo = to + (i + 1) * stepSize;
+        animateSpinner(i === 0 ? to : to + i * stepSize, segmentTo, 120 + i * 40, () => anticipation(i + 1));
+      };
+
+      anticipation(0);
     });
   };
 
@@ -206,8 +233,8 @@ export default function LuckyDrawCY() {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Smoother easing function
-      const easeOut = 1 - Math.pow(1 - progress, 4);
+      // Smoother easing function with easeOutCubic
+      const easeOut = 1 - Math.pow(1 - progress, 3);
       const currentPos = from + (to - from) * easeOut;
 
       setCurrentPosition(currentPos);
@@ -260,10 +287,13 @@ export default function LuckyDrawCY() {
       console.error("Error recording winner:", error);
     }
 
-    // Ensure perfect center alignment for winner
-    const winnerIndex = spinnerItems.findIndex(item => item === winner);
-    if (winnerIndex !== -1) {
-      setCurrentPosition(winnerIndex * 96);
+    // Ensure perfect center alignment using modulo track
+    const index = spinnerItems.findIndex(item => item === winner);
+    if (index !== -1) {
+      const itemHeight = 96;
+      const currentCycles = Math.floor(currentPosition / (spinnerItems.length * itemHeight));
+      const finalPos = (currentCycles * spinnerItems.length + index) * itemHeight;
+      setCurrentPosition(finalPos);
     }
 
     // Trigger effects
@@ -334,12 +364,14 @@ export default function LuckyDrawCY() {
 
       const animateIdle = () => {
         const now = Date.now();
-        const delta = (now - lastTime) / 1000; // Convert to seconds
+        const delta = (now - lastTime) / 1000; // seconds
         lastTime = now;
 
-        idlePosition += 30 * delta; // 30 pixels per second
-        if (idlePosition >= spinnerItems.length * 96) {
-          idlePosition = idlePosition % (spinnerItems.length * 96);
+        idlePosition += 30 * delta; // 30px per second
+        const track = spinnerItems.length * 96;
+        if (track > 0) {
+          // wrap infinitely
+          idlePosition = ((idlePosition % track) + track) % track;
         }
         setCurrentPosition(idlePosition);
         idleAnimationRef.current = requestAnimationFrame(animateIdle);
@@ -366,6 +398,18 @@ export default function LuckyDrawCY() {
       }
     };
   }, []);
+
+  // Derived sizes for infinite scroll and center positioning
+  const BASE_HEIGHT = spinnerItems.length * 96;
+  const normalizedPosition = BASE_HEIGHT === 0
+    ? 0
+    : ((currentPosition % BASE_HEIGHT) + BASE_HEIGHT) % BASE_HEIGHT;
+  const displayOffset = BASE_HEIGHT; // show the middle copy in a tripled track
+
+  const renderedItems = useMemo(
+    () => (spinnerItems.length ? [...spinnerItems, ...spinnerItems, ...spinnerItems] : []),
+    [spinnerItems]
+  );
 
   if (initialLoading) {
     return (
@@ -409,7 +453,7 @@ export default function LuckyDrawCY() {
         <BackButton />
         <div className="flex items-center gap-3">
           <h1 className={cn(
-            "text-2xl font-bold",
+            "text-2xl font-bold tracking-tight leading-tight",
             isDarkMode ? "text-white" : "text-gray-900"
           )}>
             {luckyDraw?.name}
@@ -427,18 +471,20 @@ export default function LuckyDrawCY() {
               ref={spinnerRef}
               className="absolute w-full"
               style={{
-                transform: `translateY(calc(50vh - ${currentPosition}px - 48px))`,
+                transform: `translateY(calc(50vh - ${(displayOffset + normalizedPosition)}px - 48px))`,
                 willChange: 'transform'
               }}
             >
-              {spinnerItems.map((item, index) => {
-                const itemPosition = index * 96;
-                const distanceFromCenter = Math.abs(itemPosition - currentPosition) / 96;
+              {renderedItems.map((item, index) => {
+                // Compute distance from the center line using the wrapped position
+                const containerShift = displayOffset + normalizedPosition; // px
+                const itemTop = index * 96; // px
+                const distanceFromCenter = Math.abs(itemTop - containerShift) / 96;
                 const isCenter = distanceFromCenter < 0.5;
                 const isNearCenter = distanceFromCenter < 2;
-                const opacity = isCenter ? 1 : isNearCenter ? 0.8 : Math.max(0.4, 1 - distanceFromCenter * 0.08);
-                const scale = isCenter ? 1.15 : Math.max(0.95, 1 - distanceFromCenter * 0.015);
-                const blur = distanceFromCenter > 12 ? 1.5 : distanceFromCenter > 8 ? 0.3 : 0;
+                const opacity = isCenter ? 1 : isNearCenter ? 0.9 : Math.max(0.5, 1 - distanceFromCenter * 0.1);
+                const scale = isCenter ? 1.05 : Math.max(0.98, 1 - distanceFromCenter * 0.01);
+                const blur = 0; // No blur effect
 
                 return (
                   <div
@@ -448,30 +494,43 @@ export default function LuckyDrawCY() {
                       opacity,
                       transform: `scale(${scale})`,
                       filter: `blur(${blur}px)`,
-                      fontSize: isCenter ? '2.75rem' : isNearCenter ? '2rem' : '1.5rem',
-                      fontWeight: isCenter ? '700' : isNearCenter ? '600' : '400',
-                      transition: isSpinning ? 'none' : 'all 0.3s ease-out'
+                      transition: isSpinning ? 'none' : 'all 0.2s ease-out'
                     }}
                   >
-                    <span
+                    <div
                       className={cn(
-                        "transition-all duration-300",
+                        "px-8 py-3 rounded-xl shadow-2xl",
+                        "backdrop-blur-xl bg-white/10 dark:bg-black/20",
+                        "border border-white/20 dark:border-white/10",
                         isCenter
-                          ? "text-transparent bg-clip-text bg-gradient-to-r from-[#173066] via-[#0463ce] to-[#509bff]"
-                          : isNearCenter
-                            ? isDarkMode ? "text-white/90" : "text-gray-800"
-                            : isDarkMode ? "text-white/50" : "text-gray-600"
+                          ? "ring-2 ring-offset-0 ring-[#509bff]/60"
+                          : ""
                       )}
-                      style={{
-                        textShadow: isCenter
-                          ? `0 0 30px ${BASE_COLORS[1]}80, 0 2px 4px rgba(0,0,0,0.2)`
-                          : isNearCenter
-                          ? '0 1px 2px rgba(0,0,0,0.1)'
-                          : 'none'
-                      }}
                     >
-                      {item}
-                    </span>
+                      <span
+                        className={cn(
+                          "transition-all duration-200",
+                          isCenter
+                            ? "text-transparent bg-clip-text bg-gradient-to-r from-[#173066] via-[#0463ce] to-[#509bff] tracking-wide"
+                            : isNearCenter
+                              ? isDarkMode ? "text-white/90 tracking-normal" : "text-gray-800 tracking-normal"
+                              : isDarkMode ? "text-white/50 tracking-normal" : "text-gray-600 tracking-normal"
+                        )}
+                        style={{
+                          fontSize: isCenter ? '2.25rem' : isNearCenter ? '1.9rem' : '1.5rem',
+                          fontWeight: isCenter ? 700 : isNearCenter ? 600 : 500,
+                          lineHeight: isCenter ? '1.1' : isNearCenter ? '1.2' : '1.3',
+                          letterSpacing: isCenter ? '0.025em' : isNearCenter ? '0.01em' : '0',
+                          textShadow: isCenter
+                            ? `0 0 30px ${BASE_COLORS[1]}80, 0 2px 4px rgba(0,0,0,0.2)`
+                            : isNearCenter
+                            ? '0 1px 2px rgba(0,0,0,0.1)'
+                            : 'none'
+                        }}
+                      >
+                        {item}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
@@ -503,36 +562,9 @@ export default function LuckyDrawCY() {
               }}
             />
 
-            {/* Center Indicator - Glassmorphic card for the centered name */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
-              <motion.div 
-                className={cn(
-                  "px-12 py-6 rounded-2xl",
-                  "backdrop-blur-xl bg-white/10 dark:bg-black/20",
-                  "border border-white/20 dark:border-white/10",
-                  "shadow-2xl"
-                )}
-                animate={{ 
-                  boxShadow: [
-                    "0 0 20px rgba(80, 155, 255, 0.3)",
-                    "0 0 40px rgba(4, 99, 206, 0.3)",
-                    "0 0 20px rgba(80, 155, 255, 0.3)"
-                  ]
-                }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={cn(
-                    "w-1 h-12 rounded-full",
-                    "bg-gradient-to-b from-[#509bff] to-[#0463ce]"
-                  )} />
-                  <div className="w-96" /> {/* Space for the name */}
-                  <div className={cn(
-                    "w-1 h-12 rounded-full",
-                    "bg-gradient-to-b from-[#509bff] to-[#0463ce]"
-                  )} />
-                </div>
-              </motion.div>
+            {/* Center Indicator - single line */}
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none z-30">
+              <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#509bff] to-transparent opacity-80" />
             </div>
           </div>
         </div>
@@ -552,16 +584,16 @@ export default function LuckyDrawCY() {
                 )}
               >
                 <div className={cn(
-                  "text-xs uppercase tracking-widest mb-2",
+                  "text-xs uppercase tracking-widest mb-2 leading-tight font-medium",
                   isDarkMode ? "text-white/60" : "text-gray-600"
                 )}>
                   Previous Winner
                 </div>
-                <div className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#173066] to-[#509bff]">
+                <div className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#173066] to-[#509bff] tracking-wide leading-tight">
                   {winners[winners.length - 1].workId}
                 </div>
                 <div className={cn(
-                  "text-xs mt-2",
+                  "text-xs mt-2 tracking-wide leading-relaxed",
                   isDarkMode ? "text-white/40" : "text-gray-500"
                 )}>
                   {new Date(winners[winners.length - 1].wonAt).toLocaleTimeString("en-SG", {
@@ -595,7 +627,7 @@ export default function LuckyDrawCY() {
                 "transition-all duration-300"
               )}
             >
-              <span className="relative z-10 tracking-wider">
+              <span className="relative z-10 tracking-widest leading-none font-extrabold">
                 {isSpinning ? 'SPINNING' : 'SPIN'}
               </span>
               {isSpinning && (
@@ -673,13 +705,13 @@ export default function LuckyDrawCY() {
                         className="flex items-center justify-between p-3 border rounded-lg"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-xs">
+                          <span className="text-xs tracking-wide leading-relaxed font-medium text-muted-foreground">
                             {new Date(winner.wonAt).toLocaleTimeString("en-SG", {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
                           </span>
-                          <span className="font-medium">{winner.workId}</span>
+                          <span className="font-semibold tracking-wide leading-tight">{winner.workId}</span>
                         </div>
                         <Button
                           variant="ghost"
@@ -744,7 +776,7 @@ export default function LuckyDrawCY() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
                 className={cn(
-                  "text-lg font-medium uppercase tracking-[0.4em] mb-4",
+                  "text-lg font-semibold uppercase tracking-[0.4em] mb-4 leading-tight",
                   isDarkMode ? "text-white/60" : "text-gray-600"
                 )}
               >
@@ -761,7 +793,7 @@ export default function LuckyDrawCY() {
                 }}
                 className="relative"
               >
-                <div className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#173066] via-[#0463ce] to-[#509bff]">
+                <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#173066] via-[#0463ce] to-[#509bff] tracking-wide leading-none">
                   {currentWinner}
                 </div>
                 <motion.div
