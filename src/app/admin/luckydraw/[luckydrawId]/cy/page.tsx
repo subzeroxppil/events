@@ -232,14 +232,15 @@ export default function LuckyDrawCY() {
     const totalIndices = Math.floor(spins * totalItems) + winnerIndex;
 
     // Animate through indices - totalIndices already points to winnerIndex after spins
-    animateSpinnerByIndex(0, totalIndices, SPIN_DURATION_MS, intendedWinner);
+    animateSpinnerByIndex(0, totalIndices, SPIN_DURATION_MS, intendedWinner, newSpinnerItems);
   };
 
   const animateSpinnerByIndex = (
     fromIndex: number,
     toIndex: number,
     duration: number,
-    winner: string
+    winner: string,
+    itemsArray: string[]
   ) => {
     const startTime = Date.now();
     let soundFading = false;
@@ -258,7 +259,7 @@ export default function LuckyDrawCY() {
       const wholeIndex = Math.floor(currentProgress);
       const fractionalPart = currentProgress - wholeIndex;
 
-      setCenterIndex(wholeIndex % spinnerItems.length);
+      setCenterIndex(wholeIndex % itemsArray.length);
       setAnimationOffset(fractionalPart * ITEM_HEIGHT);
 
       // Fade out sound gradually near the end
@@ -289,11 +290,17 @@ export default function LuckyDrawCY() {
         // Animation complete - we're at toIndex
         // toIndex was calculated as (spins * totalItems) + winnerIndex
         // So toIndex % totalItems should equal winnerIndex
-        const finalPosition = toIndex % spinnerItems.length;
+        const finalPosition = toIndex % itemsArray.length;
         setCenterIndex(finalPosition);
         setAnimationOffset(0); // Reset offset for perfect alignment
         
-        // The item at finalPosition should be our intended winner
+        // Verify the actual winner at this position
+        const actualWinnerAtPosition = itemsArray[finalPosition];
+        if (actualWinnerAtPosition !== winner) {
+          console.warn(`Mismatch! Expected: ${winner}, Got: ${actualWinnerAtPosition} at position ${finalPosition}`);
+        }
+        
+        // Always use the winner that was predetermined
         handleSpinComplete(winner);
       }
     };
@@ -560,19 +567,25 @@ export default function LuckyDrawCY() {
                     {/* Glassmorphic card container */}
                     <div
                       className={cn(
-                        "relative px-10 py-4 rounded-2xl",
+                        "relative px-10 py-4 rounded-2xl overflow-hidden",
                         "transition-all duration-300"
                       )}
                       style={{
-                        background: 'rgba(255, 255, 255, 0.8)',
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
+                        background: isCenter
+                          ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85))'
+                          : 'linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.4))',
+                        backdropFilter: 'blur(30px) saturate(200%)',
+                        WebkitBackdropFilter: 'blur(30px) saturate(200%)',
                         border: isCenter
-                          ? `2px solid ${BASE_COLORS[1]}`
-                          : '1px solid rgba(255, 255, 255, 0.3)',
+                          ? `2px solid rgba(255, 255, 255, 0.9)`
+                          : '1px solid rgba(255, 255, 255, 0.5)',
                         boxShadow: isCenter
-                          ? `0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 40px ${BASE_COLORS[1]}30`
-                          : '0 4px 16px 0 rgba(31, 38, 135, 0.1)'
+                          ? `0 25px 50px -12px rgba(0, 0, 0, 0.25), 
+                             0 0 40px ${BASE_COLORS[1]}30,
+                             inset 0 1px 1px rgba(255, 255, 255, 0.9),
+                             0 10px 40px rgba(255, 255, 255, 0.4)`
+                          : `0 4px 16px 0 rgba(31, 38, 135, 0.15),
+                             inset 0 1px 1px rgba(255, 255, 255, 0.6)`
                       }}
                     >
                       <span
