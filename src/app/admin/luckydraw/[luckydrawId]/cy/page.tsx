@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import GradualBlur from "@/components/GradualBlur";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon, Sun, LayoutGrid } from "lucide-react";
@@ -542,9 +543,25 @@ export default function LuckyDrawCY() {
 
           {/* Spinner Container - Center */}
           <div className={`flex-1 relative rounded-3xl ${themeStyles.card} overflow-hidden max-w-2xl mx-auto`}>
-            {/* Gradient Overlays for depth */}
-            <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black/10 via-transparent to-transparent pointer-events-none z-10" />
-            <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/10 via-transparent to-transparent pointer-events-none z-10" />
+            {/* GradualBlur for melting effect */}
+            <GradualBlur 
+              position="top" 
+              height="12rem" 
+              strength={4} 
+              divCount={10}
+              opacity={1}
+              exponential={true}
+              style={{ zIndex: 30 }}
+            />
+            <GradualBlur 
+              position="bottom" 
+              height="12rem" 
+              strength={4} 
+              divCount={10}
+              opacity={1}
+              exponential={true}
+              style={{ zIndex: 30 }}
+            />
 
             {/* Center Indicator */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
@@ -598,17 +615,21 @@ export default function LuckyDrawCY() {
                       }}
                     >
                       <span
-                        className={`transition-all duration-300 ${isCenter
-                            ? `bg-gradient-to-r ${isDarkMode ? 'from-indigo-400 via-purple-400 to-pink-400' : 'from-indigo-600 via-purple-600 to-pink-600'} bg-clip-text text-transparent`
+                        className={`transition-all duration-300 font-semibold ${isCenter
+                            ? `bg-gradient-to-r ${isDarkMode ? 'from-indigo-300 via-purple-300 to-pink-300' : 'from-indigo-600 via-purple-600 to-pink-600'} bg-clip-text text-transparent`
                             : isNearCenter
-                              ? themeStyles.text
-                              : themeStyles.mutedText
+                              ? isDarkMode ? 'text-white' : 'text-slate-800'
+                              : isDarkMode ? 'text-slate-400' : 'text-slate-600'
                           }`}
                         style={{
                           textShadow: isCenter
                             ? isDarkMode
-                              ? '0 0 40px rgba(129, 140, 248, 0.4)'
-                              : '0 0 30px rgba(99, 102, 241, 0.2)'
+                              ? '0 0 40px rgba(129, 140, 248, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4)'
+                              : '0 0 30px rgba(99, 102, 241, 0.3), 0 2px 8px rgba(0, 0, 0, 0.1)'
+                            : isNearCenter
+                            ? isDarkMode
+                              ? '0 2px 8px rgba(0, 0, 0, 0.5)'
+                              : '0 1px 3px rgba(0, 0, 0, 0.1)'
                             : 'none',
                           letterSpacing: isCenter ? '0.02em' : '0'
                         }}
