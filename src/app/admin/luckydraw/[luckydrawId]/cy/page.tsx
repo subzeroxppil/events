@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
-import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
 import { cn } from "@/lib/utils";
 
 type Winner = {
@@ -60,15 +59,69 @@ export default function LuckyDrawCY() {
   // Vertical spinner states
   const [spinnerItems, setSpinnerItems] = useState<string[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
-    const spinnerRef = useRef<HTMLDivElement>(null);
+  const spinnerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
   const idleAnimationRef = useRef<number | null>(null);
   const targetIndexRef = useRef<number | null>(null);
-  
+  const idlePositionRef = useRef<number>(0);
+  const viewportHalfRef = useRef<number>(typeof window !== "undefined" ? window.innerHeight / 2 : 0);
+  const idleAnimationWAAPIRef = useRef<Animation | null>(null);
+  const idleStartPosRef = useRef<number>(0);
+  const idleStartTimeRef = useRef<number>(0);
+  const idleSpeedRef = useRef<number>(30);
+
   // Audio refs
   const spinSound = useRef<HTMLAudioElement | null>(null);
   const celebrateSound = useRef<HTMLAudioElement | null>(null);
   const applauseSound = useRef<HTMLAudioElement | null>(null);
+
+  // Track viewport half for transform math and restart idle animation on resize
+  useEffect(() => {
+    const handleResize = () => {
+      viewportHalfRef.current = window.innerHeight / 2;
+
+      // Restart idle animation to match new viewport
+      if (!isSpinning && spinnerItems.length > 0 && !showWinner && spinnerRef.current) {
+        const itemHeight = 96;
+        const baseHeight = spinnerItems.length * itemHeight;
+        const now = performance.now();
+
+        let startPos = baseHeight === 0
+          ? 0
+          : ((currentPosition % baseHeight) + baseHeight) % baseHeight;
+
+        if (idleAnimationWAAPIRef.current) {
+          const elapsedSec = (now - idleStartTimeRef.current) / 1000;
+          startPos = (idleStartPosRef.current + idleSpeedRef.current * elapsedSec) % baseHeight;
+          idleAnimationWAAPIRef.current.cancel();
+          idleAnimationWAAPIRef.current = null;
+        }
+
+        idleStartPosRef.current = startPos;
+        idleStartTimeRef.current = now;
+        idlePositionRef.current = startPos;
+
+        const fromY = viewportHalfRef.current - (baseHeight + startPos) - 48;
+        const toY = fromY - baseHeight;
+        const duration = (baseHeight / idleSpeedRef.current) * 1000;
+
+        const anim = spinnerRef.current.animate(
+          [
+            { transform: `translate3d(0, ${fromY}px, 0)` },
+            { transform: `translate3d(0, ${toY}px, 0)` }
+          ],
+          {
+            duration,
+            iterations: Infinity,
+            easing: 'linear'
+          }
+        );
+        idleAnimationWAAPIRef.current = anim;
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isSpinning, spinnerItems.length, showWinner, currentPosition]);
 
   // Initialize theme from localStorage (page-specific)
   useEffect(() => {
@@ -143,9 +196,26 @@ export default function LuckyDrawCY() {
   const handleSpin = async () => {
     if (isSpinning || participants.length === 0) return;
 
+    // Derive seamless start position from idle WAAPI, if running
+    const itemHeight = 96;
+    const baseHeight = spinnerItems.length * itemHeight;
+    let startPos = currentPosition;
+    if (idleAnimationWAAPIRef.current && baseHeight > 0) {
+      const now = performance.now();
+      const elapsedSec = (now - idleStartTimeRef.current) / 1000;
+      startPos = (idleStartPosRef.current + idleSpeedRef.current * elapsedSec) % baseHeight;
+      idleAnimationWAAPIRef.current.cancel();
+      idleAnimationWAAPIRef.current = null;
+    } else if (idlePositionRef.current) {
+      startPos = idlePositionRef.current;
+    }
+
     setIsSpinning(true);
     setShowWinner(false);
     setError("");
+
+    // Sync state position from idle animation for a seamless transition
+    setCurrentPosition(startPos);
 
     // Reset and shuffle spinner items
     const newSpinnerItems = createExtendedList(participants, 100);
@@ -185,29 +255,29 @@ export default function LuckyDrawCY() {
     }
 
     // Start animation - compute a target that lands with the item centered
-    const itemHeight = 96; // h-24 = 96px
+    const itemHeight2 = 96; // h-24 = 96px
 
     // Compute target row so that after spinning, the chosen index is exactly centered
     const cycles = 6; // full loops for excitement
     const N = newSpinnerItems.length;
-    const baseRow = Math.round(currentPosition / itemHeight);
+    const baseRow = Math.round(startPos / itemHeight2);
     const rowOffset = (validIndex - (baseRow % N) + N) % N; // rows to reach chosen index from current row
     const targetRow = baseRow + cycles * N + rowOffset; // ensures k % N === validIndex
 
-    const from = currentPosition;
-    const to = targetRow * itemHeight;
+    const from = startPos;
+    const to = targetRow * itemHeight2;
 
     // Main spin
     animateSpinner(from, to, 4200, () => {
       // Anticipation: small stepped bumps into the final center
       const stepCount = 6;
-      const stepSize = itemHeight / stepCount;
+      const stepSize = itemHeight2 / stepCount;
       const anticipation = (i: number) => {
         if (i >= stepCount) {
           // Final snap to exact center position
-          const normalizedTargetIndex = (Math.floor((to / itemHeight)) % spinnerItems.length);
+          const normalizedTargetIndex = (Math.floor((to / itemHeight2)) % spinnerItems.length);
           const centerIndex = normalizedTargetIndex; // already integer index
-          const finalPos = Math.round((to / itemHeight)) * itemHeight; // align to exact row
+          const finalPos = Math.round((to / itemHeight2)) * itemHeight2; // align to exact row
           setCurrentPosition(finalPos);
           handleSpinComplete(newSpinnerItems[validIndex]);
           return;
@@ -358,34 +428,52 @@ export default function LuckyDrawCY() {
 
   // Improved idle animation with smooth continuous motion
   useEffect(() => {
-    if (!isSpinning && spinnerItems.length > 0 && !showWinner) {
-      let idlePosition = currentPosition;
-      let lastTime = Date.now();
+    if (!isSpinning && spinnerItems.length > 0 && !showWinner && spinnerRef.current) {
+      const itemHeight = 96;
+      const baseHeight = spinnerItems.length * itemHeight;
 
-      const animateIdle = () => {
-        const now = Date.now();
-        const delta = (now - lastTime) / 1000; // seconds
-        lastTime = now;
+      const startPos = baseHeight === 0
+        ? 0
+        : ((currentPosition % baseHeight) + baseHeight) % baseHeight;
 
-        idlePosition += 30 * delta; // 30px per second
-        const track = spinnerItems.length * 96;
-        if (track > 0) {
-          // wrap infinitely
-          idlePosition = ((idlePosition % track) + track) % track;
+      idleStartPosRef.current = startPos;
+      idleStartTimeRef.current = performance.now();
+      idlePositionRef.current = startPos;
+
+      // Compute start and end transforms in pixels
+      const fromY = viewportHalfRef.current - (baseHeight + startPos) - 48;
+      const toY = fromY - baseHeight;
+
+      const duration = (baseHeight / idleSpeedRef.current) * 1000;
+
+      // Cancel any existing WAAPI animation
+      if (idleAnimationWAAPIRef.current) {
+        idleAnimationWAAPIRef.current.cancel();
+        idleAnimationWAAPIRef.current = null;
+      }
+
+      // Start WAAPI animation
+      const anim = spinnerRef.current.animate(
+        [
+          { transform: `translate3d(0, ${fromY}px, 0)` },
+          { transform: `translate3d(0, ${toY}px, 0)` }
+        ],
+        {
+          duration,
+          iterations: Infinity,
+          easing: 'linear'
         }
-        setCurrentPosition(idlePosition);
-        idleAnimationRef.current = requestAnimationFrame(animateIdle);
-      };
-
-      idleAnimationRef.current = requestAnimationFrame(animateIdle);
+      );
+      idleAnimationWAAPIRef.current = anim;
     }
 
     return () => {
-      if (idleAnimationRef.current) {
-        cancelAnimationFrame(idleAnimationRef.current);
+      if (idleAnimationWAAPIRef.current) {
+        idleAnimationWAAPIRef.current.cancel();
+        idleAnimationWAAPIRef.current = null;
       }
     };
-  }, [isSpinning, spinnerItems.length, showWinner]);
+  }, [isSpinning, spinnerItems.length, showWinner, currentPosition]);
 
   // Cleanup
   useEffect(() => {
@@ -395,6 +483,9 @@ export default function LuckyDrawCY() {
       }
       if (idleAnimationRef.current) {
         cancelAnimationFrame(idleAnimationRef.current);
+      }
+      if (idleAnimationWAAPIRef.current) {
+        idleAnimationWAAPIRef.current.cancel();
       }
     };
   }, []);
@@ -431,13 +522,8 @@ export default function LuckyDrawCY() {
     <div className={cn("min-h-screen relative overflow-hidden", isDarkMode ? "dark bg-black" : "bg-white")}>
       {/* PayPal colors background with ripple effect */}
       <div className="absolute inset-0 z-0">
-        <BackgroundRippleEffect 
-          rows={20} 
-          cols={40} 
-          cellSize={40}
-        />
         {/* Custom gradient overlay with PayPal colors */}
-        <div 
+        <div
           className="absolute inset-0 opacity-30"
           style={{
             background: `radial-gradient(circle at 20% 50%, ${BASE_COLORS[0]}40 0%, transparent 50%),
@@ -471,7 +557,7 @@ export default function LuckyDrawCY() {
               ref={spinnerRef}
               className="absolute w-full"
               style={{
-                transform: `translateY(calc(50vh - ${(displayOffset + normalizedPosition)}px - 48px))`,
+                transform: `translate3d(0, calc(50vh - ${(displayOffset + normalizedPosition)}px - 48px), 0)`,
                 willChange: 'transform'
               }}
             >
@@ -524,8 +610,8 @@ export default function LuckyDrawCY() {
                           textShadow: isCenter
                             ? `0 0 30px ${BASE_COLORS[1]}80, 0 2px 4px rgba(0,0,0,0.2)`
                             : isNearCenter
-                            ? '0 1px 2px rgba(0,0,0,0.1)'
-                            : 'none'
+                              ? '0 1px 2px rgba(0,0,0,0.1)'
+                              : 'none'
                         }}
                       >
                         {item}
@@ -544,7 +630,7 @@ export default function LuckyDrawCY() {
               divCount={10}
               opacity={0.95}
               exponential={true}
-              style={{ 
+              style={{
                 zIndex: 20,
                 pointerEvents: 'none'
               }}
@@ -556,7 +642,7 @@ export default function LuckyDrawCY() {
               divCount={10}
               opacity={0.95}
               exponential={true}
-              style={{ 
+              style={{
                 zIndex: 20,
                 pointerEvents: 'none'
               }}
