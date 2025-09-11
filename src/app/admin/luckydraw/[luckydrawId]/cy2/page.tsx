@@ -334,6 +334,20 @@ export default function LuckyDrawCY2() {
     };
   }, []);
 
+  // Derived values for infinite scroll - must be before any returns
+  const ITEM_WIDTH = 200;
+  const BASE_WIDTH = spinnerItems.length * ITEM_WIDTH;
+  const normalizedPosition = BASE_WIDTH === 0
+    ? 0
+    : ((currentPosition % BASE_WIDTH) + BASE_WIDTH) % BASE_WIDTH;
+  const displayOffset = BASE_WIDTH; // show the middle copy in a tripled track
+
+  // Create tripled array for seamless infinite scrolling - must be before any returns
+  const renderedItems = useMemo(
+    () => (spinnerItems.length ? [...spinnerItems, ...spinnerItems, ...spinnerItems] : []),
+    [spinnerItems]
+  );
+
   if (initialLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -349,20 +363,6 @@ export default function LuckyDrawCY2() {
       </div>
     );
   }
-
-  // Derived values for infinite scroll
-  const ITEM_WIDTH = 200;
-  const BASE_WIDTH = spinnerItems.length * ITEM_WIDTH;
-  const normalizedPosition = BASE_WIDTH === 0
-    ? 0
-    : ((currentPosition % BASE_WIDTH) + BASE_WIDTH) % BASE_WIDTH;
-  const displayOffset = BASE_WIDTH; // show the middle copy in a tripled track
-
-  // Create tripled array for seamless infinite scrolling
-  const renderedItems = useMemo(
-    () => (spinnerItems.length ? [...spinnerItems, ...spinnerItems, ...spinnerItems] : []),
-    [spinnerItems]
-  );
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
