@@ -85,8 +85,6 @@ export default function Page() {
     };
   }, []);
 
-  const previousUlStyleRef = useRef<string | null>(null);
-
   const isSpinningRef = useRef(isSpinning);
   useEffect(() => {
     isSpinningRef.current = isSpinning;
@@ -482,7 +480,7 @@ export default function Page() {
                 onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy`)}
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Try New Design
+                Vertical
               </Button>
               <Sheet>
                 <SheetTrigger asChild>

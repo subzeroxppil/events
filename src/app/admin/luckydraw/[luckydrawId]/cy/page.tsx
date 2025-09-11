@@ -386,14 +386,14 @@ export default function LuckyDrawCY() {
   return (
     <div className={cn("min-h-screen relative overflow-hidden", isDarkMode ? "dark bg-black" : "bg-white")}>
       {/* PayPal colors background with ripple effect */}
-      <div className="absolute inset-0">
-        <BackgroundRippleEffect
-          rows={20}
-          cols={40}
+      <div className="absolute inset-0 z-0">
+        <BackgroundRippleEffect 
+          rows={20} 
+          cols={40} 
           cellSize={40}
         />
         {/* Custom gradient overlay with PayPal colors */}
-        <div
+        <div 
           className="absolute inset-0 opacity-30"
           style={{
             background: `radial-gradient(circle at 20% 50%, ${BASE_COLORS[0]}40 0%, transparent 50%),
@@ -405,7 +405,7 @@ export default function LuckyDrawCY() {
       </div>
 
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
+      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-40">
         <BackButton />
         <div className="flex items-center gap-3">
           <h1 className={cn(
@@ -418,63 +418,11 @@ export default function LuckyDrawCY() {
       </div>
 
       {/* Main Content - Full height spinner */}
-      <div className="min-h-screen flex items-center justify-center relative">
+      <div className="min-h-screen flex items-center justify-center relative z-10">
         {/* Spinner Container - Full height, no card */}
-        <div className="relative w-full max-w-3xl h-screen overflow-hidden">
-          {/* GradualBlur for smooth melting effect */}
-          <GradualBlur
-            position="top"
-            height="8rem"
-            strength={3}
-            divCount={8}
-            opacity={0.9}
-            exponential={true}
-            style={{ zIndex: 30 }}
-          />
-          <GradualBlur
-            position="bottom"
-            height="8rem"
-            strength={3}
-            divCount={8}
-            opacity={0.9}
-            exponential={true}
-            style={{ zIndex: 30 }}
-          />
-
-          {/* Center Indicator - Glassmorphic card for the centered name */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-            <motion.div
-              className={cn(
-                "px-12 py-6 rounded-2xl",
-                "backdrop-blur-xl bg-white/10 dark:bg-black/20",
-                "border border-white/20 dark:border-white/10",
-                "shadow-2xl"
-              )}
-              animate={{
-                boxShadow: [
-                  "0 0 20px rgba(80, 155, 255, 0.3)",
-                  "0 0 40px rgba(4, 99, 206, 0.3)",
-                  "0 0 20px rgba(80, 155, 255, 0.3)"
-                ]
-              }}
-              transition={{ duration: 3, repeat: Infinity }}
-            >
-              <div className="flex items-center gap-4">
-                <div className={cn(
-                  "w-1 h-12 rounded-full",
-                  "bg-gradient-to-b from-[#509bff] to-[#0463ce]"
-                )} />
-                <div className="w-96" /> {/* Space for the name */}
-                <div className={cn(
-                  "w-1 h-12 rounded-full",
-                  "bg-gradient-to-b from-[#509bff] to-[#0463ce]"
-                )} />
-              </div>
-            </motion.div>
-          </div>
-
+        <div className="relative w-full max-w-3xl h-screen">
           {/* Vertical Spinner - Full Height */}
-          <div className="relative h-full flex items-center justify-center">
+          <div className="relative h-full flex items-center justify-center overflow-hidden">
             <div
               ref={spinnerRef}
               className="absolute w-full"
@@ -488,9 +436,9 @@ export default function LuckyDrawCY() {
                 const distanceFromCenter = Math.abs(itemPosition - currentPosition) / 96;
                 const isCenter = distanceFromCenter < 0.5;
                 const isNearCenter = distanceFromCenter < 2;
-                const opacity = isCenter ? 1 : isNearCenter ? 0.7 : Math.max(0.3, 1 - distanceFromCenter * 0.1);
-                const scale = isCenter ? 1.1 : Math.max(0.9, 1 - distanceFromCenter * 0.02);
-                const blur = distanceFromCenter > 10 ? 2 : distanceFromCenter > 6 ? 0.5 : 0;
+                const opacity = isCenter ? 1 : isNearCenter ? 0.8 : Math.max(0.4, 1 - distanceFromCenter * 0.08);
+                const scale = isCenter ? 1.15 : Math.max(0.95, 1 - distanceFromCenter * 0.015);
+                const blur = distanceFromCenter > 12 ? 1.5 : distanceFromCenter > 8 ? 0.3 : 0;
 
                 return (
                   <div
@@ -500,7 +448,7 @@ export default function LuckyDrawCY() {
                       opacity,
                       transform: `scale(${scale})`,
                       filter: `blur(${blur}px)`,
-                      fontSize: isCenter ? '2.5rem' : isNearCenter ? '1.875rem' : '1.5rem',
+                      fontSize: isCenter ? '2.75rem' : isNearCenter ? '2rem' : '1.5rem',
                       fontWeight: isCenter ? '700' : isNearCenter ? '600' : '400',
                       transition: isSpinning ? 'none' : 'all 0.3s ease-out'
                     }}
@@ -511,12 +459,14 @@ export default function LuckyDrawCY() {
                         isCenter
                           ? "text-transparent bg-clip-text bg-gradient-to-r from-[#173066] via-[#0463ce] to-[#509bff]"
                           : isNearCenter
-                            ? isDarkMode ? "text-white/80" : "text-gray-800"
-                            : isDarkMode ? "text-white/40" : "text-gray-500"
+                            ? isDarkMode ? "text-white/90" : "text-gray-800"
+                            : isDarkMode ? "text-white/50" : "text-gray-600"
                       )}
                       style={{
                         textShadow: isCenter
-                          ? `0 0 30px ${BASE_COLORS[1]}80`
+                          ? `0 0 30px ${BASE_COLORS[1]}80, 0 2px 4px rgba(0,0,0,0.2)`
+                          : isNearCenter
+                          ? '0 1px 2px rgba(0,0,0,0.1)'
                           : 'none'
                       }}
                     >
@@ -526,11 +476,69 @@ export default function LuckyDrawCY() {
                 );
               })}
             </div>
+
+            {/* GradualBlur for smooth melting effect - positioned absolutely */}
+            <GradualBlur
+              position="top"
+              height="10rem"
+              strength={2.5}
+              divCount={10}
+              opacity={0.95}
+              exponential={true}
+              style={{ 
+                zIndex: 20,
+                pointerEvents: 'none'
+              }}
+            />
+            <GradualBlur
+              position="bottom"
+              height="10rem"
+              strength={2.5}
+              divCount={10}
+              opacity={0.95}
+              exponential={true}
+              style={{ 
+                zIndex: 20,
+                pointerEvents: 'none'
+              }}
+            />
+
+            {/* Center Indicator - Glassmorphic card for the centered name */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+              <motion.div 
+                className={cn(
+                  "px-12 py-6 rounded-2xl",
+                  "backdrop-blur-xl bg-white/10 dark:bg-black/20",
+                  "border border-white/20 dark:border-white/10",
+                  "shadow-2xl"
+                )}
+                animate={{ 
+                  boxShadow: [
+                    "0 0 20px rgba(80, 155, 255, 0.3)",
+                    "0 0 40px rgba(4, 99, 206, 0.3)",
+                    "0 0 20px rgba(80, 155, 255, 0.3)"
+                  ]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={cn(
+                    "w-1 h-12 rounded-full",
+                    "bg-gradient-to-b from-[#509bff] to-[#0463ce]"
+                  )} />
+                  <div className="w-96" /> {/* Space for the name */}
+                  <div className={cn(
+                    "w-1 h-12 rounded-full",
+                    "bg-gradient-to-b from-[#509bff] to-[#0463ce]"
+                  )} />
+                </div>
+              </motion.div>
+            </div>
           </div>
         </div>
 
         {/* Previous Winner - Left Side */}
-        <div className="absolute left-8 top-1/2 -translate-y-1/2">
+        <div className="absolute left-8 top-1/2 -translate-y-1/2 z-40">
           <AnimatePresence mode="wait">
             {winners.length > 0 && (
               <motion.div
@@ -567,7 +575,7 @@ export default function LuckyDrawCY() {
         </div>
 
         {/* Controls - Right Side with SPIN button and config below */}
-        <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col items-center gap-6">
+        <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col items-center gap-6 z-40">
           {/* SPIN Button */}
           <motion.div
             whileHover={{ scale: 1.05 }}
