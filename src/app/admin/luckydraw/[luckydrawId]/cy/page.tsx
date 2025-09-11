@@ -470,30 +470,9 @@ export default function LuckyDrawCY() {
     [spinnerItems]
   );
 
-  // Virtualization around center to avoid rendering all items every frame
+  // For now, render all items to ensure visibility
   const TRIPLE_BASE_HEIGHT = BASE_HEIGHT * 3;
-  const centerIndexTripled = spinnerItems.length + Math.floor(normalizedPosition / ITEM_HEIGHT);
-  const VISIBLE_WINDOW = 30; // render ~61 items total for stability while spinning
-  const visibleStartIndex = Math.max(0, centerIndexTripled - VISIBLE_WINDOW);
-  const visibleEndIndex = Math.min(spinnerItems.length * 3 - 1, centerIndexTripled + VISIBLE_WINDOW);
-  const visibleIndices = useMemo(() => {
-    const indices: number[] = [];
-    for (let i = visibleStartIndex; i <= visibleEndIndex; i++) {
-      indices.push(i);
-    }
-    return indices;
-  }, [visibleStartIndex, visibleEndIndex, spinnerItems.length]);
-
-  // While spinning, render the full tripled list to prevent gaps at high speed
-  const totalTripledLength = spinnerItems.length * 3;
-  const indicesToRender = useMemo(() => {
-    if (spinnerItems.length === 0) return [] as number[];
-    if (isSpinning) {
-      return Array.from({ length: totalTripledLength }, (_, i) => i);
-    }
-    return visibleIndices;
-  }, [isSpinning, totalTripledLength, visibleIndices, spinnerItems.length]);
-
+  
   if (initialLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -543,8 +522,7 @@ export default function LuckyDrawCY() {
                 height: `${TRIPLE_BASE_HEIGHT}px`
               }}
             >
-              {indicesToRender.map((i) => {
-                const text = spinnerItems[i % spinnerItems.length];
+              {renderedItems.map((text, i) => {
                 const containerShift = displayOffset + normalizedPosition;
                 const itemTop = i * ITEM_HEIGHT;
                 const distanceFromCenter = Math.abs(itemTop - containerShift);
