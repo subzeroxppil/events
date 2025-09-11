@@ -84,11 +84,16 @@ export default function LuckyDrawCY() {
       applauseSound.current = new Audio("/sounds/applause1.mp3");
     }
 
-    // Inject shimmer animation
+    // Inject shimmer and shine animations
     let style: HTMLStyleElement | null = null;
     if (typeof document !== 'undefined') {
       style = document.createElement('style');
-      style.textContent = shimmerKeyframes;
+      style.textContent = shimmerKeyframes + `
+        @keyframes shine {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+      `;
       document.head.appendChild(style);
     }
 
@@ -205,10 +210,16 @@ export default function LuckyDrawCY() {
     const spins = 3 + Math.random() * 2;
     const spinDistance = spins * baseHeight;
     
-    // Add the distance to land on the winner
+    // Calculate where the winner item needs to be positioned
+    // We want the winner item to be centered at the viewport center
     const targetOffset = validIndex * ITEM_HEIGHT;
     const currentOffset = startPos % baseHeight;
-    const adjustmentDistance = targetOffset - currentOffset + (currentOffset > targetOffset ? baseHeight : 0);
+    
+    // Calculate the shortest forward distance to the target
+    let adjustmentDistance = targetOffset - currentOffset;
+    if (adjustmentDistance < 0) {
+      adjustmentDistance += baseHeight;
+    }
     
     const totalDistance = spinDistance + adjustmentDistance;
     const finalPosition = startPos + totalDistance;
@@ -490,7 +501,7 @@ export default function LuckyDrawCY() {
               ref={spinnerRef}
               className="absolute w-full"
               style={{
-                transform: `translateY(calc(50vh - ${wrappedPosition}px - 48px))`,
+                transform: `translateY(calc(50vh - ${wrappedPosition}px - ${ITEM_HEIGHT / 2}px))`,
                 willChange: 'transform',
                 transition: 'none' // Remove transition to prevent jittering
               }}
@@ -498,6 +509,7 @@ export default function LuckyDrawCY() {
               {renderedItems.map((item) => {
                 const itemTop = item.position;
                 const viewportCenter = wrappedPosition;
+                // Check distance from item's top to viewport center (where the line is)
                 const distanceFromCenter = Math.abs(itemTop - viewportCenter);
 
                 const isCenter = distanceFromCenter < ITEM_HEIGHT * 0.5;
@@ -630,23 +642,28 @@ export default function LuckyDrawCY() {
           </div>
         </div>
 
-        {/* Previous Winner - Left Side */}
-        <div className="absolute left-8 top-1/2 -translate-y-1/2 z-40">
+        {/* Previous Winner and Winners Button - Bottom Left */}
+        <div className="absolute left-8 bottom-8 z-40 flex flex-col gap-4">
+          {/* Previous Winner Display */}
           <AnimatePresence mode="wait">
             {winners.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                className="p-6 rounded-xl backdrop-blur-sm"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="p-4 rounded-xl backdrop-blur-md bg-white/80 border border-white/50 shadow-lg"
+                style={{
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                }}
               >
-                <div className="text-xs uppercase tracking-widest mb-2 leading-tight font-medium text-gray-500">
+                <div className="text-xs uppercase tracking-widest mb-1 leading-tight font-medium text-gray-500">
                   Previous Winner
                 </div>
-                <div className="text-xl font-bold" style={{ color: BASE_COLORS[0] }}>
+                <div className="text-lg font-bold text-gray-900">
                   {winners[winners.length - 1].workId}
                 </div>
-                <div className="text-xs mt-2 tracking-wide leading-relaxed text-gray-500">
+                <div className="text-xs mt-1 tracking-wide leading-relaxed text-gray-500">
                   {new Date(winners[winners.length - 1].wonAt).toLocaleTimeString("en-SG", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -655,70 +672,17 @@ export default function LuckyDrawCY() {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-
-        {/* Controls - Right Side with SPIN button and Winners sheet */}
-        <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col items-center gap-6 z-40">
-          {/* SPIN Button - Glassmorphic */}
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <button
-              onClick={handleSpin}
-              disabled={isSpinning || participants.length === 0}
-              className={cn(
-                "group relative overflow-hidden",
-                "px-12 py-6 text-xl font-semibold rounded-2xl",
-                "disabled:opacity-50 disabled:cursor-not-allowed",
-                "transition-all duration-300",
-                "hover:shadow-xl hover:scale-105",
-                "active:scale-95"
-              )}
-              style={{
-                background: 'rgba(255, 255, 255, 0.85)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                border: `1.5px solid ${isSpinning ? BASE_COLORS[2] : 'rgba(255, 255, 255, 0.5)'}`,
-                boxShadow: isSpinning
-                  ? `0 10px 30px -5px rgba(0, 0, 0, 0.2), 0 0 30px ${BASE_COLORS[2]}30`
-                  : `0 8px 24px -4px rgba(0, 0, 0, 0.15), inset 0 0 12px rgba(255, 255, 255, 0.5)`,
-              }}
-            >
-              {/* Text */}
-              <span
-                className="relative z-10 tracking-widest leading-none font-bold"
-                style={{
-                  color: isSpinning ? BASE_COLORS[2] : BASE_COLORS[0],
-                  textShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                  letterSpacing: '0.15em'
-                }}
-              >
-                {isSpinning ? 'SPINNING' : 'SPIN'}
-              </span>
-
-              {/* Subtle pulse when spinning */}
-              {isSpinning && (
-                <motion.div
-                  className="absolute inset-0 rounded-2xl"
-                  style={{
-                    background: `linear-gradient(135deg, ${BASE_COLORS[2]}10, transparent)`,
-                  }}
-                  animate={{
-                    opacity: [0.5, 1, 0.5]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              )}
-            </button>
-          </motion.div>
-
-          {/* Winners Sheet */}
+          
+          {/* Winners Sheet Button */}
           <Sheet>
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
-                className="backdrop-blur-sm bg-white/70 border border-gray-200 hover:bg-white/80 text-gray-700 shadow-md relative"
+                className="backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg relative"
+                style={{
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                }}
               >
                 <Trophy className="w-4 h-4 mr-2" />
                 Winners
@@ -729,11 +693,11 @@ export default function LuckyDrawCY() {
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent>
+            <SheetContent className="overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Lucky Draw Winners</SheetTitle>
               </SheetHeader>
-              <div className="mt-6 space-y-3">
+              <div className="mt-6 space-y-3 pb-6">
                 {winners.length === 0 ? (
                   <p className="text-center text-muted-foreground">No winners yet</p>
                 ) : (
@@ -764,6 +728,76 @@ export default function LuckyDrawCY() {
               </div>
             </SheetContent>
           </Sheet>
+        </div>
+
+        {/* SPIN Button - Right Side, More Glassmorphic */}
+        <div className="absolute right-8 top-1/2 -translate-y-1/2 z-40">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <button
+              onClick={handleSpin}
+              disabled={isSpinning || participants.length === 0}
+              className={cn(
+                "group relative overflow-hidden",
+                "px-16 py-8 text-2xl font-bold rounded-3xl",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                "transition-all duration-300",
+                "hover:shadow-2xl hover:scale-105",
+                "active:scale-95"
+              )}
+              style={{
+                background: isSpinning 
+                  ? 'rgba(255, 255, 255, 0.95)'
+                  : 'rgba(255, 255, 255, 0.25)',
+                backdropFilter: 'blur(24px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+                border: `2px solid ${isSpinning ? BASE_COLORS[2] : 'rgba(255, 255, 255, 0.18)'}`,
+                boxShadow: isSpinning
+                  ? `0 20px 40px -10px rgba(0, 0, 0, 0.3), 0 0 40px ${BASE_COLORS[2]}40, inset 0 0 30px rgba(255, 255, 255, 0.6)`
+                  : `0 12px 32px -8px rgba(0, 0, 0, 0.25), inset 0 2px 16px rgba(255, 255, 255, 0.5), inset 0 -2px 8px rgba(0, 0, 0, 0.1)`,
+              }}
+            >
+              {/* Glass shine effect */}
+              <div 
+                className="absolute inset-0 rounded-3xl"
+                style={{
+                  background: 'linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.3) 50%, transparent 60%)',
+                  transform: 'translateX(-100%)',
+                  animation: !isSpinning ? 'shine 3s ease-in-out infinite' : 'none'
+                }}
+              />
+              
+              {/* Text */}
+              <span
+                className="relative z-10 tracking-[0.2em] leading-none font-black"
+                style={{
+                  color: isSpinning ? BASE_COLORS[2] : BASE_COLORS[0],
+                  textShadow: isSpinning 
+                    ? '0 2px 8px rgba(0,0,0,0.2)'
+                    : '0 2px 12px rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.3)',
+                }}
+              >
+                {isSpinning ? 'SPINNING' : 'SPIN'}
+              </span>
+
+              {/* Pulse effect when spinning */}
+              {isSpinning && (
+                <motion.div
+                  className="absolute inset-0 rounded-3xl"
+                  style={{
+                    background: `radial-gradient(circle at center, ${BASE_COLORS[2]}20, transparent 70%)`,
+                  }}
+                  animate={{
+                    opacity: [0.3, 0.6, 0.3],
+                    scale: [1, 1.05, 1]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              )}
+            </button>
+          </motion.div>
         </div>
       </div>
 
