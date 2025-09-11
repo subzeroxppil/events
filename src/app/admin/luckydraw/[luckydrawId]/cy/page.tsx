@@ -33,6 +33,7 @@ type LuckyDraw = {
   createdBy: string;
 };
 
+const BASE_COLORS = ["#173066", "#509bff", "#0463ce", "#63cbfb"];
 
 export default function LuckyDrawCY() {
   const params = useParams();
@@ -510,12 +511,10 @@ export default function LuckyDrawCY() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Glassmorphic background elements */}
+    <div className="min-h-screen relative overflow-hidden bg-gray-50">
+      {/* Clean minimal background */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
-        <div className="absolute top-40 right-20 w-72 h-72 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
-        <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
+        <div className="absolute inset-0 bg-white/40" />
       </div>
 
       {/* Header */}
@@ -547,7 +546,7 @@ export default function LuckyDrawCY() {
                 const containerShift = displayOffset + normalizedPosition; // px
                 const itemTop = index * 96; // px
                 const distanceFromCenter = Math.abs(itemTop - containerShift) / 96;
-                const isCenter = distanceFromCenter < 0.5;
+                const isCenter = distanceFromCenter < 0.8;  // Wider range for darkening
                 const isNearCenter = distanceFromCenter < 2;
                 const opacity = isCenter ? 1 : isNearCenter ? 0.9 : Math.max(0.5, 1 - distanceFromCenter * 0.1);
                 const scale = isCenter ? 1.05 : Math.max(0.98, 1 - distanceFromCenter * 0.01);
@@ -566,34 +565,34 @@ export default function LuckyDrawCY() {
                   >
                     <div
                       className={cn(
-                        "px-8 py-3 rounded-2xl",
-                        "backdrop-blur-md bg-white/40",
-                        "border border-white/50",
-                        "shadow-lg",
+                        "px-8 py-3 rounded-xl",
+                        "backdrop-blur-sm",
                         isCenter
-                          ? "ring-2 ring-offset-0 ring-blue-400/50 bg-white/60"
-                          : ""
+                          ? "bg-white/80 border-2 shadow-xl"
+                          : "bg-white/30 border border-white/40"
                       )}
+                      style={{
+                        borderColor: isCenter ? BASE_COLORS[2] : 'rgba(255,255,255,0.4)'
+                      }}
                     >
                       <span
                         className={cn(
                           "transition-all duration-200",
                           isCenter
-                            ? "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 font-bold"
+                            ? "font-bold"
                             : isNearCenter
-                              ? "text-gray-700 font-semibold"
-                              : "text-gray-500"
+                              ? "text-gray-600 font-medium"
+                              : "text-gray-400"
                         )}
                         style={{
+                          color: isCenter ? BASE_COLORS[0] : undefined,
                           fontSize: isCenter ? '2.25rem' : isNearCenter ? '1.9rem' : '1.5rem',
                           fontWeight: isCenter ? 700 : isNearCenter ? 600 : 500,
                           lineHeight: isCenter ? '1.1' : isNearCenter ? '1.2' : '1.3',
                           letterSpacing: isCenter ? '0.025em' : isNearCenter ? '0.01em' : '0',
                           textShadow: isCenter
-                            ? '0 0 30px rgba(99, 102, 241, 0.5), 0 2px 4px rgba(0,0,0,0.2)'
-                            : isNearCenter
-                              ? '0 1px 2px rgba(0,0,0,0.1)'
-                              : 'none'
+                            ? '0 2px 4px rgba(0,0,0,0.1)'
+                            : 'none'
                         }}
                       >
                         {item}
@@ -630,10 +629,9 @@ export default function LuckyDrawCY() {
               }}
             />
 
-            {/* Center Indicator - glassmorphic line */}
+            {/* Center Indicator - accent line */}
             <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none z-30">
-              <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-60" />
-              <div className="absolute inset-x-0 -top-1 h-4 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent blur-sm" />
+              <div className="h-[2px] w-full" style={{ backgroundColor: `${BASE_COLORS[1]}40` }} />
             </div>
           </div>
         </div>
@@ -646,12 +644,12 @@ export default function LuckyDrawCY() {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -30 }}
-                className="p-6 rounded-2xl backdrop-blur-md bg-white/50 border border-white/60 shadow-xl"
+                className="p-6 rounded-xl backdrop-blur-sm bg-white/70 border border-gray-200 shadow-lg"
               >
-                <div className="text-xs uppercase tracking-widest mb-2 leading-tight font-medium text-gray-600">
+                <div className="text-xs uppercase tracking-widest mb-2 leading-tight font-medium text-gray-500">
                   Previous Winner
                 </div>
-                <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                <div className="text-xl font-bold" style={{ color: BASE_COLORS[0] }}>
                   {winners[winners.length - 1].workId}
                 </div>
                 <div className="text-xs mt-2 tracking-wide leading-relaxed text-gray-500">
@@ -678,14 +676,16 @@ export default function LuckyDrawCY() {
               size="lg"
               className={cn(
                 "group relative overflow-hidden",
-                "px-16 py-8 text-2xl font-bold rounded-2xl",
-                "bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600",
-                "hover:from-blue-600 hover:to-purple-700",
-                "text-white shadow-2xl",
-                "backdrop-blur-sm border border-white/20",
+                "px-16 py-8 text-2xl font-semibold rounded-xl",
+                "text-white shadow-xl",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
-                "transition-all duration-300"
+                "transition-all duration-300",
+                "hover:shadow-2xl"
               )}
+              style={{
+                backgroundColor: isSpinning ? BASE_COLORS[2] : BASE_COLORS[0],
+                borderColor: BASE_COLORS[2]
+              }}
             >
               <span className="relative z-10 tracking-wider leading-none font-bold">
                 {isSpinning ? 'SPINNING' : 'SPIN'}
@@ -705,12 +705,12 @@ export default function LuckyDrawCY() {
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
-                className="backdrop-blur-md bg-white/40 border border-white/60 hover:bg-white/50 text-gray-700 shadow-lg relative"
+                className="backdrop-blur-sm bg-white/70 border border-gray-200 hover:bg-white/80 text-gray-700 shadow-md relative"
               >
                 <Trophy className="w-4 h-4 mr-2" />
                 Winners
                 {winners.length > 0 && (
-                  <span className="ml-2 px-2 py-0.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-xs font-semibold">
+                  <span className="ml-2 px-2 py-0.5 text-white rounded-full text-xs font-semibold" style={{ backgroundColor: BASE_COLORS[2] }}>
                     {winners.length}
                   </span>
                 )}
@@ -779,7 +779,7 @@ export default function LuckyDrawCY() {
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
-                className="text-lg font-semibold uppercase tracking-[0.3em] mb-4 leading-tight text-gray-700"
+                className="text-sm font-medium uppercase tracking-[0.3em] mb-4 leading-tight text-gray-500"
               >
                 Congratulations
               </motion.div>
@@ -794,11 +794,12 @@ export default function LuckyDrawCY() {
                 }}
                 className="relative"
               >
-                <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 tracking-wide leading-none">
+                <div className="text-7xl font-bold tracking-tight leading-none" style={{ color: BASE_COLORS[0] }}>
                   {currentWinner}
                 </div>
                 <motion.div
-                  className="absolute -inset-4 bg-gradient-to-r from-blue-400/30 via-indigo-400/30 to-purple-400/30 blur-2xl rounded-full"
+                  className="absolute -inset-4 blur-3xl rounded-full"
+                  style={{ backgroundColor: `${BASE_COLORS[1]}15` }}
                   animate={{
                     scale: [1, 1.2, 1],
                     opacity: [0.5, 0.8, 0.5]
