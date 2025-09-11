@@ -44,8 +44,16 @@ const ITEM_HEIGHT = 96; // Height of each name card
 
 // Default animation settings
 const DEFAULT_SETTINGS: AnimationSettings = {
-  duration: 11000, // Duration in milliseconds
-  easeExponent: 6, // Higher = more dramatic slowdown
+  duration: 13000, // Match original spinningTime
+  easeExponent: 4, // Reduced for more natural feel
+};
+
+// Smooth easing function that mimics roulette physics without abrupt transitions
+const rouletteEasing = (progress: number, exponent: number): number => {
+  // Use a smooth curve that gradually increases the easing strength
+  // This creates continuous deceleration without sudden changes in speed
+  const smoothExponent = 2 + (exponent - 2) * Math.pow(progress, 1.5);
+  return 1 - Math.pow(1 - progress, smoothExponent);
 };
 
 // Add shimmer animation
@@ -197,7 +205,11 @@ export default function LuckyDrawCY() {
   const handleSpin = async () => {
     if (isSpinning || participants.length === 0) return;
 
-    // Cancel idle animation
+    // Cancel any existing animations
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
     if (idleAnimationRef.current) {
       cancelAnimationFrame(idleAnimationRef.current);
       idleAnimationRef.current = null;
@@ -257,6 +269,12 @@ export default function LuckyDrawCY() {
     winner: string,
     itemsArray: string[]
   ) => {
+    // Cancel any existing animation before starting new one
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+
     const startTime = Date.now();
     let soundFading = false;
     const totalIndices = toIndex - fromIndex;
@@ -266,9 +284,8 @@ export default function LuckyDrawCY() {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Configurable easing that starts slowing down early for maximum suspense
-      // This creates a long, drawn-out deceleration that builds tension
-      const easeOut = 1 - Math.pow(1 - progress, animationSettings.easeExponent);
+      // Use the new roulette-style easing for more natural deceleration
+      const easeOut = rouletteEasing(progress, animationSettings.easeExponent);
 
       const currentProgress = fromIndex + (totalIndices * easeOut);
 
@@ -279,9 +296,9 @@ export default function LuckyDrawCY() {
       setCenterIndex(wholeIndex % itemsArray.length);
       setAnimationOffset(fractionalPart * ITEM_HEIGHT);
 
-      // Fade out sound automatically based on easing curve - start when spin becomes noticeably slow
-      const autoSoundFadeStart = animationSettings.easeExponent >= 5 ? 0.5 : 0.6;
-      const autoSoundFadeDuration = animationSettings.easeExponent >= 5 ? 0.5 : 0.4;
+      // Fade out sound to match the original timing (around 10.5 seconds of 13 total)
+      const autoSoundFadeStart = 0.65; // Start fading at 65% (around 8.5 seconds)
+      const autoSoundFadeDuration = 0.35; // Fade over remaining 35%
 
       if (spinSound.current && progress > autoSoundFadeStart && !soundFading) {
         soundFading = true;
@@ -733,9 +750,9 @@ export default function LuckyDrawCY() {
                   </label>
                   <input
                     type="range"
-                    min="3000"
-                    max="20000"
-                    step="500"
+                    min="8000"
+                    max="18000"
+                    step="1000"
                     value={animationSettings.duration}
                     onChange={(e) => setAnimationSettings(prev => ({
                       ...prev,
@@ -745,7 +762,7 @@ export default function LuckyDrawCY() {
                     disabled={isSpinning}
                   />
                   <div className="text-xs text-muted-foreground">
-                    3s - 20s
+                    8s - 18s (matches original roulette timing)
                   </div>
                 </div>
 
@@ -757,7 +774,7 @@ export default function LuckyDrawCY() {
                   <input
                     type="range"
                     min="2"
-                    max="10"
+                    max="8"
                     step="1"
                     value={animationSettings.easeExponent}
                     onChange={(e) => setAnimationSettings(prev => ({
@@ -768,7 +785,7 @@ export default function LuckyDrawCY() {
                     disabled={isSpinning}
                   />
                   <div className="text-xs text-muted-foreground">
-                    2 = gentle slowdown, 10 = dramatic slowdown
+                    2 = gentle slowdown, 8 = dramatic slowdown (optimized for roulette feel)
                   </div>
                 </div>
 
