@@ -205,22 +205,22 @@ export default function LuckyDrawCY() {
 
     // Calculate spin distance for smooth infinite rotation
     const baseHeight = newSpinnerItems.length * ITEM_HEIGHT;
-    
+
     // Spin multiple times for effect (3-5 full rotations)
     const spins = 3 + Math.random() * 2;
     const spinDistance = spins * baseHeight;
-    
+
     // Calculate where the winner item needs to be positioned
     // We want the winner item to be centered at the viewport center
     const targetOffset = validIndex * ITEM_HEIGHT;
     const currentOffset = startPos % baseHeight;
-    
+
     // Calculate the shortest forward distance to the target
     let adjustmentDistance = targetOffset - currentOffset;
     if (adjustmentDistance < 0) {
       adjustmentDistance += baseHeight;
     }
-    
+
     const totalDistance = spinDistance + adjustmentDistance;
     const finalPosition = startPos + totalDistance;
 
@@ -440,12 +440,12 @@ export default function LuckyDrawCY() {
   // Calculate visible range and render items with wrapping
   const visibleRange = 20; // Number of items to render above and below center
   const centerIndex = BASE_HEIGHT > 0 ? Math.floor(wrappedPosition / ITEM_HEIGHT) : 0;
-  
+
   const renderedItems = useMemo(() => {
     if (spinnerItems.length === 0) return [];
     const items = [];
     const totalItems = spinnerItems.length;
-    
+
     for (let i = -visibleRange; i <= visibleRange; i++) {
       const absoluteIndex = centerIndex + i;
       const wrappedIndex = ((absoluteIndex % totalItems) + totalItems) % totalItems;
@@ -457,7 +457,7 @@ export default function LuckyDrawCY() {
     }
     return items;
   }, [spinnerItems, centerIndex, ITEM_HEIGHT]);
-  
+
   if (initialLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -499,7 +499,7 @@ export default function LuckyDrawCY() {
           <div className="relative h-full flex items-center justify-center overflow-hidden">
             <div
               ref={spinnerRef}
-              className="absolute w-full"
+              className="absolute w-full top-0 left-0"
               style={{
                 transform: `translateY(calc(50vh - ${wrappedPosition + ITEM_HEIGHT / 2}px))`,
                 willChange: 'transform',
@@ -511,8 +511,9 @@ export default function LuckyDrawCY() {
                 // The center line is at the viewport center
                 // We need to check if this item's vertical range contains the center
                 const itemBottom = itemTop + ITEM_HEIGHT;
+                // Center of the viewport in container coordinates
                 const viewportCenter = wrappedPosition + ITEM_HEIGHT / 2;
-                
+
                 // Item is at center if the viewport center falls within its bounds
                 const isCenter = itemTop <= viewportCenter && viewportCenter <= itemBottom;
                 const distanceFromCenter = Math.min(
@@ -656,7 +657,7 @@ export default function LuckyDrawCY() {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -30 }}
-                className="p-6 rounded-xl backdrop-blur-md bg-white/80 border border-white/50 shadow-lg"
+                className="p-6 rounded-xl backdrop-blur-md"
                 style={{
                   backdropFilter: 'blur(16px)',
                   WebkitBackdropFilter: 'blur(16px)',
@@ -755,7 +756,7 @@ export default function LuckyDrawCY() {
                 "active:scale-95"
               )}
               style={{
-                background: isSpinning 
+                background: isSpinning
                   ? 'rgba(255, 255, 255, 0.95)'
                   : 'rgba(255, 255, 255, 0.25)',
                 backdropFilter: 'blur(24px) saturate(180%)',
@@ -767,7 +768,7 @@ export default function LuckyDrawCY() {
               }}
             >
               {/* Glass shine effect */}
-              <div 
+              <div
                 className="absolute inset-0 rounded-3xl"
                 style={{
                   background: 'linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.3) 50%, transparent 60%)',
@@ -775,13 +776,13 @@ export default function LuckyDrawCY() {
                   animation: !isSpinning ? 'shine 3s ease-in-out infinite' : 'none'
                 }}
               />
-              
+
               {/* Text */}
               <span
                 className="relative z-10 tracking-[0.2em] leading-none font-black"
                 style={{
                   color: isSpinning ? BASE_COLORS[2] : BASE_COLORS[0],
-                  textShadow: isSpinning 
+                  textShadow: isSpinning
                     ? '0 2px 8px rgba(0,0,0,0.2)'
                     : '0 2px 12px rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.3)',
                 }}
