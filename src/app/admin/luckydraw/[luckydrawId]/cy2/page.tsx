@@ -366,35 +366,31 @@ export default function LuckyDrawCY2() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Minimal Header - Fixed positioning with proper spacing */}
-      <div className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-50">
-        <div className="px-6 py-4 flex justify-between items-center">
-          <Button
-            variant="ghost"
-            onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy`)}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          
-          <h1 className="text-sm font-light text-gray-600 tracking-wide uppercase">
-            {luckyDraw?.name}
-          </h1>
+      {/* Top Controls - minimal floating buttons */}
+      <div className="absolute top-6 left-6 z-20">
+        <Button
+          variant="ghost"
+          onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy`)}
+          className="text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to CY
+        </Button>
+      </div>
 
-          <Button
-            variant="ghost"
-            onClick={() => setShowWinners(!showWinners)}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <Trophy className="w-4 h-4 mr-2" />
-            Winners ({winners.length})
-          </Button>
-        </div>
+      <div className="absolute top-6 right-6 z-20">
+        <Button
+          variant="ghost"
+          onClick={() => setShowWinners(!showWinners)}
+          className="text-gray-600 hover:text-gray-900"
+        >
+          <Trophy className="w-4 h-4 mr-2" />
+          Winners ({winners.length})
+        </Button>
       </div>
 
       {/* Main Content - Centered Horizontal Spinner */}
-      <div className="flex-1 flex items-center justify-center pt-16">
+      <div className="flex-1 flex items-center justify-center">
         <div className="w-full relative">
           {/* Horizontal Spinner Container */}
           <div className="relative h-32 overflow-hidden w-full">
@@ -446,15 +442,110 @@ export default function LuckyDrawCY2() {
           </div>
 
           {/* SPIN Button */}
-          <div className="mt-16 flex justify-center">
-            <Button
+          <div className="mt-20 flex justify-center">
+            <motion.button
               onClick={handleSpin}
               disabled={isSpinning || participants.length === 0}
-              variant="outline"
-              className="px-8 py-3 text-sm font-light tracking-widest uppercase border-gray-300 hover:border-gray-900 hover:bg-gray-50 transition-colors"
+              className={`
+                relative px-16 py-6 
+                font-light tracking-[0.3em] uppercase text-lg
+                transition-all duration-500 ease-out
+                ${isSpinning 
+                  ? 'bg-gray-900 text-white cursor-wait' 
+                  : 'bg-white text-gray-900 hover:bg-gray-900 hover:text-white cursor-pointer'
+                }
+                border border-gray-900
+                disabled:opacity-30 disabled:cursor-not-allowed
+                overflow-hidden
+              `}
+              whileHover={!isSpinning ? { scale: 1.02 } : {}}
+              whileTap={!isSpinning ? { scale: 0.98 } : {}}
+              initial={false}
+              animate={isSpinning ? {
+                boxShadow: [
+                  "0 0 0 0 rgba(0,0,0,0.1)",
+                  "0 0 20px 10px rgba(0,0,0,0.1)",
+                  "0 0 0 0 rgba(0,0,0,0.1)"
+                ]
+              } : {
+                boxShadow: "0 0 0 0 rgba(0,0,0,0)"
+              }}
+              transition={{
+                boxShadow: {
+                  duration: 1.5,
+                  repeat: isSpinning ? Infinity : 0,
+                  ease: "easeInOut"
+                }
+              }}
             >
-              {isSpinning ? 'Spinning' : 'Spin'}
-            </Button>
+              {/* Button text with fade transition */}
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={isSpinning ? 'spinning' : 'idle'}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="relative z-10"
+                >
+                  {isSpinning ? 'Spinning' : 'Spin'}
+                </motion.span>
+              </AnimatePresence>
+
+              {/* Animated loading dots when spinning */}
+              {isSpinning && (
+                <motion.div className="absolute inset-0 flex items-center justify-end pr-16">
+                  <div className="flex gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="w-1.5 h-1.5 bg-white rounded-full"
+                        animate={{
+                          opacity: [0.3, 1, 0.3],
+                          scale: [0.8, 1.2, 0.8]
+                        }}
+                        transition={{
+                          duration: 1.4,
+                          repeat: Infinity,
+                          delay: i * 0.2,
+                          ease: "easeInOut"
+                        }}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Subtle scan line effect when spinning */}
+              {isSpinning && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                  animate={{
+                    x: ["-100%", "100%"]
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
+                />
+              )}
+
+              {/* Border animation when spinning */}
+              {isSpinning && (
+                <motion.div
+                  className="absolute inset-0 border border-gray-900"
+                  animate={{
+                    opacity: [0, 1, 0]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+              )}
+            </motion.button>
           </div>
         </div>
       </div>
