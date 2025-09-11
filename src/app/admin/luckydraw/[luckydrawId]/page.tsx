@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import BackButton from "@/components/BackButton";
-import { Trash2 } from "lucide-react";
+import { Trash2, Sparkles } from "lucide-react";
 
 type LuckyDraw = {
   id: number;
@@ -477,6 +477,13 @@ export default function Page() {
           <div className="flex w-full justify-between p-4">
             <BackButton />
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy`)}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Try New Design
+              </Button>
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline">

@@ -7,7 +7,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import GradualBlur from "@/components/GradualBlur";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, LayoutGrid } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import {
   Sheet,
@@ -353,6 +353,14 @@ export default function LuckyDrawCY() {
       <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10">
         <BackButton />
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/admin/luckydraw/${luckydrawId}`)}
+            className={`backdrop-blur-md ${themeStyles.card} ${themeStyles.text}`}
+          >
+            <LayoutGrid className="w-4 h-4 mr-2" />
+            Classic View
+          </Button>
           <Sheet>
             <SheetTrigger asChild>
               <Button 
