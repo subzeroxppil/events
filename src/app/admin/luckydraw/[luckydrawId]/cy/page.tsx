@@ -705,8 +705,8 @@ export default function LuckyDrawCY() {
           </AnimatePresence>
         </div>
 
-        {/* Settings Button - Bottom Right */}
-        <div className="absolute right-8 bottom-8 z-40">
+        {/* Settings Button - Fixed Bottom Right */}
+        <div className="fixed right-8 bottom-8 z-40">
           <Sheet open={showSettings} onOpenChange={setShowSettings}>
             <SheetTrigger asChild>
               <Button
@@ -791,8 +791,8 @@ export default function LuckyDrawCY() {
           </Sheet>
         </div>
 
-        {/* Winners Button - Bottom Left */}
-        <div className="absolute left-8 bottom-8 z-40">
+        {/* Winners Button - Fixed Bottom Left */}
+        <div className="fixed left-8 bottom-8 z-40">
           <Sheet>
             <SheetTrigger asChild>
               <Button
