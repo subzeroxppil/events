@@ -595,26 +595,74 @@ export default function LuckyDrawCY() {
           <AnimatePresence mode="wait">
             {winners.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                className="p-3 sm:p-4 lg:p-6 rounded-lg sm:rounded-xl backdrop-blur-md"
+                initial={{ opacity: 0, x: -30, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -30, scale: 0.9 }}
+                transition={{
+                  type: "spring",
+                  damping: 25,
+                  stiffness: 300
+                }}
+                className="relative p-4 sm:p-5 lg:p-6 rounded-2xl overflow-hidden"
                 style={{
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.05)',
                 }}
               >
-                <div className="text-xs sm:text-sm uppercase tracking-widest mb-1 sm:mb-2 leading-tight font-medium text-gray-500">
-                  Previous Winner
-                </div>
-                <div className="text-lg sm:text-xl font-bold text-gray-900">
-                  {winners[winners.length - 1].workId}
-                </div>
-                <div className="text-xs mt-1 sm:mt-2 tracking-wide leading-relaxed text-gray-500">
-                  {new Date(winners[winners.length - 1].wonAt).toLocaleTimeString("en-SG", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                {/* Subtle gradient overlay */}
+                <motion.div
+                  className="absolute inset-0 opacity-30"
+                  style={{
+                    background: `linear-gradient(135deg, ${currentColors[0]}10 0%, transparent 100%)`,
+                  }}
+                />
+                
+                <div className="relative z-10">
+                  <motion.div 
+                    className="text-xs sm:text-sm uppercase tracking-[0.2em] mb-2 font-semibold"
+                    style={{
+                      background: `linear-gradient(90deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 100%)`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}
+                  >
+                    Previous Winner
+                  </motion.div>
+                  <motion.div 
+                    className="text-lg sm:text-xl font-bold text-gray-900 mb-1"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    {winners[winners.length - 1].workId}
+                  </motion.div>
+                  <motion.div 
+                    className="text-xs tracking-wide text-gray-600 flex items-center gap-1"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <motion.div
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: currentColors[1] }}
+                      animate={{
+                        opacity: [0.3, 1, 0.3],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    {new Date(winners[winners.length - 1].wonAt).toLocaleTimeString("en-SG", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </motion.div>
                 </div>
               </motion.div>
             )}
@@ -636,23 +684,42 @@ export default function LuckyDrawCY() {
         <div className="fixed left-2 sm:left-4 lg:left-8 bottom-2 sm:bottom-4 lg:bottom-8 z-40">
           <Sheet>
             <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size={typeof window !== 'undefined' && window.innerWidth < 640 ? "sm" : "default"}
-                className="backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg relative text-xs sm:text-sm"
-                style={{
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                }}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
               >
-                <Trophy className="w-4 h-4 mr-2" />
-                Winners
-                {winners.length > 0 && (
-                  <span className="ml-2 px-2 py-0.5 text-white rounded-full text-xs font-semibold" style={{ backgroundColor: currentColors[2] }}>
-                    {winners.length}
-                  </span>
-                )}
-              </Button>
+                <Button
+                  variant="ghost"
+                  size={typeof window !== 'undefined' && window.innerWidth < 640 ? "sm" : "default"}
+                  className="relative overflow-hidden text-xs sm:text-sm font-medium"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                    border: '1px solid rgba(255, 255, 255, 0.18)',
+                    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                    color: '#1a1a1a',
+                  }}
+                >
+                  <Trophy className="w-4 h-4 mr-2" style={{ color: currentColors[1] }} />
+                  Winners
+                  {winners.length > 0 && (
+                    <motion.span 
+                      className="ml-2 px-2 py-0.5 text-white rounded-full text-xs font-bold"
+                      style={{ 
+                        backgroundColor: currentColors[2],
+                        boxShadow: `0 0 10px ${currentColors[2]}40`
+                      }}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    >
+                      {winners.length}
+                    </motion.span>
+                  )}
+                </Button>
+              </motion.div>
             </SheetTrigger>
             <SheetContent className="overflow-y-auto">
               <SheetHeader>
@@ -693,35 +760,160 @@ export default function LuckyDrawCY() {
 
         {/* SPIN Button */}
         <div className="absolute right-2 sm:right-6 lg:right-12 top-1/2 -translate-y-1/2 z-40">
-          <button
-            onClick={handleSpin}
-            disabled={isSpinning || participants.length === 0}
-            className={cn(
-              "relative group",
-              "px-6 sm:px-8 lg:px-12 py-2 sm:py-3 lg:py-4",
-              "bg-white/90 backdrop-blur-sm",
-              "border border-gray-200",
-              "rounded-full",
-              "transition-all duration-200 ease-out",
-              "hover:bg-gray-50",
-              "hover:border-gray-300",
-              "hover:shadow-lg",
-              "active:scale-95",
-              "disabled:opacity-40 disabled:cursor-not-allowed",
-              "disabled:hover:bg-white/90 disabled:hover:shadow-none"
-            )}
+          <motion.div
+            initial={false}
+            animate={{
+              scale: isSpinning ? 0.95 : 1,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 400,
+              damping: 30
+            }}
           >
-            <span
+            <button
+              onClick={handleSpin}
+              disabled={isSpinning || participants.length === 0}
               className={cn(
-                "font-medium text-xs sm:text-sm tracking-wider uppercase",
-                "transition-colors duration-200",
-                isSpinning ? "text-blue-600" : "text-gray-700",
-                "group-hover:text-gray-900"
+                "relative group overflow-hidden",
+                "px-8 sm:px-12 lg:px-16 py-3 sm:py-4 lg:py-5",
+                "rounded-full",
+                "transition-all duration-500 ease-out",
+                "disabled:cursor-not-allowed"
               )}
+              style={{
+                background: isSpinning 
+                  ? `linear-gradient(135deg, ${currentColors[0]}15 0%, ${currentColors[1]}20 100%)`
+                  : 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(255, 255, 255, 0.18)',
+                boxShadow: isSpinning
+                  ? `0 8px 32px 0 ${currentColors[1]}20, inset 0 0 0 1px rgba(255, 255, 255, 0.1)`
+                  : '0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)',
+              }}
             >
-              {isSpinning ? 'Spinning...' : 'Spin'}
-            </span>
-          </button>
+              {/* Animated gradient background */}
+              <motion.div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{
+                  background: `radial-gradient(circle at 50% 50%, ${currentColors[1]}10 0%, transparent 70%)`,
+                }}
+                animate={{
+                  scale: isSpinning ? [1, 1.5, 1] : 1,
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: isSpinning ? Infinity : 0,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              {/* Shimmer effect */}
+              <motion.div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100"
+                initial={{ x: '-100%', opacity: 0 }}
+                whileHover={{ x: '100%', opacity: [0, 0.5, 0] }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                }}
+              />
+              
+              {/* Button text */}
+              <motion.span
+                className={cn(
+                  "relative z-10 font-semibold text-sm sm:text-base tracking-widest uppercase",
+                  "transition-all duration-300",
+                  "drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+                )}
+                style={{
+                  color: isSpinning ? currentColors[0] : '#1a1a1a',
+                  textShadow: isSpinning 
+                    ? `0 0 20px ${currentColors[1]}40`
+                    : '0 1px 2px rgba(0,0,0,0.05)'
+                }}
+                animate={{
+                  letterSpacing: isSpinning ? '0.2em' : '0.15em',
+                }}
+              >
+                {isSpinning ? (
+                  <motion.div
+                    className="flex items-center gap-2"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <motion.div
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: currentColors[1] }}
+                      animate={{
+                        scale: [1, 1.5, 1],
+                        opacity: [1, 0.5, 1]
+                      }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                    Spinning
+                    <motion.div
+                      className="flex gap-0.5"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      {[0, 1, 2].map((i) => (
+                        <motion.div
+                          key={i}
+                          className="w-1 h-1 rounded-full"
+                          style={{ backgroundColor: currentColors[1] }}
+                          animate={{
+                            y: [0, -3, 0],
+                            opacity: [0.3, 1, 0.3]
+                          }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            delay: i * 0.15,
+                            ease: "easeInOut"
+                          }}
+                        />
+                      ))}
+                    </motion.div>
+                  </motion.div>
+                ) : (
+                  <motion.span
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    Spin
+                  </motion.span>
+                )}
+              </motion.span>
+              
+              {/* Pulse ring animation when not spinning */}
+              {!isSpinning && (
+                <motion.div
+                  className="absolute inset-0 rounded-full pointer-events-none"
+                  style={{
+                    border: `1px solid ${currentColors[1]}20`,
+                  }}
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    opacity: [0.5, 0, 0.5],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeOut"
+                  }}
+                />
+              )}
+            </button>
+          </motion.div>
         </div>
       </div>
 
@@ -732,55 +924,249 @@ export default function LuckyDrawCY() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
             className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
           >
+            {/* Backdrop with enhanced blur */}
             <motion.div
-              className="absolute inset-0 backdrop-blur-md"
+              className="absolute inset-0"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              style={{
+                background: 'radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%)',
+                backdropFilter: 'blur(30px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+              }}
             />
+            
+            {/* Winner card container */}
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="text-center relative"
+              initial={{ scale: 0.5, opacity: 0, rotateX: -30 }}
+              animate={{ 
+                scale: 1, 
+                opacity: 1, 
+                rotateX: 0,
+              }}
+              exit={{ scale: 0.8, opacity: 0, rotateX: 30 }}
+              transition={{
+                type: "spring",
+                damping: 20,
+                stiffness: 300,
+                duration: 0.8
+              }}
+              className="text-center relative px-8 py-12 max-w-2xl"
+              style={{
+                perspective: '1000px',
+                transformStyle: 'preserve-3d'
+              }}
             >
+              {/* Glassmorphic card background */}
               <motion.div
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                className="text-sm font-medium uppercase tracking-[0.3em] mb-4 leading-tight text-gray-500"
-              >
-                Congratulations
-              </motion.div>
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{
-                  delay: 0.2,
-                  type: "spring",
-                  damping: 10,
-                  stiffness: 200
+                className="absolute inset-0 rounded-3xl"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1, duration: 0.6 }}
+                style={{
+                  background: `linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)`,
+                  backdropFilter: 'blur(40px) saturate(200%)',
+                  WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  boxShadow: `
+                    0 20px 60px -10px ${currentColors[0]}30,
+                    0 10px 40px -10px ${currentColors[1]}20,
+                    inset 0 0 0 1px rgba(255,255,255,0.1),
+                    inset 0 -40px 60px -20px ${currentColors[0]}10
+                  `,
                 }}
-                className="relative"
+              />
+              
+              {/* Animated light rays */}
+              <motion.div
+                className="absolute inset-0 overflow-hidden rounded-3xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
               >
-                <div className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-none px-4" style={{ color: currentColors[0] }}>
-                  {currentWinner}
-                </div>
-                <motion.div
-                  className="absolute -inset-4 blur-3xl rounded-full"
-                  style={{ backgroundColor: `${currentColors[1]}15` }}
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.5, 0.8, 0.5]
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity
-                  }}
-                />
+                {[...Array(3)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute inset-0"
+                    style={{
+                      background: `linear-gradient(${120 * i}deg, transparent 40%, ${currentColors[i % currentColors.length]}15 50%, transparent 60%)`,
+                    }}
+                    animate={{
+                      rotate: [0, 360],
+                    }}
+                    transition={{
+                      duration: 20 + i * 5,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                  />
+                ))}
               </motion.div>
+              
+              {/* Content */}
+              <div className="relative z-10">
+                {/* Trophy icon with glow */}
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ 
+                    delay: 0.2, 
+                    type: "spring",
+                    damping: 12,
+                    stiffness: 200
+                  }}
+                  className="mb-6 flex justify-center"
+                >
+                  <div className="relative">
+                    <Trophy 
+                      className="w-16 h-16 sm:w-20 sm:h-20"
+                      style={{ 
+                        color: currentColors[1],
+                        filter: `drop-shadow(0 0 20px ${currentColors[1]}60)`,
+                      }}
+                    />
+                    <motion.div
+                      className="absolute inset-0 flex items-center justify-center"
+                      animate={{
+                        scale: [1, 1.3, 1],
+                        opacity: [0.5, 0, 0.5],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeOut"
+                      }}
+                    >
+                      <Trophy 
+                        className="w-16 h-16 sm:w-20 sm:h-20"
+                        style={{ 
+                          color: currentColors[1],
+                          opacity: 0.3,
+                        }}
+                      />
+                    </motion.div>
+                  </div>
+                </motion.div>
+                
+                {/* Congratulations text */}
+                <motion.div
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="mb-6"
+                >
+                  <div 
+                    className="text-xs sm:text-sm font-bold uppercase tracking-[0.4em] mb-2"
+                    style={{
+                      background: `linear-gradient(135deg, ${currentColors[1]} 0%, ${currentColors[2]} 100%)`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      textShadow: `0 0 30px ${currentColors[1]}40`,
+                    }}
+                  >
+                    Winner
+                  </div>
+                </motion.div>
+                
+                {/* Winner name with cinematic reveal */}
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{
+                    delay: 0.4,
+                    type: "spring",
+                    damping: 10,
+                    stiffness: 150
+                  }}
+                  className="relative"
+                >
+                  {/* Glowing background */}
+                  <motion.div
+                    className="absolute -inset-8 rounded-full opacity-30"
+                    style={{
+                      background: `radial-gradient(circle, ${currentColors[1]}40 0%, transparent 70%)`,
+                      filter: 'blur(20px)',
+                    }}
+                    animate={{
+                      scale: [0.8, 1.2, 0.8],
+                      opacity: [0.2, 0.4, 0.2],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  
+                  {/* Winner text */}
+                  <motion.div
+                    className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight px-4"
+                    style={{ 
+                      color: '#ffffff',
+                      textShadow: `
+                        0 0 40px ${currentColors[0]}60,
+                        0 0 80px ${currentColors[1]}40,
+                        0 4px 12px rgba(0,0,0,0.3)
+                      `,
+                      letterSpacing: '-0.02em',
+                    }}
+                    animate={{
+                      textShadow: [
+                        `0 0 40px ${currentColors[0]}60, 0 0 80px ${currentColors[1]}40, 0 4px 12px rgba(0,0,0,0.3)`,
+                        `0 0 60px ${currentColors[1]}80, 0 0 120px ${currentColors[2]}60, 0 4px 12px rgba(0,0,0,0.3)`,
+                        `0 0 40px ${currentColors[0]}60, 0 0 80px ${currentColors[1]}40, 0 4px 12px rgba(0,0,0,0.3)`,
+                      ]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    {currentWinner}
+                  </motion.div>
+                  
+                  {/* Sparkle effects */}
+                  {[...Array(6)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-1 h-1 rounded-full"
+                      style={{
+                        backgroundColor: currentColors[i % currentColors.length],
+                        boxShadow: `0 0 6px ${currentColors[i % currentColors.length]}`,
+                        left: `${20 + i * 12}%`,
+                        top: `${30 + Math.sin(i) * 20}%`,
+                      }}
+                      animate={{
+                        scale: [0, 1, 0],
+                        opacity: [0, 1, 0],
+                        y: [-20, 20],
+                      }}
+                      transition={{
+                        duration: 2,
+                        delay: i * 0.2,
+                        repeat: Infinity,
+                        ease: "easeOut"
+                      }}
+                    />
+                  ))}
+                </motion.div>
+                
+                {/* Celebration message */}
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="mt-8 text-sm sm:text-base text-white/80 font-medium tracking-wide"
+                >
+                  Congratulations on your victory!
+                </motion.div>
+              </div>
             </motion.div>
           </motion.div>
         )}
