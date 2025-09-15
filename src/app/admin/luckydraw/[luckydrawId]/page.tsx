@@ -1,17 +1,29 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import React from "react";
-import RoulettePro from "react-roulette-pro";
-import "react-roulette-pro/dist/index.css";
-import "@/app/globals.css";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import GradualBlur from "@/components/GradualBlur";
 import confetti from "canvas-confetti";
-import ghostAnimationData from "@/app/assets/ghost-animation.json";
-import Lottie from "lottie-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Trophy } from "lucide-react";
+import BackButton from "@/components/BackButton";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import LuckyDrawSettings, {
+  AnimationSettings,
+  DEFAULT_SETTINGS,
+} from "./LuckyDrawSettings";
+import SpinnerItem from "./SpinnerItem";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -22,17 +34,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { toast } from "sonner";
-import BackButton from "@/components/BackButton";
-import { Trash2, Sparkles } from "lucide-react";
+
+type Winner = {
+  workId: string;
+  wonAt: string;
+};
 
 type LuckyDraw = {
   id: number;
@@ -42,75 +48,95 @@ type LuckyDraw = {
   createdBy: string;
 };
 
-export default function Page() {
-  const params = useParams();
-  const router = useRouter();
+const BASE_COLORS = ["#173066", "#509bff", "#0463ce", "#63cbfb"];
 
+// Smooth easing function
+const rouletteEasing = (progress: number, exponent: number): number => {
+  const smoothExponent = 2 + (exponent - 2) * Math.pow(progress, 1.5);
+  return 1 - Math.pow(1 - progress, smoothExponent);
+};
+
+export default function LuckyDrawCY() {
+  const params = useParams();
   const luckydrawId = Array.isArray(params?.luckydrawId)
     ? params.luckydrawId[0]
     : params?.luckydrawId;
 
+  const router = useRouter();
+  // Core states
   const [initialLoading, setInitialLoading] = useState(true);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
-  const [error, setError] = useState("");
-  const [prizes, setPrizes] = useState<{ text: string }[]>([]);
-  const [start, setStart] = useState(false);
+  const [participants, setParticipants] = useState<string[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
-  const [prizeIndex, setPrizeIndex] = useState(0);
-  const [winners, setWinners] = useState<{ workId: string; wonAt: string }[]>(
-    []
-  );
-  const [prizeList, setPrizeList] = useState<
-    { text: string; id: string; image: string }[]
-  >([]);
-  const [spinSound, setSpinSound] = useState<HTMLAudioElement | null>(null);
-  const [celebrateSound, setCelebrateSound] = useState<HTMLAudioElement | null>(
-    null
-  );
-  const [applauseSound, setApplauseSound] = useState<HTMLAudioElement | null>(
-    null
-  );
+  const [winners, setWinners] = useState<Winner[]>([]);
   const [luckyDraw, setLuckyDraw] = useState<LuckyDraw | null>(null);
+  const [error, setError] = useState("");
+  const [currentWinner, setCurrentWinner] = useState<string | null>(null);
+  const [showWinner, setShowWinner] = useState(false);
 
-  // Add near other refs at top inside component:
-  const idleAnimationRestartRef = useRef<number | null>(null);
+  // Animation settings
+  const [animationSettings, setAnimationSettings] =
+    useState<AnimationSettings>(DEFAULT_SETTINGS);
+  const [showSettings, setShowSettings] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // (Optional) Cleanup on unmount: add in a useEffect:
+  // Memoized values for performance
+  const itemHeight = useMemo(() => {
+    if (typeof window === "undefined") return 96;
+    if (window.innerWidth < 640) return 64;
+    if (window.innerWidth < 1024) return 80;
+    return 96;
+  }, []);
+
+  const currentColors = useMemo(() => {
+    return animationSettings.useCustomColors
+      ? animationSettings.customColors
+      : BASE_COLORS;
+  }, [animationSettings.useCustomColors, animationSettings.customColors]);
+
+  // Vertical spinner states
+  const [spinnerItems, setSpinnerItems] = useState<string[]>([]);
+  const [centerIndex, setCenterIndex] = useState(0);
+  const [animationOffset, setAnimationOffset] = useState(0);
+  const spinnerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
+  const idleAnimationRef = useRef<number | null>(null);
+  const [isIdleAnimating, setIsIdleAnimating] = useState(false);
+
+  // Audio refs
+  const spinSound = useRef<HTMLAudioElement | null>(null);
+  const celebrateSound = useRef<HTMLAudioElement | null>(null);
+  const applauseSound = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize audio
   useEffect(() => {
+    window.scrollTo(0, 100);
+
+    if (typeof Audio !== "undefined") {
+      spinSound.current = new Audio("/sounds/spin4.mp3");
+      celebrateSound.current = new Audio("/sounds/celebrate.wav");
+      applauseSound.current = new Audio("/sounds/applause1.mp3");
+
+      // Preload audio
+      if (spinSound.current) spinSound.current.load();
+      if (celebrateSound.current) celebrateSound.current.load();
+      if (applauseSound.current) applauseSound.current.load();
+    }
+
     return () => {
-      if (idleAnimationRestartRef.current) {
-        clearTimeout(idleAnimationRestartRef.current);
-      }
+      document.body.style.overflow = "auto";
+
+      // Cleanup audio
+      if (spinSound.current) spinSound.current = null;
+      if (celebrateSound.current) celebrateSound.current = null;
+      if (applauseSound.current) applauseSound.current = null;
     };
   }, []);
 
-  const isSpinningRef = useRef(isSpinning);
-  useEffect(() => {
-    isSpinningRef.current = isSpinning;
-  }, [isSpinning]);
-
-  const spinAudio =
-    typeof Audio !== "undefined" ? new Audio("/sounds/spin4.mp3") : null;
-
-  const celebrateAudio =
-    typeof Audio !== "undefined" ? new Audio("/sounds/celebrate.wav") : null;
-
-  const applauseAudio =
-    typeof Audio !== "undefined" ? new Audio("/sounds/applause1.mp3") : null;
-
-  const lengthOfNames = 180;
-  const baseOffset = 160;
-
+  // Fetch lucky draw data
   useEffect(() => {
     if (!luckydrawId) return;
-
     fetchLuckyDrawData();
-
-    setSpinSound(spinAudio);
-    setCelebrateSound(celebrateAudio);
-    setApplauseSound(applauseAudio);
-  }, []);
+  }, [luckydrawId]);
 
   const fetchLuckyDrawData = async () => {
     try {
@@ -118,234 +144,35 @@ export default function Page() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Failed to fetch attendees");
+        throw new Error(data.message || "Failed to fetch data");
       }
 
       setLuckyDraw(data.luckyDraw);
 
-      let allAttendees = data.participants.map((workId: any) => ({
-        text: workId,
-      }));
+      const uniqueParticipants = Array.from(
+        new Set(data.participants)
+      ) as string[];
 
-      // make unique
-      allAttendees = Array.from(
-        new Map(allAttendees.map((a: { text: any }) => [a.text, a])).values()
+      setParticipants(uniqueParticipants);
+
+      const extendedList = createExtendedList(
+        uniqueParticipants,
+        animationSettings.spinnerItemCount
       );
+      setSpinnerItems(extendedList);
 
-      setPrizes(allAttendees);
+      setCenterIndex(0);
+      setAnimationOffset(0);
 
-      // Set existing winners from API response
       if (data.winners && Array.isArray(data.winners)) {
-        console.log("data.winners", data.winners);
         setWinners(data.winners);
       }
-
-      // max 50
-      const reproducedPrizeList = createRepeatedPrizeList(
-        allAttendees,
-        lengthOfNames
-      );
-
-      console.log("reset prize list");
-      setPrizeList(
-        reproducedPrizeList.map((prize) => ({
-          ...prize,
-          image: null,
-          id:
-            typeof crypto.randomUUID === "function"
-              ? crypto.randomUUID()
-              : generateId(),
-        }))
-      );
     } catch (err: any) {
-      setError("Failed to load attendees.");
+      setError("Failed to load data.");
+      console.error(err);
     } finally {
       setInitialLoading(false);
     }
-  };
-
-  function createRepeatedPrizeList(prizes: any[], targetLength: number): any[] {
-    if (prizes.length === 0) return [];
-
-    const shuffled = [...prizes].sort(() => 0.5 - Math.random());
-
-    if (shuffled.length === targetLength) {
-      return shuffled;
-    }
-
-    if (shuffled.length < targetLength) {
-      const repeated = [];
-      while (repeated.length < targetLength) {
-        repeated.push(...shuffled.sort(() => 0.5 - Math.random()));
-      }
-      return repeated.slice(0, targetLength);
-    }
-
-    // shuffled.length > targetLength
-    return shuffled.slice(0, targetLength);
-  }
-
-  const generateId = () =>
-    `${Date.now().toString(36)}-${Math.random().toString(36).substring(2)}`;
-
-  // INIT STUFF
-
-  function getValidPrizeIndex(
-    prizeList: { text: string }[],
-    winners: { workId: string; wonAt: string }[]
-  ): number {
-    const maxOffset = 10;
-    let attempts = 0;
-
-    while (attempts < 10) {
-      const candidateIndex = baseOffset + Math.floor(Math.random() * maxOffset);
-      const candidate = prizeList[candidateIndex];
-      if (!winners.some((winner) => winner.workId === candidate.text)) {
-        return candidateIndex;
-      }
-      attempts++;
-    }
-
-    // fallback: allow repeat
-    return baseOffset + Math.floor(Math.random() * maxOffset);
-  }
-
-  const handleStart = () => {
-    const reproducedPrizeList = createRepeatedPrizeList(prizes, lengthOfNames);
-
-    const newPrizeList = reproducedPrizeList.map((prize) => ({
-      ...prize,
-      image: null,
-      id:
-        typeof crypto.randomUUID === "function"
-          ? crypto.randomUUID()
-          : generateId(),
-    }));
-    const prizeIndex = getValidPrizeIndex(newPrizeList, winners);
-
-    setPrizeList(newPrizeList);
-    setPrizeIndex(prizeIndex);
-
-    if (spinSound) {
-      spinSound.pause(); // Just in case it's already playing
-      spinSound.currentTime = 1;
-
-      // Add event listener to stop at 12 seconds
-      const handleTimeUpdate = () => {
-        if (spinSound.currentTime >= 10.5) {
-          spinSound.pause();
-          spinSound.removeEventListener("timeupdate", handleTimeUpdate);
-        }
-      };
-
-      spinSound.addEventListener("timeupdate", handleTimeUpdate);
-      spinSound.play();
-    }
-
-    if (celebrateSound) {
-      celebrateSound.pause();
-      celebrateSound.currentTime = 0;
-    }
-
-    if (applauseSound) {
-      applauseSound.pause();
-      applauseSound.currentTime = 0;
-    }
-
-    // In handleStart (before setStart(false)) clear any pending restart:
-    if (idleAnimationRestartRef.current) {
-      clearTimeout(idleAnimationRestartRef.current);
-      idleAnimationRestartRef.current = null;
-    }
-
-    setStart(false); // reset
-    setTimeout(() => {
-      setStart(true); // trigger spin
-      setIsSpinning(true);
-      setHasStarted(true); // Mark that user has started at least once
-    }, 50); // small delay ensures React registers the change
-  };
-
-  const handlePrizeDefined = async () => {
-    const winner = prizeList[prizeIndex];
-    const winnerWorkId = winner?.text;
-
-    if (winnerWorkId) {
-      try {
-        // Send POST request to record the winner
-        const response = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ workId: winnerWorkId }),
-        });
-
-        if (response.ok) {
-          // Only update UI if the API call was successful
-          setWinners((prev) => [
-            ...prev,
-            { workId: winnerWorkId, wonAt: new Date().toISOString() },
-          ]);
-        } else {
-          const errorData = await response.json();
-          console.error("Error recording winner:", errorData.message);
-        }
-      } catch (error) {
-        console.error("Error recording winner:", error);
-      }
-    }
-
-    if (spinSound) {
-      spinSound.pause();
-      spinSound.currentTime = 0;
-    }
-
-    if (celebrateSound) {
-      celebrateSound.pause();
-      celebrateSound.currentTime = 0; // restart from beginning
-      celebrateSound.play().catch((e) => {
-        console.warn("Playback failed:", e);
-      });
-    }
-
-    if (applauseSound) {
-      applauseSound.pause();
-      applauseSound.currentTime = 0; // restart from beginning
-      applauseSound.play().catch((e) => {
-        console.warn("Playback failed:", e);
-      });
-    }
-
-    // triggerConfetti();
-    triggerFireworks();
-    setIsSpinning(false);
-
-    setTimeout(() => {
-      if (isSpinningRef.current) return;
-
-      const roulettePrizeList = document.querySelector(
-        ".roulette-pro-prize-list"
-      ) as HTMLElement | null;
-      if (roulettePrizeList) {
-        roulettePrizeList.classList.add("with-animation");
-
-        // Schedule restart after 60s (adjust as needed)
-        if (idleAnimationRestartRef.current) {
-          clearTimeout(idleAnimationRestartRef.current);
-        }
-        idleAnimationRestartRef.current = window.setTimeout(() => {
-          if (!roulettePrizeList.isConnected) return;
-          roulettePrizeList.classList.remove("with-animation");
-          roulettePrizeList.style.transform = "translate3d(0px,0px,0px)";
-          roulettePrizeList.style.removeProperty("transition");
-          roulettePrizeList.style.left = "0px";
-          void roulettePrizeList.offsetWidth;
-          roulettePrizeList.classList.add("with-animation");
-        }, 60000); // 1 minute
-      }
-      // });
-    }, 5000);
   };
 
   const handleDeleteLuckyDraw = async () => {
@@ -369,64 +196,263 @@ export default function Page() {
     }
   };
 
-  const handleDeleteWinner = async (winnerWorkId: string) => {
-    try {
-      const response = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ workId: winnerWorkId }),
-      });
-
-      if (response.ok) {
-        // Remove winner from UI
-        setWinners((prev) =>
-          prev.filter((winner) => winner.workId !== winnerWorkId)
-        );
-        toast.success("Winner removed successfully");
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.message || "Failed to remove winner");
+  const createExtendedList = useCallback(
+    (items: string[], targetLength: number): string[] => {
+      if (items.length === 0) return [];
+      const result = [];
+      while (result.length < targetLength) {
+        const shuffled = [...items].sort(() => Math.random() - 0.5);
+        result.push(...shuffled);
       }
-    } catch (error) {
-      console.error("Error removing winner:", error);
-      toast.error("Failed to remove winner");
+      return result.slice(0, targetLength);
+    },
+    []
+  );
+
+  const handleSpin = useCallback(async () => {
+    if (isSpinning || participants.length === 0) return;
+
+    // Cancel any existing animations
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
     }
-  };
+    if (idleAnimationRef.current) {
+      cancelAnimationFrame(idleAnimationRef.current);
+      idleAnimationRef.current = null;
+    }
+    setIsIdleAnimating(false);
 
-  const triggerConfetti = () => {
-    const end = Date.now() + 3 * 1000; // 3 seconds
-    const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
+    setIsSpinning(true);
+    setShowWinner(false);
+    setError("");
 
-    const frame = () => {
-      if (Date.now() > end) return;
+    // Reset and shuffle spinner items
+    const newSpinnerItems = createExtendedList(
+      participants,
+      animationSettings.spinnerItemCount
+    );
+    setSpinnerItems(newSpinnerItems);
 
-      confetti({
-        particleCount: 2,
-        angle: 60,
-        spread: 55,
-        startVelocity: 60,
-        origin: { x: 0, y: 0.5 },
-        colors: colors,
-      });
-      confetti({
-        particleCount: 2,
-        angle: 120,
-        spread: 55,
-        startVelocity: 60,
-        origin: { x: 1, y: 0.5 },
-        colors: colors,
-      });
+    // Find a valid winner
+    let winnerIndex = -1;
+    const availableIndices = [];
 
-      requestAnimationFrame(frame);
-    };
+    for (let i = 0; i < newSpinnerItems.length; i++) {
+      if (!winners.some((w) => w.workId === newSpinnerItems[i])) {
+        availableIndices.push(i);
+      }
+    }
 
-    frame();
-  };
+    if (availableIndices.length > 0) {
+      winnerIndex =
+        availableIndices[Math.floor(Math.random() * availableIndices.length)];
+    } else {
+      winnerIndex = Math.floor(newSpinnerItems.length / 2);
+    }
 
-  const triggerFireworks = () => {
-    const duration = 5 * 1000;
+    const intendedWinner = newSpinnerItems[winnerIndex];
+
+    // Play spin sound
+    if (spinSound.current && animationSettings.enableSounds) {
+      spinSound.current.currentTime = 1;
+      spinSound.current.play();
+    }
+
+    // Reset to start position
+    setCenterIndex(0);
+    setAnimationOffset(0);
+
+    // Calculate total indices to spin through
+    const totalItems = newSpinnerItems.length;
+    const spins =
+      animationSettings.minSpins +
+      Math.random() * (animationSettings.maxSpins - animationSettings.minSpins);
+    const baseTarget = Math.floor(spins) * totalItems + winnerIndex;
+
+    const randomOffset = Math.random() * 0.9;
+    const finalTarget = baseTarget + randomOffset;
+
+    animateSpinnerByIndex(
+      0,
+      finalTarget,
+      animationSettings.duration,
+      intendedWinner,
+      newSpinnerItems
+    );
+  }, [
+    isSpinning,
+    participants,
+    winners,
+    animationSettings,
+    createExtendedList,
+  ]);
+
+  const animateSpinnerByIndex = useCallback(
+    (
+      fromIndex: number,
+      toIndex: number,
+      duration: number,
+      winner: string,
+      itemsArray: string[]
+    ) => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+
+      const startTime = Date.now();
+      let soundFading = false;
+      const totalIndices = toIndex - fromIndex;
+
+      const animate = () => {
+        const now = Date.now();
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        const easeOut = rouletteEasing(
+          progress,
+          animationSettings.easeExponent
+        );
+        const currentProgress = fromIndex + totalIndices * easeOut;
+
+        const wholeIndex = Math.floor(currentProgress);
+        const fractionalPart = currentProgress - wholeIndex;
+
+        setCenterIndex(wholeIndex % itemsArray.length);
+        setAnimationOffset(fractionalPart * itemHeight);
+
+        // Fade out sound
+        const autoSoundFadeStart = animationSettings.soundFadeStartPercent;
+        const autoSoundFadeDuration = animationSettings.soundFadeDuration;
+
+        if (
+          spinSound.current &&
+          animationSettings.enableSounds &&
+          progress > autoSoundFadeStart &&
+          !soundFading
+        ) {
+          soundFading = true;
+          const fadeOutDurationMs = duration * autoSoundFadeDuration;
+          const steps = 20;
+          const stepMs = Math.max(16, Math.floor(fadeOutDurationMs / steps));
+          const decrement = 1 / steps;
+          const fadeInterval = setInterval(() => {
+            if (spinSound.current) {
+              spinSound.current.volume = Math.max(
+                0,
+                spinSound.current.volume - decrement
+              );
+              if (spinSound.current.volume <= 0) {
+                spinSound.current.pause();
+                spinSound.current.currentTime = 0;
+                spinSound.current.volume = 1;
+                clearInterval(fadeInterval);
+              }
+            } else {
+              clearInterval(fadeInterval);
+            }
+          }, stepMs);
+        }
+
+        if (progress < 1) {
+          animationRef.current = requestAnimationFrame(animate);
+        } else {
+          const wholeIndex = Math.floor(toIndex);
+          const fractionalPart = toIndex - wholeIndex;
+
+          setCenterIndex(wholeIndex % itemsArray.length);
+          setAnimationOffset(fractionalPart * itemHeight);
+
+          handleSpinComplete(winner);
+        }
+      };
+
+      animationRef.current = requestAnimationFrame(animate);
+    },
+    [animationSettings, itemHeight]
+  );
+
+  const handleSpinComplete = useCallback(
+    async (winner: string) => {
+      setCurrentWinner(winner);
+
+      // Stop spin sound
+      if (spinSound.current) {
+        spinSound.current.pause();
+        spinSound.current.currentTime = 0;
+        spinSound.current.volume = 1;
+      }
+
+      // Play celebration sounds
+      if (celebrateSound.current && animationSettings.enableSounds) {
+        celebrateSound.current.currentTime = 0;
+        celebrateSound.current.play();
+      }
+
+      if (applauseSound.current && animationSettings.enableSounds) {
+        applauseSound.current.currentTime = 0;
+        applauseSound.current.play();
+      }
+
+      // Record winner
+      try {
+        const response = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workId: winner }),
+        });
+
+        if (response.ok) {
+          setWinners((prev) => [
+            ...prev,
+            { workId: winner, wonAt: new Date().toISOString() },
+          ]);
+        }
+      } catch (error) {
+        console.error("Error recording winner:", error);
+      }
+
+      // Trigger effects
+      if (animationSettings.enableFireworks) {
+        triggerFireworks();
+      }
+      setShowWinner(true);
+      setIsSpinning(false);
+
+      // Auto-hide winner
+      setTimeout(() => {
+        setShowWinner(false);
+      }, animationSettings.winnerDisplayDuration);
+    },
+    [animationSettings, luckydrawId]
+  );
+
+  const handleDeleteWinner = useCallback(
+    async (winnerWorkId: string) => {
+      try {
+        const response = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workId: winnerWorkId }),
+        });
+
+        if (response.ok) {
+          setWinners((prev) => prev.filter((w) => w.workId !== winnerWorkId));
+          toast.success("Winner removed successfully");
+        } else {
+          toast.error("Failed to remove winner");
+        }
+      } catch (error) {
+        console.error("Error removing winner:", error);
+        toast.error("Failed to remove winner");
+      }
+    },
+    [luckydrawId]
+  );
+
+  const triggerFireworks = useCallback(() => {
+    const duration = animationSettings.fireworksDuration;
     const animationEnd = Date.now() + duration;
     const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
@@ -440,7 +466,8 @@ export default function Page() {
         return clearInterval(interval);
       }
 
-      const particleCount = 500 * (timeLeft / duration);
+      const particleCount =
+        animationSettings.fireworksParticleCount * (timeLeft / duration);
       confetti({
         ...defaults,
         particleCount,
@@ -452,179 +479,669 @@ export default function Page() {
         origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
       });
     }, 250);
-  };
+  }, [animationSettings]);
+
+  // Idle animation
+  useEffect(() => {
+    if (!isSpinning && spinnerItems.length > 0 && !showWinner) {
+      setIsIdleAnimating(true);
+      let accumulatedOffset = animationOffset;
+      let lastTime = performance.now();
+
+      const animateIdle = () => {
+        if (isSpinning || showWinner || spinnerItems.length === 0) {
+          setIsIdleAnimating(false);
+          return;
+        }
+
+        const now = performance.now();
+        const delta = (now - lastTime) / 1000;
+        lastTime = now;
+
+        accumulatedOffset += animationSettings.idleSpeed * delta;
+
+        if (accumulatedOffset >= itemHeight) {
+          setCenterIndex((prev) => (prev + 1) % spinnerItems.length);
+          accumulatedOffset = accumulatedOffset % itemHeight;
+        }
+
+        setAnimationOffset(accumulatedOffset);
+
+        idleAnimationRef.current = requestAnimationFrame(animateIdle);
+      };
+
+      idleAnimationRef.current = requestAnimationFrame(animateIdle);
+    } else {
+      setIsIdleAnimating(false);
+    }
+
+    return () => {
+      if (idleAnimationRef.current) {
+        cancelAnimationFrame(idleAnimationRef.current);
+        idleAnimationRef.current = null;
+      }
+      setIsIdleAnimating(false);
+    };
+  }, [
+    isSpinning,
+    spinnerItems.length,
+    showWinner,
+    animationSettings.idleSpeed,
+    itemHeight,
+  ]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      if (idleAnimationRef.current) {
+        cancelAnimationFrame(idleAnimationRef.current);
+      }
+    };
+  }, []);
+
+  // Calculate visible items
+  const renderedItems = useMemo(() => {
+    if (spinnerItems.length === 0) return [];
+    const items = [];
+    const totalItems = spinnerItems.length;
+    const visibleRange = animationSettings.visibleRange;
+
+    for (let i = -visibleRange; i <= visibleRange; i++) {
+      const absoluteIndex = centerIndex + i;
+      const wrappedIndex =
+        ((absoluteIndex % totalItems) + totalItems) % totalItems;
+      items.push({
+        text: spinnerItems[wrappedIndex],
+        offset: i,
+        key: `${absoluteIndex}-${spinnerItems[wrappedIndex]}`,
+      });
+    }
+    return items;
+  }, [spinnerItems, centerIndex, animationSettings.visibleRange]);
+
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex w-full justify-center h-full max-w-[2000px] self-center">
-      {initialLoading ? (
-        <LoadingSpinner className="mt-5" />
-      ) : prizes.length === 0 ? (
-        <>
-          <div className="w-full py-30 flex flex-col items-center">
-            <Lottie animationData={ghostAnimationData} className="h-[170px]" />
-            <span className="text-muted-foreground text-sm">
-              Lucky Draw unavailable as no attendees have checked in to this
-              event yet
-            </span>
+    <div className="min-h-screen relative overflow-hidden bg-gray-50">
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-white/40" />
+      </div>
+
+      {/* Header */}
+      <div className="absolute top-0 left-0 right-0 p-3 sm:p-6 flex justify-between items-center z-40">
+        <BackButton />
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg sm:text-2xl font-bold tracking-tight leading-tight text-gray-900">
+            {luckyDraw?.name}
+          </h1>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="min-h-screen flex items-center justify-center relative z-10">
+        {/* Spinner Container */}
+        <div className="relative w-full max-w-sm sm:max-w-2xl lg:max-w-3xl h-screen">
+          {/* Vertical Spinner */}
+          <div className="relative h-full flex items-center justify-center overflow-hidden">
+            <div
+              ref={spinnerRef}
+              className="absolute w-full"
+              style={{
+                top: "50%",
+                transform: `translateY(calc(-50% - ${animationOffset}px))`,
+                willChange: "transform",
+                transition: "none",
+              }}
+            >
+              {renderedItems.map((item) => {
+                const distanceFromCenter = Math.abs(item.offset);
+                const isCenter = item.offset === 0;
+                const isNearCenter = distanceFromCenter <= 2;
+
+                const scale = isCenter
+                  ? animationSettings.centerItemScale
+                  : isNearCenter
+                  ? animationSettings.nearCenterScale
+                  : 1;
+                const opacity = isCenter
+                  ? 1
+                  : Math.max(0.3, 1 - distanceFromCenter * 0.05);
+                const blur =
+                  distanceFromCenter > 8
+                    ? Math.min(
+                        animationSettings.maxBlur,
+                        (distanceFromCenter - 8) * 0.1
+                      )
+                    : 0;
+
+                return (
+                  <SpinnerItem
+                    key={item.key}
+                    text={item.text}
+                    offset={item.offset}
+                    itemHeight={itemHeight}
+                    isCenter={isCenter}
+                    isNearCenter={isNearCenter}
+                    scale={scale}
+                    opacity={opacity}
+                    blur={blur}
+                    isAnimating={isIdleAnimating || isSpinning}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Gradual Blur */}
+            <GradualBlur
+              position="top"
+              height="8rem"
+              strength={2.5}
+              divCount={10}
+              opacity={0.95}
+              exponential={true}
+              style={{
+                zIndex: 20,
+                pointerEvents: "none",
+              }}
+            />
+            <GradualBlur
+              position="bottom"
+              height="8rem"
+              strength={2.5}
+              divCount={10}
+              opacity={0.95}
+              exponential={true}
+              style={{
+                zIndex: 20,
+                pointerEvents: "none",
+              }}
+            />
+
+            {/* Center Indicator */}
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none z-30">
+              <div className="relative">
+                <div
+                  className="h-[2px] w-full"
+                  style={{
+                    background: `linear-gradient(90deg, transparent 0%, ${currentColors[1]}60 20%, ${currentColors[1]}80 50%, ${currentColors[1]}60 80%, transparent 100%)`,
+                    boxShadow: `0 0 20px ${currentColors[1]}30`,
+                  }}
+                />
+                <div
+                  className="absolute inset-0 h-[1px] w-full top-[1px]"
+                  style={{
+                    background: `linear-gradient(90deg, transparent 0%, ${currentColors[3]}40 20%, ${currentColors[3]}60 50%, ${currentColors[3]}40 80%, transparent 100%)`,
+                    filter: "blur(4px)",
+                  }}
+                />
+              </div>
+            </div>
           </div>
-        </>
-      ) : error ? (
-        <div className="text-red-500 font-medium text-center mt-5">{error}</div>
-      ) : (
-        <div className="flex flex-col gap-4 w-full">
-          <div className="flex w-full justify-between p-4">
-            <BackButton />
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy`)}
+        </div>
+
+        {/* Previous Winner */}
+        <div className="absolute left-2 sm:left-4 lg:left-8 top-1/2 -translate-y-1/2 z-40 hidden sm:block">
+          <AnimatePresence mode="wait">
+            {winners.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: -30, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -30, scale: 0.9 }}
+                transition={{
+                  type: "spring",
+                  damping: 25,
+                  stiffness: 300,
+                }}
+                className="relative p-4 sm:p-5 lg:p-6 rounded-2xl overflow-hidden"
               >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Vertical
-              </Button>
+                {/* Subtle gradient overlay */}
+                <motion.div className="absolute inset-0 opacity-30" />
+
+                <div className="relative z-10">
+                  <motion.div
+                    className="text-xs sm:text-sm uppercase tracking-[0.2em] mb-1 font-semibold"
+                    style={{
+                      background: `linear-gradient(90deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 100%)`,
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }}
+                  >
+                    Previous Winner
+                  </motion.div>
+                  <motion.div
+                    className="text-lg sm:text-xl font-bold text-gray-900 mb-1"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    {winners[winners.length - 1].workId}
+                  </motion.div>
+                  <motion.div
+                    className="text-xs tracking-wide text-gray-600 flex items-center gap-1"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    {new Date(
+                      winners[winners.length - 1].wonAt
+                    ).toLocaleTimeString("en-SG", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Settings Button */}
+        <div className="fixed right-2 sm:right-4 lg:right-8 bottom-2 sm:bottom-4 lg:bottom-8 z-40 flex gap-2 items-center">
+          <LuckyDrawSettings
+            settings={animationSettings}
+            onSettingsChange={setAnimationSettings}
+            isSpinning={isSpinning}
+            showSettings={showSettings}
+            onShowSettingsChange={setShowSettings}
+          />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
               <Button
-                variant="outline"
-                onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy2`)}
+                variant={"ghost"}
+                className="backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg text-xs sm:text-sm"
               >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Minimal
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete{" "}
               </Button>
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline">
-                    View Winners
-                    {winners.length > 0 && (
-                      <span className="px-2 py-1 bg-[#60cdff] rounded-full text-xs">
-                        {winners.length}
-                      </span>
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent>
-                  <SheetHeader>
-                    <SheetTitle>Lucky Draw Winners</SheetTitle>
-                    {/* <SheetDescription>
-                      List of all winners from this lucky draw session
-                    </SheetDescription> */}
-                  </SheetHeader>
-                  <div className="mt-6">
-                    {winners.length === 0 ? (
-                      <div className="w-full py-30 flex flex-col items-center">
-                        <Lottie
-                          animationData={ghostAnimationData}
-                          className="h-[170px]"
-                        />
-                        <span className="text-muted-foreground text-sm text-center">
-                          No winners yet! Start the lucky draw to see winners.
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete lucky draw?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete your lucky draw and all data
+                  related to it.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteLuckyDraw}
+                  className="w-full sm:w-[75px] "
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? <LoadingSpinner /> : "Delete"}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+
+        {/* Winners Button */}
+        <div className="fixed left-2 sm:left-4 lg:left-8 bottom-2 sm:bottom-4 lg:bottom-8 z-40">
+          <Sheet>
+            <SheetTrigger asChild>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              >
+                <Button
+                  variant="ghost"
+                  size={
+                    typeof window !== "undefined" && window.innerWidth < 640
+                      ? "sm"
+                      : "default"
+                  }
+                  className="relative overflow-hidden text-xs sm:text-sm font-medium"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.1)",
+                    backdropFilter: "blur(20px) saturate(180%)",
+                    WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                    border: "1px solid rgba(255, 255, 255, 0.18)",
+                    boxShadow:
+                      "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
+                    color: "#1a1a1a",
+                  }}
+                >
+                  <Trophy
+                    className="w-4 h-4 mr-2"
+                    style={{ color: currentColors[1] }}
+                  />
+                  Winners
+                  {winners.length > 0 && (
+                    <motion.span
+                      className="ml-2 px-2 py-0.5 text-white rounded-full text-xs font-bold"
+                      style={{
+                        backgroundColor: currentColors[2],
+                        boxShadow: `0 0 10px ${currentColors[2]}40`,
+                      }}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 25,
+                      }}
+                    >
+                      {winners.length}
+                    </motion.span>
+                  )}
+                </Button>
+              </motion.div>
+            </SheetTrigger>
+            <SheetContent className="overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Lucky Draw Winners</SheetTitle>
+              </SheetHeader>
+              <div className="mt-6 space-y-3 pb-6">
+                {winners.length === 0 ? (
+                  <p className="text-center text-muted-foreground">
+                    No winners yet
+                  </p>
+                ) : (
+                  winners.map((winner, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs tracking-wide leading-relaxed font-medium text-muted-foreground">
+                          {new Date(winner.wonAt).toLocaleTimeString("en-SG", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        <span className="font-semibold tracking-wide leading-tight">
+                          {winner.workId}
                         </span>
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Total winners:{" "}
-                          <span className="text-black font-semibold">
-                            {winners.length}
-                          </span>
-                        </p>
-                        {winners.map((winner, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-3 border rounded-lg bg-background"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-auto px-2 py-1 rounded bg-primary/10 flex items-center justify-center text-xs font-medium">
-                                {new Date(winner.wonAt).toLocaleTimeString(
-                                  "en-SG",
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  }
-                                )}
-                              </div>
-                              <span className="font-medium">
-                                {winner.workId}
-                              </span>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteWinner(winner.workId)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </SheetContent>
-              </Sheet>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant={"outline"}>Delete </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete lucky draw?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently delete your lucky draw and all data
-                      related to it.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <Button
-                      variant="destructive"
-                      onClick={handleDeleteLuckyDraw}
-                      className="w-full sm:w-[75px]"
-                      disabled={deleteLoading}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteWinner(winner.workId)}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* SPIN Button */}
+        <div className="absolute right-2 sm:right-6 lg:right-12 top-1/2 -translate-y-1/2 z-40">
+          <motion.div
+            initial={false}
+            animate={{
+              scale: isSpinning ? 0.95 : 1,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 400,
+              damping: 30,
+            }}
+          >
+            <button
+              onClick={handleSpin}
+              disabled={isSpinning || participants.length === 0}
+              className={cn(
+                "relative group overflow-hidden",
+                "px-4 sm:px-8 lg:px-12 py-2 sm:py-3 lg:py-4",
+                "rounded-full",
+                "transition-all duration-500 ease-out",
+                "disabled:cursor-not-allowed"
+              )}
+              style={{
+                background: isSpinning
+                  ? `linear-gradient(135deg, ${currentColors[0]}15 0%, ${currentColors[1]}20 100%)`
+                  : "rgba(255, 255, 255, 0.1)",
+                backdropFilter: "blur(20px) saturate(180%)",
+                WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                border: "1px solid rgba(255, 255, 255, 0.18)",
+                boxShadow: isSpinning
+                  ? `0 8px 32px 0 ${currentColors[1]}20, inset 0 0 0 1px rgba(255, 255, 255, 0.1)`
+                  : "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              {/* Button text */}
+              <motion.span
+                className={cn(
+                  "relative z-10 font-semibold text-sm sm:text-base tracking-widest uppercase",
+                  "transition-all duration-300",
+                  "drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+                )}
+                style={{
+                  color: isSpinning ? currentColors[0] : "#1a1a1a",
+                  textShadow: isSpinning
+                    ? `0 0 20px ${currentColors[1]}40`
+                    : "0 1px 2px rgba(0,0,0,0.05)",
+                }}
+                animate={{
+                  letterSpacing: isSpinning ? "0.2em" : "0.15em",
+                }}
+              >
+                {isSpinning ? (
+                  <motion.div
+                    className="flex items-center gap-2"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    Spinning
+                    <motion.div
+                      className="flex gap-0.5"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
                     >
-                      {deleteLoading ? <LoadingSpinner /> : "Delete"}
-                    </Button>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </div>
-          <Card className="px-15 pb-15  border-0 shadow-none w-screen max-w-[1500px] overflow-hidden self-center">
-            <div className="flex flex-col items-center text-center mt-10">
-              <div className="flex items-center">
-                <span className="text-[60px] font-bold">Lucky Draw 🎁</span>
-              </div>
-              <div className="w-auto px-2 py-1 rounded bg-primary/10 flex items-center justify-center text-xs font-medium">
-                {prizes.length} participant{prizes.length === 1 ? "" : "s"}
-              </div>
-              <Card className="p-10 mt-2 flex flex-col items-center shadow-none border-0">
-                <div className="flex flex-col gap-8 items-center">
-                  <RoulettePro
-                    prizes={prizeList}
-                    prizeIndex={prizeIndex}
-                    start={start}
-                    onPrizeDefined={handlePrizeDefined}
-                    defaultDesignOptions={{ prizesWithText: true }}
-                    spinningTime={13} //prev was 9
+                      {[0, 1, 2].map((i) => (
+                        <motion.div
+                          key={i}
+                          className="w-1 h-1 rounded-full"
+                          style={{ backgroundColor: currentColors[1] }}
+                          animate={{
+                            y: [0, -3, 0],
+                            opacity: [0.3, 1, 0.3],
+                          }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            delay: i * 0.15,
+                            ease: "easeInOut",
+                          }}
+                        />
+                      ))}
+                    </motion.div>
+                  </motion.div>
+                ) : (
+                  <motion.span
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    Spin
+                  </motion.span>
+                )}
+              </motion.span>
+
+              {/* Pulse ring animation when not spinning */}
+              {!isSpinning && (
+                <motion.div
+                  className="absolute inset-0 rounded-full pointer-events-none"
+                  style={{
+                    border: `1px solid ${currentColors[1]}20`,
+                  }}
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    opacity: [0.5, 0, 0.5],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeOut",
+                  }}
+                />
+              )}
+            </button>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Winner Display */}
+      <AnimatePresence>
+        {showWinner && currentWinner && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+          >
+            {/* Elegant backdrop with subtle blur */}
+            <motion.div
+              className="absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                background:
+                  "radial-gradient(circle at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 100%)",
+                backdropFilter: "blur(12px) saturate(150%)",
+                WebkitBackdropFilter: "blur(12px) saturate(150%)",
+              }}
+            />
+
+            {/* Winner card container */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: -20 }}
+              transition={{
+                type: "spring",
+                damping: 20,
+                stiffness: 300,
+                duration: 0.6,
+              }}
+              className="text-center relative px-10 py-12 max-w-lg mx-4"
+            >
+              {/* Elegant glassmorphic card */}
+              <motion.div
+                className="absolute inset-0 rounded-3xl"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1, duration: 0.5 }}
+                style={{
+                  background: `linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.10) 100%)`,
+                  backdropFilter: "blur(20px) saturate(180%)",
+                  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                  boxShadow: `
+                    0 25px 45px -10px rgba(0,0,0,0.25),
+                    0 10px 25px -5px ${currentColors[1]}15,
+                    inset 0 0 0 1px rgba(255,255,255,0.2)
+                  `,
+                }}
+              />
+
+              {/* Content */}
+              <div className="relative z-10">
+                {/* Winner label */}
+                <motion.div
+                  initial={{ y: -15, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
+                  className="mb-6"
+                >
+                  <div
+                    className="text-sm font-medium uppercase tracking-[0.3em]"
+                    style={{
+                      background: `linear-gradient(135deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 100%)`,
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }}
+                  >
+                    Winner
+                  </div>
+                </motion.div>
+
+                {/* Winner name with subtle glow */}
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{
+                    delay: 0.3,
+                    type: "spring",
+                    damping: 15,
+                    stiffness: 200,
+                  }}
+                  className="relative mb-8"
+                >
+                  {/* Subtle glow effect */}
+                  <motion.div
+                    className="absolute -inset-4 rounded-xl opacity-20"
+                    style={{
+                      background: `radial-gradient(ellipse, ${currentColors[1]}30 0%, transparent 70%)`,
+                      filter: "blur(15px)",
+                    }}
+                    animate={{
+                      opacity: [0.15, 0.25, 0.15],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
                   />
 
-                  <Button
-                    onClick={handleStart}
-                    size={"lg"}
-                    disabled={isSpinning}
-                    variant={"outline"}
+                  {/* Winner text */}
+                  <motion.div
+                    className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight"
+                    style={{
+                      color: "#1a1a1a",
+                      textShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                      letterSpacing: "-0.025em",
+                    }}
                   >
-                    Start
-                  </Button>
-                  {winners.length > 0 && !isSpinning && hasStarted && (
-                    <span className="font-bold text-6xl mt-1 p-4 rounded-md text-[#008cff]">
-                      🎉 {winners[winners.length - 1]?.workId}
-                    </span>
-                  )}
-                </div>
-              </Card>
-            </div>
-          </Card>
-        </div>
-      )}
+                    {currentWinner}
+                  </motion.div>
+                </motion.div>
+
+                {/* Congratulations message */}
+                <motion.div
+                  initial={{ y: 15, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                  className="text-sm text-gray-700 font-medium tracking-wide"
+                >
+                  Congratulations!
+                </motion.div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
