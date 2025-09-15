@@ -31,6 +31,13 @@ export type AnimationSettings = {
   maxBlur: number;
   useCustomColors: boolean;
   customColors: string[];
+  // Background customization
+  backgroundMode: 'solid' | 'gradient';
+  backgroundSolidColor: string;
+  backgroundGradientFrom: string;
+  backgroundGradientTo: string;
+  backgroundGradientAngle: number; // degrees
+  backgroundOverlayOpacity: number; // 0 - 1 (white overlay)
 };
 
 export const DEFAULT_SETTINGS: AnimationSettings = {
@@ -53,6 +60,12 @@ export const DEFAULT_SETTINGS: AnimationSettings = {
   maxBlur: 1,
   useCustomColors: false,
   customColors: ["#173066", "#509bff", "#0463ce", "#63cbfb"],
+  backgroundMode: 'gradient',
+  backgroundSolidColor: '#f8fafc',
+  backgroundGradientFrom: '#ffffff',
+  backgroundGradientTo: '#e2e8f0',
+  backgroundGradientAngle: 135,
+  backgroundOverlayOpacity: 0.4,
 };
 
 interface LuckyDrawSettingsProps {
@@ -321,6 +334,116 @@ const LuckyDrawSettings: React.FC<LuckyDrawSettingsProps> = React.memo(({
                 {/* Visual Effects */}
                 <div className="space-y-4">
                   <h4 className="text-md font-semibold text-gray-700">Visual Effects</h4>
+                  {/* Background */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium">Background</label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => updateSetting('backgroundMode', 'solid')}
+                          className={cn(
+                            'px-2 py-1 rounded text-xs font-medium border',
+                            settings.backgroundMode === 'solid'
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white text-gray-600 border-gray-200'
+                          )}
+                          disabled={isSpinning}
+                        >
+                          Solid
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateSetting('backgroundMode', 'gradient')}
+                          className={cn(
+                            'px-2 py-1 rounded text-xs font-medium border',
+                            settings.backgroundMode === 'gradient'
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white text-gray-600 border-gray-200'
+                          )}
+                          disabled={isSpinning}
+                        >
+                          Gradient
+                        </button>
+                      </div>
+                    </div>
+
+                    {settings.backgroundMode === 'solid' && (
+                      <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={settings.backgroundSolidColor}
+                            onChange={(e) => updateSetting('backgroundSolidColor', e.target.value)}
+                            className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
+                            disabled={isSpinning}
+                          />
+                          <span className="text-xs text-muted-foreground">Color</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {settings.backgroundMode === 'gradient' && (
+                      <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={settings.backgroundGradientFrom}
+                              onChange={(e) => updateSetting('backgroundGradientFrom', e.target.value)}
+                              className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
+                              disabled={isSpinning}
+                            />
+                            <span className="text-xs text-muted-foreground">From</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={settings.backgroundGradientTo}
+                              onChange={(e) => updateSetting('backgroundGradientTo', e.target.value)}
+                              className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
+                              disabled={isSpinning}
+                            />
+                            <span className="text-xs text-muted-foreground">To</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-medium">Angle</label>
+                            <span className="text-xs text-muted-foreground">{settings.backgroundGradientAngle}°</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="360"
+                            step="5"
+                            value={settings.backgroundGradientAngle}
+                            onChange={(e) => updateSetting('backgroundGradientAngle', parseInt(e.target.value))}
+                            className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            disabled={isSpinning}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium">Overlay Opacity</label>
+                        <span className="text-sm text-muted-foreground">{(settings.backgroundOverlayOpacity * 100).toFixed(0)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="0.8"
+                        step="0.05"
+                        value={settings.backgroundOverlayOpacity}
+                        onChange={(e) => updateSetting('backgroundOverlayOpacity', parseFloat(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        disabled={isSpinning}
+                      />
+                      <div className="text-xs text-muted-foreground">White veil for contrast (0% - 80%)</div>
+                    </div>
+                  </div>
 
                   {/* Visible Range */}
                   <div className="space-y-2">
