@@ -107,96 +107,6 @@ export default function LuckyDrawCY() {
   const celebrateSound = useRef<HTMLAudioElement | null>(null);
   const applauseSound = useRef<HTMLAudioElement | null>(null);
 
-  // Initialize audio
-  useEffect(() => {
-    window.scrollTo(0, 100);
-
-    if (typeof Audio !== "undefined") {
-      spinSound.current = new Audio("/sounds/spin4.mp3");
-      celebrateSound.current = new Audio("/sounds/celebrate.wav");
-      applauseSound.current = new Audio("/sounds/applause1.mp3");
-
-      // Preload audio
-      if (spinSound.current) spinSound.current.load();
-      if (celebrateSound.current) celebrateSound.current.load();
-      if (applauseSound.current) applauseSound.current.load();
-    }
-
-    return () => {
-      document.body.style.overflow = "auto";
-
-      // Cleanup audio
-      if (spinSound.current) spinSound.current = null;
-      if (celebrateSound.current) celebrateSound.current = null;
-      if (applauseSound.current) applauseSound.current = null;
-    };
-  }, []);
-
-  // Fetch lucky draw data
-  useEffect(() => {
-    if (!luckydrawId) return;
-    fetchLuckyDrawData();
-  }, [luckydrawId]);
-
-  const fetchLuckyDrawData = async () => {
-    try {
-      const res = await fetch(`/api/admin/luckydraw/${luckydrawId}`);
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to fetch data");
-      }
-
-      setLuckyDraw(data.luckyDraw);
-
-      const uniqueParticipants = Array.from(
-        new Set(data.participants)
-      ) as string[];
-
-      // Keep all participants in the UI - don't filter out winners
-      setParticipants(uniqueParticipants);
-
-      const extendedList = createExtendedList(
-        uniqueParticipants,
-        animationSettings.spinnerItemCount
-      );
-      setSpinnerItems(extendedList);
-
-      setCenterIndex(0);
-      setAnimationOffset(0);
-
-      if (data.winners && Array.isArray(data.winners)) {
-        setWinners(data.winners);
-      }
-    } catch (err: any) {
-      setError("Failed to load data.");
-      console.error(err);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const handleDeleteLuckyDraw = async () => {
-    if (!luckydrawId) return;
-
-    try {
-      setDeleteLoading(true);
-      const res = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Failed to delete lucky draw");
-
-      router.push("/admin/luckydraw");
-      toast.success("Lucky draw deleted");
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || "Error deleting lucky draw");
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
   const createExtendedList = useCallback(
     (items: string[], targetLength: number): string[] => {
       if (items.length === 0) return [];
@@ -288,6 +198,107 @@ export default function LuckyDrawCY() {
     animationSettings,
     createExtendedList,
   ]);
+
+  // Initialize audio
+  useEffect(() => {
+    window.scrollTo(0, 100);
+
+    if (typeof Audio !== "undefined") {
+      spinSound.current = new Audio("/sounds/spin4.mp3");
+      celebrateSound.current = new Audio("/sounds/celebrate.wav");
+      applauseSound.current = new Audio("/sounds/applause1.mp3");
+
+      // Preload audio
+      if (spinSound.current) spinSound.current.load();
+      if (celebrateSound.current) celebrateSound.current.load();
+      if (applauseSound.current) applauseSound.current.load();
+    }
+
+    // Add right-click event listener to trigger spin
+    const handleRightClick = (e: MouseEvent) => {
+      e.preventDefault(); // Prevent context menu
+      handleSpin();
+    };
+
+    document.addEventListener("contextmenu", handleRightClick);
+
+    return () => {
+      document.body.style.overflow = "auto";
+
+      // Cleanup audio
+      if (spinSound.current) spinSound.current = null;
+      if (celebrateSound.current) celebrateSound.current = null;
+      if (applauseSound.current) applauseSound.current = null;
+
+      // Remove right-click event listener
+      document.removeEventListener("contextmenu", handleRightClick);
+    };
+  }, [handleSpin]);
+
+  // Fetch lucky draw data
+  useEffect(() => {
+    if (!luckydrawId) return;
+    fetchLuckyDrawData();
+  }, [luckydrawId]);
+
+  const fetchLuckyDrawData = async () => {
+    try {
+      const res = await fetch(`/api/admin/luckydraw/${luckydrawId}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch data");
+      }
+
+      setLuckyDraw(data.luckyDraw);
+
+      const uniqueParticipants = Array.from(
+        new Set(data.participants)
+      ) as string[];
+
+      // Keep all participants in the UI - don't filter out winners
+      setParticipants(uniqueParticipants);
+
+      const extendedList = createExtendedList(
+        uniqueParticipants,
+        animationSettings.spinnerItemCount
+      );
+      setSpinnerItems(extendedList);
+
+      setCenterIndex(0);
+      setAnimationOffset(0);
+
+      if (data.winners && Array.isArray(data.winners)) {
+        setWinners(data.winners);
+      }
+    } catch (err: any) {
+      setError("Failed to load data.");
+      console.error(err);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const handleDeleteLuckyDraw = async () => {
+    if (!luckydrawId) return;
+
+    try {
+      setDeleteLoading(true);
+      const res = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete lucky draw");
+
+      router.push("/admin/luckydraw");
+      toast.success("Lucky draw deleted");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error deleting lucky draw");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const animateSpinnerByIndex = useCallback(
     (
