@@ -63,7 +63,7 @@ export const DEFAULT_SETTINGS: AnimationSettings = {
   backgroundMode: "gradient",
   backgroundSolidColor: "#f8fafc",
   backgroundGradientFrom: "#ffffff",
-  backgroundGradientTo: "#e2e8f0",
+  backgroundGradientTo: "rgb(143, 191, 255)",
   backgroundGradientAngle: 135,
   backgroundOverlayOpacity: 0.4,
 };
