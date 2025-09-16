@@ -1173,7 +1173,6 @@ export default function LuckyDraw() {
                     {currentWinner}
                   </motion.div>
 
-                  {/* Winner real name from corp mapping */}
                   {currentWinner && corpIdMapping[currentWinner] && (
                     <motion.div
                       initial={{ y: 10, opacity: 0 }}
