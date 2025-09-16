@@ -1111,7 +1111,7 @@ export default function LuckyDraw() {
               />
 
               {/* Content */}
-              <div className="relative z-10 text-center">
+              <div className="relative z-10 text-center flex flex-col items-center">
                 {/* Winner label */}
                 <motion.div
                   initial={{ y: -15, opacity: 0 }}
