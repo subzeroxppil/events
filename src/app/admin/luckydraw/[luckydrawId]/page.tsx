@@ -848,16 +848,7 @@ export default function LuckyDrawCY() {
                       ? "sm"
                       : "default"
                   }
-                  className="relative overflow-hidden text-xs sm:text-sm font-medium"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.1)",
-                    backdropFilter: "blur(20px) saturate(180%)",
-                    WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                    border: "1px solid rgba(255, 255, 255, 0.18)",
-                    boxShadow:
-                      "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
-                    color: "#1a1a1a",
-                  }}
+                  className="backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg text-xs sm:text-sm font-medium"
                 >
                   <Trophy
                     className="w-4 h-4 mr-2"
@@ -943,23 +934,12 @@ export default function LuckyDrawCY() {
               onClick={handleSpin}
               disabled={isSpinning || participants.length === 0}
               className={cn(
-                "relative group overflow-hidden",
+                "backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg",
                 "px-4 sm:px-8 lg:px-12 py-2 sm:py-3 lg:py-4",
-                "rounded-full",
-                "transition-all duration-500 ease-out",
-                "disabled:cursor-not-allowed"
+                "rounded-full text-sm sm:text-base font-semibold tracking-widest uppercase",
+                "transition-all duration-300 ease-out",
+                "disabled:cursor-not-allowed disabled:opacity-50"
               )}
-              style={{
-                background: isSpinning
-                  ? `linear-gradient(135deg, ${currentColors[0]}15 0%, ${currentColors[1]}20 100%)`
-                  : "rgba(255, 255, 255, 0.1)",
-                backdropFilter: "blur(20px) saturate(180%)",
-                WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                border: "1px solid rgba(255, 255, 255, 0.18)",
-                boxShadow: isSpinning
-                  ? `0 8px 32px 0 ${currentColors[1]}20, inset 0 0 0 1px rgba(255, 255, 255, 0.1)`
-                  : "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
-              }}
             >
               {/* Button text */}
               <motion.span
