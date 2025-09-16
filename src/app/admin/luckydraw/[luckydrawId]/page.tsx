@@ -542,6 +542,24 @@ export default function LuckyDrawCY() {
     };
   }, []);
 
+  // Dynamic background style based on settings
+  const backgroundStyle = useMemo(() => {
+    if (animationSettings.backgroundMode === "solid") {
+      return {
+        background: animationSettings.backgroundSolidColor,
+      } as React.CSSProperties;
+    }
+    return {
+      background: `linear-gradient(${animationSettings.backgroundGradientAngle}deg, ${animationSettings.backgroundGradientFrom}, ${animationSettings.backgroundGradientTo})`,
+    } as React.CSSProperties;
+  }, [
+    animationSettings.backgroundMode,
+    animationSettings.backgroundSolidColor,
+    animationSettings.backgroundGradientAngle,
+    animationSettings.backgroundGradientFrom,
+    animationSettings.backgroundGradientTo,
+  ]);
+
   // Calculate visible items
   const renderedItems = useMemo(() => {
     if (spinnerItems.length === 0) return [];
@@ -579,11 +597,17 @@ export default function LuckyDrawCY() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gray-50">
-      {/* Background */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-white/40" />
-      </div>
+    <div
+      className="min-h-screen relative overflow-hidden"
+      style={backgroundStyle}
+    >
+      {/* Overlay veil for contrast */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background: `rgba(255,255,255,${animationSettings.backgroundOverlayOpacity})`,
+        }}
+      />
 
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 p-3 sm:p-6 flex justify-between items-center z-40">
@@ -675,23 +699,35 @@ export default function LuckyDrawCY() {
               }}
             />
 
-            {/* Center Indicator */}
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none z-30">
-              <div className="relative">
+            {/* Center Arrow Indicator */}
+            <div className="absolute left-1 sm:left-2 md:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-30">
+              <div className="relative flex items-center">
+                {/* Arrow character */}
                 <div
-                  className="h-[2px] w-full"
+                  className="text-2xl sm:text-3xl lg:text-4xl font-bold select-none"
                   style={{
-                    background: `linear-gradient(90deg, transparent 0%, ${currentColors[1]}60 20%, ${currentColors[1]}80 50%, ${currentColors[1]}60 80%, transparent 100%)`,
-                    boxShadow: `0 0 20px ${currentColors[1]}30`,
+                    color: currentColors[1],
+                    filter: `drop-shadow(0 0 ${
+                      typeof window !== "undefined" && window.innerWidth < 640
+                        ? "8px"
+                        : "12px"
+                    } ${currentColors[1]}60)`,
+                    textShadow: `0 0 20px ${currentColors[1]}40`,
                   }}
-                />
+                >
+                  ▶
+                </div>
+                {/* Glow effect behind arrow */}
                 <div
-                  className="absolute inset-0 h-[1px] w-full top-[1px]"
+                  className="absolute inset-0 text-2xl sm:text-3xl lg:text-4xl font-bold select-none"
                   style={{
-                    background: `linear-gradient(90deg, transparent 0%, ${currentColors[3]}40 20%, ${currentColors[3]}60 50%, ${currentColors[3]}40 80%, transparent 100%)`,
+                    color: currentColors[3],
                     filter: "blur(4px)",
+                    opacity: 0.6,
                   }}
-                />
+                >
+                  ▶
+                </div>
               </div>
             </div>
           </div>
@@ -1019,7 +1055,6 @@ export default function LuckyDrawCY() {
             transition={{ duration: 0.4 }}
             className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
           >
-            {/* Elegant backdrop with subtle blur */}
             <motion.div
               className="absolute inset-0"
               initial={{ opacity: 0 }}
@@ -1046,22 +1081,12 @@ export default function LuckyDrawCY() {
               }}
               className="text-center relative px-10 py-12 max-w-lg mx-4"
             >
-              {/* Elegant glassmorphic card */}
+              {/* Winner Card */}
               <motion.div
                 className="absolute inset-0 rounded-3xl"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1, duration: 0.5 }}
-                style={{
-                  background: `linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.10) 100%)`,
-                  backdropFilter: "blur(20px) saturate(180%)",
-                  WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                  boxShadow: `
-                    0 25px 45px -10px rgba(0,0,0,0.25),
-                    0 10px 25px -5px ${currentColors[1]}15,
-                    inset 0 0 0 1px rgba(255,255,255,0.2)
-                  `,
-                }}
               />
 
               {/* Content */}

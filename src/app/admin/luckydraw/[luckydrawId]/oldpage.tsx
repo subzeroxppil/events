@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import GradualBlur from "@/components/GradualBlur";
@@ -19,8 +19,21 @@ import {
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import LuckyDrawSettings, { AnimationSettings, DEFAULT_SETTINGS } from "../LuckyDrawSettings";
-import SpinnerItem from "../SpinnerItem";
+import LuckyDrawSettings, {
+  AnimationSettings,
+  DEFAULT_SETTINGS,
+} from "./LuckyDrawSettings";
+import SpinnerItem from "./SpinnerItem";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Winner = {
   workId: string;
@@ -49,6 +62,7 @@ export default function LuckyDrawCY() {
     ? params.luckydrawId[0]
     : params?.luckydrawId;
 
+  const router = useRouter();
   // Core states
   const [initialLoading, setInitialLoading] = useState(true);
   const [participants, setParticipants] = useState<string[]>([]);
@@ -60,19 +74,23 @@ export default function LuckyDrawCY() {
   const [showWinner, setShowWinner] = useState(false);
 
   // Animation settings
-  const [animationSettings, setAnimationSettings] = useState<AnimationSettings>(DEFAULT_SETTINGS);
+  const [animationSettings, setAnimationSettings] =
+    useState<AnimationSettings>(DEFAULT_SETTINGS);
   const [showSettings, setShowSettings] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Memoized values for performance
   const itemHeight = useMemo(() => {
-    if (typeof window === 'undefined') return 96;
+    if (typeof window === "undefined") return 96;
     if (window.innerWidth < 640) return 64;
     if (window.innerWidth < 1024) return 80;
     return 96;
   }, []);
 
   const currentColors = useMemo(() => {
-    return animationSettings.useCustomColors ? animationSettings.customColors : BASE_COLORS;
+    return animationSettings.useCustomColors
+      ? animationSettings.customColors
+      : BASE_COLORS;
   }, [animationSettings.useCustomColors, animationSettings.customColors]);
 
   // Vertical spinner states
@@ -105,7 +123,7 @@ export default function LuckyDrawCY() {
     }
 
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
 
       // Cleanup audio
       if (spinSound.current) spinSound.current = null;
@@ -137,7 +155,10 @@ export default function LuckyDrawCY() {
 
       setParticipants(uniqueParticipants);
 
-      const extendedList = createExtendedList(uniqueParticipants, animationSettings.spinnerItemCount);
+      const extendedList = createExtendedList(
+        uniqueParticipants,
+        animationSettings.spinnerItemCount
+      );
       setSpinnerItems(extendedList);
 
       setCenterIndex(0);
@@ -154,15 +175,39 @@ export default function LuckyDrawCY() {
     }
   };
 
-  const createExtendedList = useCallback((items: string[], targetLength: number): string[] => {
-    if (items.length === 0) return [];
-    const result = [];
-    while (result.length < targetLength) {
-      const shuffled = [...items].sort(() => Math.random() - 0.5);
-      result.push(...shuffled);
+  const handleDeleteLuckyDraw = async () => {
+    if (!luckydrawId) return;
+
+    try {
+      setDeleteLoading(true);
+      const res = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete lucky draw");
+
+      router.push("/admin/luckydraw");
+      toast.success("Lucky draw deleted");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error deleting lucky draw");
+    } finally {
+      setDeleteLoading(false);
     }
-    return result.slice(0, targetLength);
-  }, []);
+  };
+
+  const createExtendedList = useCallback(
+    (items: string[], targetLength: number): string[] => {
+      if (items.length === 0) return [];
+      const result = [];
+      while (result.length < targetLength) {
+        const shuffled = [...items].sort(() => Math.random() - 0.5);
+        result.push(...shuffled);
+      }
+      return result.slice(0, targetLength);
+    },
+    []
+  );
 
   const handleSpin = useCallback(async () => {
     if (isSpinning || participants.length === 0) return;
@@ -183,7 +228,10 @@ export default function LuckyDrawCY() {
     setError("");
 
     // Reset and shuffle spinner items
-    const newSpinnerItems = createExtendedList(participants, animationSettings.spinnerItemCount);
+    const newSpinnerItems = createExtendedList(
+      participants,
+      animationSettings.spinnerItemCount
+    );
     setSpinnerItems(newSpinnerItems);
 
     // Find a valid winner
@@ -191,13 +239,14 @@ export default function LuckyDrawCY() {
     const availableIndices = [];
 
     for (let i = 0; i < newSpinnerItems.length; i++) {
-      if (!winners.some(w => w.workId === newSpinnerItems[i])) {
+      if (!winners.some((w) => w.workId === newSpinnerItems[i])) {
         availableIndices.push(i);
       }
     }
 
     if (availableIndices.length > 0) {
-      winnerIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+      winnerIndex =
+        availableIndices[Math.floor(Math.random() * availableIndices.length)];
     } else {
       winnerIndex = Math.floor(newSpinnerItems.length / 2);
     }
@@ -216,157 +265,191 @@ export default function LuckyDrawCY() {
 
     // Calculate total indices to spin through
     const totalItems = newSpinnerItems.length;
-    const spins = animationSettings.minSpins + Math.random() * (animationSettings.maxSpins - animationSettings.minSpins);
+    const spins =
+      animationSettings.minSpins +
+      Math.random() * (animationSettings.maxSpins - animationSettings.minSpins);
     const baseTarget = Math.floor(spins) * totalItems + winnerIndex;
 
     const randomOffset = Math.random() * 0.9;
     const finalTarget = baseTarget + randomOffset;
 
-    animateSpinnerByIndex(0, finalTarget, animationSettings.duration, intendedWinner, newSpinnerItems);
-  }, [isSpinning, participants, winners, animationSettings, createExtendedList]);
+    animateSpinnerByIndex(
+      0,
+      finalTarget,
+      animationSettings.duration,
+      intendedWinner,
+      newSpinnerItems
+    );
+  }, [
+    isSpinning,
+    participants,
+    winners,
+    animationSettings,
+    createExtendedList,
+  ]);
 
-  const animateSpinnerByIndex = useCallback((
-    fromIndex: number,
-    toIndex: number,
-    duration: number,
-    winner: string,
-    itemsArray: string[]
-  ) => {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-      animationRef.current = null;
-    }
-
-    const startTime = Date.now();
-    let soundFading = false;
-    const totalIndices = toIndex - fromIndex;
-
-    const animate = () => {
-      const now = Date.now();
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      const easeOut = rouletteEasing(progress, animationSettings.easeExponent);
-      const currentProgress = fromIndex + (totalIndices * easeOut);
-
-      const wholeIndex = Math.floor(currentProgress);
-      const fractionalPart = currentProgress - wholeIndex;
-
-      setCenterIndex(wholeIndex % itemsArray.length);
-      setAnimationOffset(fractionalPart * itemHeight);
-
-      // Fade out sound
-      const autoSoundFadeStart = animationSettings.soundFadeStartPercent;
-      const autoSoundFadeDuration = animationSettings.soundFadeDuration;
-
-      if (spinSound.current && animationSettings.enableSounds && progress > autoSoundFadeStart && !soundFading) {
-        soundFading = true;
-        const fadeOutDurationMs = duration * autoSoundFadeDuration;
-        const steps = 20;
-        const stepMs = Math.max(16, Math.floor(fadeOutDurationMs / steps));
-        const decrement = 1 / steps;
-        const fadeInterval = setInterval(() => {
-          if (spinSound.current) {
-            spinSound.current.volume = Math.max(0, spinSound.current.volume - decrement);
-            if (spinSound.current.volume <= 0) {
-              spinSound.current.pause();
-              spinSound.current.currentTime = 0;
-              spinSound.current.volume = 1;
-              clearInterval(fadeInterval);
-            }
-          } else {
-            clearInterval(fadeInterval);
-          }
-        }, stepMs);
+  const animateSpinnerByIndex = useCallback(
+    (
+      fromIndex: number,
+      toIndex: number,
+      duration: number,
+      winner: string,
+      itemsArray: string[]
+    ) => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
       }
 
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      } else {
-        const wholeIndex = Math.floor(toIndex);
-        const fractionalPart = toIndex - wholeIndex;
+      const startTime = Date.now();
+      let soundFading = false;
+      const totalIndices = toIndex - fromIndex;
+
+      const animate = () => {
+        const now = Date.now();
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        const easeOut = rouletteEasing(
+          progress,
+          animationSettings.easeExponent
+        );
+        const currentProgress = fromIndex + totalIndices * easeOut;
+
+        const wholeIndex = Math.floor(currentProgress);
+        const fractionalPart = currentProgress - wholeIndex;
 
         setCenterIndex(wholeIndex % itemsArray.length);
         setAnimationOffset(fractionalPart * itemHeight);
 
-        handleSpinComplete(winner);
+        // Fade out sound
+        const autoSoundFadeStart = animationSettings.soundFadeStartPercent;
+        const autoSoundFadeDuration = animationSettings.soundFadeDuration;
+
+        if (
+          spinSound.current &&
+          animationSettings.enableSounds &&
+          progress > autoSoundFadeStart &&
+          !soundFading
+        ) {
+          soundFading = true;
+          const fadeOutDurationMs = duration * autoSoundFadeDuration;
+          const steps = 20;
+          const stepMs = Math.max(16, Math.floor(fadeOutDurationMs / steps));
+          const decrement = 1 / steps;
+          const fadeInterval = setInterval(() => {
+            if (spinSound.current) {
+              spinSound.current.volume = Math.max(
+                0,
+                spinSound.current.volume - decrement
+              );
+              if (spinSound.current.volume <= 0) {
+                spinSound.current.pause();
+                spinSound.current.currentTime = 0;
+                spinSound.current.volume = 1;
+                clearInterval(fadeInterval);
+              }
+            } else {
+              clearInterval(fadeInterval);
+            }
+          }, stepMs);
+        }
+
+        if (progress < 1) {
+          animationRef.current = requestAnimationFrame(animate);
+        } else {
+          const wholeIndex = Math.floor(toIndex);
+          const fractionalPart = toIndex - wholeIndex;
+
+          setCenterIndex(wholeIndex % itemsArray.length);
+          setAnimationOffset(fractionalPart * itemHeight);
+
+          handleSpinComplete(winner);
+        }
+      };
+
+      animationRef.current = requestAnimationFrame(animate);
+    },
+    [animationSettings, itemHeight]
+  );
+
+  const handleSpinComplete = useCallback(
+    async (winner: string) => {
+      setCurrentWinner(winner);
+
+      // Stop spin sound
+      if (spinSound.current) {
+        spinSound.current.pause();
+        spinSound.current.currentTime = 0;
+        spinSound.current.volume = 1;
       }
-    };
 
-    animationRef.current = requestAnimationFrame(animate);
-  }, [animationSettings, itemHeight]);
-
-  const handleSpinComplete = useCallback(async (winner: string) => {
-    setCurrentWinner(winner);
-
-    // Stop spin sound
-    if (spinSound.current) {
-      spinSound.current.pause();
-      spinSound.current.currentTime = 0;
-      spinSound.current.volume = 1;
-    }
-
-    // Play celebration sounds
-    if (celebrateSound.current && animationSettings.enableSounds) {
-      celebrateSound.current.currentTime = 0;
-      celebrateSound.current.play();
-    }
-
-    if (applauseSound.current && animationSettings.enableSounds) {
-      applauseSound.current.currentTime = 0;
-      applauseSound.current.play();
-    }
-
-    // Record winner
-    try {
-      const response = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workId: winner }),
-      });
-
-      if (response.ok) {
-        setWinners(prev => [
-          ...prev,
-          { workId: winner, wonAt: new Date().toISOString() }
-        ]);
+      // Play celebration sounds
+      if (celebrateSound.current && animationSettings.enableSounds) {
+        celebrateSound.current.currentTime = 0;
+        celebrateSound.current.play();
       }
-    } catch (error) {
-      console.error("Error recording winner:", error);
-    }
 
-    // Trigger effects
-    if (animationSettings.enableFireworks) {
-      triggerFireworks();
-    }
-    setShowWinner(true);
-    setIsSpinning(false);
+      if (applauseSound.current && animationSettings.enableSounds) {
+        applauseSound.current.currentTime = 0;
+        applauseSound.current.play();
+      }
 
-    // Auto-hide winner
-    setTimeout(() => {
-      setShowWinner(false);
-    }, animationSettings.winnerDisplayDuration);
-  }, [animationSettings, luckydrawId]);
+      // Record winner
+      try {
+        const response = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workId: winner }),
+        });
 
-  const handleDeleteWinner = useCallback(async (winnerWorkId: string) => {
-    try {
-      const response = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workId: winnerWorkId }),
-      });
+        if (response.ok) {
+          setWinners((prev) => [
+            ...prev,
+            { workId: winner, wonAt: new Date().toISOString() },
+          ]);
+        }
+      } catch (error) {
+        console.error("Error recording winner:", error);
+      }
 
-      if (response.ok) {
-        setWinners(prev => prev.filter(w => w.workId !== winnerWorkId));
-        toast.success("Winner removed successfully");
-      } else {
+      // Trigger effects
+      if (animationSettings.enableFireworks) {
+        triggerFireworks();
+      }
+      setShowWinner(true);
+      setIsSpinning(false);
+
+      // Auto-hide winner
+      setTimeout(() => {
+        setShowWinner(false);
+      }, animationSettings.winnerDisplayDuration);
+    },
+    [animationSettings, luckydrawId]
+  );
+
+  const handleDeleteWinner = useCallback(
+    async (winnerWorkId: string) => {
+      try {
+        const response = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workId: winnerWorkId }),
+        });
+
+        if (response.ok) {
+          setWinners((prev) => prev.filter((w) => w.workId !== winnerWorkId));
+          toast.success("Winner removed successfully");
+        } else {
+          toast.error("Failed to remove winner");
+        }
+      } catch (error) {
+        console.error("Error removing winner:", error);
         toast.error("Failed to remove winner");
       }
-    } catch (error) {
-      console.error("Error removing winner:", error);
-      toast.error("Failed to remove winner");
-    }
-  }, [luckydrawId]);
+    },
+    [luckydrawId]
+  );
 
   const triggerFireworks = useCallback(() => {
     const duration = animationSettings.fireworksDuration;
@@ -383,7 +466,8 @@ export default function LuckyDrawCY() {
         return clearInterval(interval);
       }
 
-      const particleCount = animationSettings.fireworksParticleCount * (timeLeft / duration);
+      const particleCount =
+        animationSettings.fireworksParticleCount * (timeLeft / duration);
       confetti({
         ...defaults,
         particleCount,
@@ -414,10 +498,10 @@ export default function LuckyDrawCY() {
         const delta = (now - lastTime) / 1000;
         lastTime = now;
 
-        accumulatedOffset += (animationSettings.idleSpeed * delta);
+        accumulatedOffset += animationSettings.idleSpeed * delta;
 
         if (accumulatedOffset >= itemHeight) {
-          setCenterIndex(prev => (prev + 1) % spinnerItems.length);
+          setCenterIndex((prev) => (prev + 1) % spinnerItems.length);
           accumulatedOffset = accumulatedOffset % itemHeight;
         }
 
@@ -438,7 +522,13 @@ export default function LuckyDrawCY() {
       }
       setIsIdleAnimating(false);
     };
-  }, [isSpinning, spinnerItems.length, showWinner, animationSettings.idleSpeed, itemHeight]);
+  }, [
+    isSpinning,
+    spinnerItems.length,
+    showWinner,
+    animationSettings.idleSpeed,
+    itemHeight,
+  ]);
 
   // Cleanup
   useEffect(() => {
@@ -452,16 +542,6 @@ export default function LuckyDrawCY() {
     };
   }, []);
 
-  // Dynamic background style based on settings
-  const backgroundStyle = useMemo(() => {
-    if (animationSettings.backgroundMode === 'solid') {
-      return { background: animationSettings.backgroundSolidColor } as React.CSSProperties;
-    }
-    return {
-      background: `linear-gradient(${animationSettings.backgroundGradientAngle}deg, ${animationSettings.backgroundGradientFrom}, ${animationSettings.backgroundGradientTo})`
-    } as React.CSSProperties;
-  }, [animationSettings.backgroundMode, animationSettings.backgroundSolidColor, animationSettings.backgroundGradientAngle, animationSettings.backgroundGradientFrom, animationSettings.backgroundGradientTo]);
-
   // Calculate visible items
   const renderedItems = useMemo(() => {
     if (spinnerItems.length === 0) return [];
@@ -471,11 +551,12 @@ export default function LuckyDrawCY() {
 
     for (let i = -visibleRange; i <= visibleRange; i++) {
       const absoluteIndex = centerIndex + i;
-      const wrappedIndex = ((absoluteIndex % totalItems) + totalItems) % totalItems;
+      const wrappedIndex =
+        ((absoluteIndex % totalItems) + totalItems) % totalItems;
       items.push({
         text: spinnerItems[wrappedIndex],
         offset: i,
-        key: `${absoluteIndex}-${spinnerItems[wrappedIndex]}`
+        key: `${absoluteIndex}-${spinnerItems[wrappedIndex]}`,
       });
     }
     return items;
@@ -498,9 +579,11 @@ export default function LuckyDrawCY() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={backgroundStyle}>
-      {/* Overlay veil for contrast */}
-      <div className="absolute inset-0 z-0" style={{ background: `rgba(255,255,255,${animationSettings.backgroundOverlayOpacity})` }} />
+    <div className="min-h-screen relative overflow-hidden bg-gray-50">
+      {/* Background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-white/40" />
+      </div>
 
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 p-3 sm:p-6 flex justify-between items-center z-40">
@@ -522,10 +605,10 @@ export default function LuckyDrawCY() {
               ref={spinnerRef}
               className="absolute w-full"
               style={{
-                top: '50%',
+                top: "50%",
                 transform: `translateY(calc(-50% - ${animationOffset}px))`,
-                willChange: 'transform',
-                transition: 'none'
+                willChange: "transform",
+                transition: "none",
               }}
             >
               {renderedItems.map((item) => {
@@ -533,11 +616,21 @@ export default function LuckyDrawCY() {
                 const isCenter = item.offset === 0;
                 const isNearCenter = distanceFromCenter <= 2;
 
-                const scale = isCenter ? animationSettings.centerItemScale :
-                  isNearCenter ? animationSettings.nearCenterScale : 1;
-                const opacity = isCenter ? 1 : Math.max(0.3, 1 - (distanceFromCenter * 0.05));
-                const blur = distanceFromCenter > 8 ?
-                  Math.min(animationSettings.maxBlur, (distanceFromCenter - 8) * 0.1) : 0;
+                const scale = isCenter
+                  ? animationSettings.centerItemScale
+                  : isNearCenter
+                  ? animationSettings.nearCenterScale
+                  : 1;
+                const opacity = isCenter
+                  ? 1
+                  : Math.max(0.3, 1 - distanceFromCenter * 0.05);
+                const blur =
+                  distanceFromCenter > 8
+                    ? Math.min(
+                        animationSettings.maxBlur,
+                        (distanceFromCenter - 8) * 0.1
+                      )
+                    : 0;
 
                 return (
                   <SpinnerItem
@@ -566,7 +659,7 @@ export default function LuckyDrawCY() {
               exponential={true}
               style={{
                 zIndex: 20,
-                pointerEvents: 'none'
+                pointerEvents: "none",
               }}
             />
             <GradualBlur
@@ -578,35 +671,27 @@ export default function LuckyDrawCY() {
               exponential={true}
               style={{
                 zIndex: 20,
-                pointerEvents: 'none'
+                pointerEvents: "none",
               }}
             />
 
-            {/* Center Arrow Indicator */}
-            <div className="absolute left-1 sm:left-2 md:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-30">
-              <div className="relative flex items-center">
-                {/* Arrow character */}
+            {/* Center Indicator */}
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none z-30">
+              <div className="relative">
                 <div
-                  className="text-2xl sm:text-3xl lg:text-4xl font-bold select-none"
+                  className="h-[2px] w-full"
                   style={{
-                    color: currentColors[1],
-                    filter: `drop-shadow(0 0 ${typeof window !== 'undefined' && window.innerWidth < 640 ? '8px' : '12px'} ${currentColors[1]}60)`,
-                    textShadow: `0 0 20px ${currentColors[1]}40`,
+                    background: `linear-gradient(90deg, transparent 0%, ${currentColors[1]}60 20%, ${currentColors[1]}80 50%, ${currentColors[1]}60 80%, transparent 100%)`,
+                    boxShadow: `0 0 20px ${currentColors[1]}30`,
                   }}
-                >
-                  ▶
-                </div>
-                {/* Glow effect behind arrow */}
+                />
                 <div
-                  className="absolute inset-0 text-2xl sm:text-3xl lg:text-4xl font-bold select-none"
+                  className="absolute inset-0 h-[1px] w-full top-[1px]"
                   style={{
-                    color: currentColors[3],
-                    filter: 'blur(4px)',
-                    opacity: 0.6,
+                    background: `linear-gradient(90deg, transparent 0%, ${currentColors[3]}40 20%, ${currentColors[3]}60 50%, ${currentColors[3]}40 80%, transparent 100%)`,
+                    filter: "blur(4px)",
                   }}
-                >
-                  ▶
-                </div>
+                />
               </div>
             </div>
           </div>
@@ -623,23 +708,21 @@ export default function LuckyDrawCY() {
                 transition={{
                   type: "spring",
                   damping: 25,
-                  stiffness: 300
+                  stiffness: 300,
                 }}
                 className="relative p-4 sm:p-5 lg:p-6 rounded-2xl overflow-hidden"
               >
                 {/* Subtle gradient overlay */}
-                <motion.div
-                  className="absolute inset-0 opacity-30"
-                />
+                <motion.div className="absolute inset-0 opacity-30" />
 
                 <div className="relative z-10">
                   <motion.div
                     className="text-xs sm:text-sm uppercase tracking-[0.2em] mb-1 font-semibold"
                     style={{
                       background: `linear-gradient(90deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 100%)`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
                     }}
                   >
                     Previous Winner
@@ -658,7 +741,9 @@ export default function LuckyDrawCY() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
                   >
-                    {new Date(winners[winners.length - 1].wonAt).toLocaleTimeString("en-SG", {
+                    {new Date(
+                      winners[winners.length - 1].wonAt
+                    ).toLocaleTimeString("en-SG", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
@@ -670,7 +755,7 @@ export default function LuckyDrawCY() {
         </div>
 
         {/* Settings Button */}
-        <div className="fixed right-2 sm:right-4 lg:right-8 bottom-2 sm:bottom-4 lg:bottom-8 z-40">
+        <div className="fixed right-2 sm:right-4 lg:right-8 bottom-2 sm:bottom-4 lg:bottom-8 z-40 flex gap-2 items-center">
           <LuckyDrawSettings
             settings={animationSettings}
             onSettingsChange={setAnimationSettings}
@@ -678,6 +763,37 @@ export default function LuckyDrawCY() {
             showSettings={showSettings}
             onShowSettingsChange={setShowSettings}
           />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant={"ghost"}
+                className="backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg text-xs sm:text-sm"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete{" "}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete lucky draw?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete your lucky draw and all data
+                  related to it.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteLuckyDraw}
+                  className="w-full sm:w-[75px] "
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? <LoadingSpinner /> : "Delete"}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         {/* Winners Button */}
@@ -691,29 +807,41 @@ export default function LuckyDrawCY() {
               >
                 <Button
                   variant="ghost"
-                  size={typeof window !== 'undefined' && window.innerWidth < 640 ? "sm" : "default"}
+                  size={
+                    typeof window !== "undefined" && window.innerWidth < 640
+                      ? "sm"
+                      : "default"
+                  }
                   className="relative overflow-hidden text-xs sm:text-sm font-medium"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(20px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                    border: '1px solid rgba(255, 255, 255, 0.18)',
-                    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                    color: '#1a1a1a',
+                    background: "rgba(255, 255, 255, 0.1)",
+                    backdropFilter: "blur(20px) saturate(180%)",
+                    WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                    border: "1px solid rgba(255, 255, 255, 0.18)",
+                    boxShadow:
+                      "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
+                    color: "#1a1a1a",
                   }}
                 >
-                  <Trophy className="w-4 h-4 mr-2" style={{ color: currentColors[1] }} />
+                  <Trophy
+                    className="w-4 h-4 mr-2"
+                    style={{ color: currentColors[1] }}
+                  />
                   Winners
                   {winners.length > 0 && (
                     <motion.span
                       className="ml-2 px-2 py-0.5 text-white rounded-full text-xs font-bold"
                       style={{
                         backgroundColor: currentColors[2],
-                        boxShadow: `0 0 10px ${currentColors[2]}40`
+                        boxShadow: `0 0 10px ${currentColors[2]}40`,
                       }}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 25,
+                      }}
                     >
                       {winners.length}
                     </motion.span>
@@ -727,7 +855,9 @@ export default function LuckyDrawCY() {
               </SheetHeader>
               <div className="mt-6 space-y-3 pb-6">
                 {winners.length === 0 ? (
-                  <p className="text-center text-muted-foreground">No winners yet</p>
+                  <p className="text-center text-muted-foreground">
+                    No winners yet
+                  </p>
                 ) : (
                   winners.map((winner, index) => (
                     <div
@@ -741,7 +871,9 @@ export default function LuckyDrawCY() {
                             minute: "2-digit",
                           })}
                         </span>
-                        <span className="font-semibold tracking-wide leading-tight">{winner.workId}</span>
+                        <span className="font-semibold tracking-wide leading-tight">
+                          {winner.workId}
+                        </span>
                       </div>
                       <Button
                         variant="ghost"
@@ -768,7 +900,7 @@ export default function LuckyDrawCY() {
             transition={{
               type: "spring",
               stiffness: 400,
-              damping: 30
+              damping: 30,
             }}
           >
             <button
@@ -784,13 +916,13 @@ export default function LuckyDrawCY() {
               style={{
                 background: isSpinning
                   ? `linear-gradient(135deg, ${currentColors[0]}15 0%, ${currentColors[1]}20 100%)`
-                  : 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                border: '1px solid rgba(255, 255, 255, 0.18)',
+                  : "rgba(255, 255, 255, 0.1)",
+                backdropFilter: "blur(20px) saturate(180%)",
+                WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                border: "1px solid rgba(255, 255, 255, 0.18)",
                 boxShadow: isSpinning
                   ? `0 8px 32px 0 ${currentColors[1]}20, inset 0 0 0 1px rgba(255, 255, 255, 0.1)`
-                  : '0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                  : "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
               }}
             >
               {/* Button text */}
@@ -801,13 +933,13 @@ export default function LuckyDrawCY() {
                   "drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
                 )}
                 style={{
-                  color: isSpinning ? currentColors[0] : '#1a1a1a',
+                  color: isSpinning ? currentColors[0] : "#1a1a1a",
                   textShadow: isSpinning
                     ? `0 0 20px ${currentColors[1]}40`
-                    : '0 1px 2px rgba(0,0,0,0.05)'
+                    : "0 1px 2px rgba(0,0,0,0.05)",
                 }}
                 animate={{
-                  letterSpacing: isSpinning ? '0.2em' : '0.15em',
+                  letterSpacing: isSpinning ? "0.2em" : "0.15em",
                 }}
               >
                 {isSpinning ? (
@@ -831,13 +963,13 @@ export default function LuckyDrawCY() {
                           style={{ backgroundColor: currentColors[1] }}
                           animate={{
                             y: [0, -3, 0],
-                            opacity: [0.3, 1, 0.3]
+                            opacity: [0.3, 1, 0.3],
                           }}
                           transition={{
                             duration: 1,
                             repeat: Infinity,
                             delay: i * 0.15,
-                            ease: "easeInOut"
+                            ease: "easeInOut",
                           }}
                         />
                       ))}
@@ -868,7 +1000,7 @@ export default function LuckyDrawCY() {
                   transition={{
                     duration: 3,
                     repeat: Infinity,
-                    ease: "easeOut"
+                    ease: "easeOut",
                   }}
                 />
               )}
@@ -887,15 +1019,17 @@ export default function LuckyDrawCY() {
             transition={{ duration: 0.4 }}
             className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
           >
+            {/* Elegant backdrop with subtle blur */}
             <motion.div
               className="absolute inset-0"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               style={{
-                background: 'radial-gradient(circle at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 100%)',
-                backdropFilter: 'blur(12px) saturate(150%)',
-                WebkitBackdropFilter: 'blur(12px) saturate(150%)',
+                background:
+                  "radial-gradient(circle at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 100%)",
+                backdropFilter: "blur(12px) saturate(150%)",
+                WebkitBackdropFilter: "blur(12px) saturate(150%)",
               }}
             />
 
@@ -908,16 +1042,26 @@ export default function LuckyDrawCY() {
                 type: "spring",
                 damping: 20,
                 stiffness: 300,
-                duration: 0.6
+                duration: 0.6,
               }}
               className="text-center relative px-10 py-12 max-w-lg mx-4"
             >
-              {/* Winner Card */}
+              {/* Elegant glassmorphic card */}
               <motion.div
                 className="absolute inset-0 rounded-3xl"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1, duration: 0.5 }}
+                style={{
+                  background: `linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.10) 100%)`,
+                  backdropFilter: "blur(20px) saturate(180%)",
+                  WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                  boxShadow: `
+                    0 25px 45px -10px rgba(0,0,0,0.25),
+                    0 10px 25px -5px ${currentColors[1]}15,
+                    inset 0 0 0 1px rgba(255,255,255,0.2)
+                  `,
+                }}
               />
 
               {/* Content */}
@@ -933,9 +1077,9 @@ export default function LuckyDrawCY() {
                     className="text-sm font-medium uppercase tracking-[0.3em]"
                     style={{
                       background: `linear-gradient(135deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 100%)`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
                     }}
                   >
                     Winner
@@ -950,7 +1094,7 @@ export default function LuckyDrawCY() {
                     delay: 0.3,
                     type: "spring",
                     damping: 15,
-                    stiffness: 200
+                    stiffness: 200,
                   }}
                   className="relative mb-8"
                 >
@@ -959,7 +1103,7 @@ export default function LuckyDrawCY() {
                     className="absolute -inset-4 rounded-xl opacity-20"
                     style={{
                       background: `radial-gradient(ellipse, ${currentColors[1]}30 0%, transparent 70%)`,
-                      filter: 'blur(15px)',
+                      filter: "blur(15px)",
                     }}
                     animate={{
                       opacity: [0.15, 0.25, 0.15],
@@ -967,7 +1111,7 @@ export default function LuckyDrawCY() {
                     transition={{
                       duration: 3,
                       repeat: Infinity,
-                      ease: "easeInOut"
+                      ease: "easeInOut",
                     }}
                   />
 
@@ -975,9 +1119,9 @@ export default function LuckyDrawCY() {
                   <motion.div
                     className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight"
                     style={{
-                      color: '#1a1a1a',
-                      textShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                      letterSpacing: '-0.025em',
+                      color: "#1a1a1a",
+                      textShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                      letterSpacing: "-0.025em",
                     }}
                   >
                     {currentWinner}
