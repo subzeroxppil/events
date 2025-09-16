@@ -50,7 +50,7 @@ export const DEFAULT_SETTINGS: AnimationSettings = {
   enableFireworks: true,
   fireworksDuration: 5000,
   fireworksParticleCount: 500,
-  winnerDisplayDuration: 6000,
+  winnerDisplayDuration: 7000,
   enableSounds: true,
   soundFadeStartPercent: 0.65,
   soundFadeDuration: 0.35,
