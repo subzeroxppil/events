@@ -79,6 +79,11 @@ export default function LuckyDrawCY() {
   const [showSettings, setShowSettings] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Corp ID to name mapping
+  const [corpIdMapping, setCorpIdMapping] = useState<Record<string, string>>(
+    {}
+  );
+
   // Memoized values for performance
   const itemHeight = useMemo(() => {
     if (typeof window === "undefined") return 96;
@@ -251,6 +256,25 @@ export default function LuckyDrawCY() {
       }
 
       setLuckyDraw(data.luckyDraw);
+
+      // Fetch corp ID mapping based on lucky draw name
+      if (data.luckyDraw?.name) {
+        try {
+          const mappingRes = await fetch(
+            `/api/admin/luckydraw/corpid-name-mapping?name=${encodeURIComponent(
+              data.luckyDraw.name
+            )}`
+          );
+          const mappingData = await mappingRes.json();
+
+          if (mappingRes.ok && mappingData.mapping) {
+            setCorpIdMapping(mappingData.mapping);
+          }
+        } catch (err) {
+          console.warn("Failed to fetch corp ID mapping:", err);
+          // Continue without mapping if it fails
+        }
+      }
 
       const uniqueParticipants = Array.from(
         new Set(data.participants)
@@ -1148,6 +1172,22 @@ export default function LuckyDrawCY() {
                   >
                     {currentWinner}
                   </motion.div>
+
+                  {/* Winner real name from corp mapping */}
+                  {currentWinner && corpIdMapping[currentWinner] && (
+                    <motion.div
+                      initial={{ y: 10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.4, duration: 0.4 }}
+                      className="text-xl sm:text-2xl lg:text-3xl font-medium tracking-tight mt-4"
+                      style={{
+                        color: "#4a4a4a",
+                        textShadow: "0 1px 4px rgba(0,0,0,0.1)",
+                      }}
+                    >
+                      ({corpIdMapping[currentWinner]})
+                    </motion.div>
+                  )}
                 </motion.div>
 
                 {/* Congratulations message */}
