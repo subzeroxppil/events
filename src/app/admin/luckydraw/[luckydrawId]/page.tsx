@@ -201,7 +201,7 @@ export default function LuckyDrawCY() {
 
   // Initialize audio
   useEffect(() => {
-    window.scrollTo(0, 100);
+    window.scrollTo(0, document.body.scrollHeight);
 
     if (typeof Audio !== "undefined") {
       spinSound.current = new Audio("/sounds/spin4.mp3");
