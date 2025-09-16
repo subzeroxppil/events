@@ -107,95 +107,6 @@ export default function LuckyDrawCY() {
   const celebrateSound = useRef<HTMLAudioElement | null>(null);
   const applauseSound = useRef<HTMLAudioElement | null>(null);
 
-  // Initialize audio
-  useEffect(() => {
-    window.scrollTo(0, 100);
-
-    if (typeof Audio !== "undefined") {
-      spinSound.current = new Audio("/sounds/spin4.mp3");
-      celebrateSound.current = new Audio("/sounds/celebrate.wav");
-      applauseSound.current = new Audio("/sounds/applause1.mp3");
-
-      // Preload audio
-      if (spinSound.current) spinSound.current.load();
-      if (celebrateSound.current) celebrateSound.current.load();
-      if (applauseSound.current) applauseSound.current.load();
-    }
-
-    return () => {
-      document.body.style.overflow = "auto";
-
-      // Cleanup audio
-      if (spinSound.current) spinSound.current = null;
-      if (celebrateSound.current) celebrateSound.current = null;
-      if (applauseSound.current) applauseSound.current = null;
-    };
-  }, []);
-
-  // Fetch lucky draw data
-  useEffect(() => {
-    if (!luckydrawId) return;
-    fetchLuckyDrawData();
-  }, [luckydrawId]);
-
-  const fetchLuckyDrawData = async () => {
-    try {
-      const res = await fetch(`/api/admin/luckydraw/${luckydrawId}`);
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to fetch data");
-      }
-
-      setLuckyDraw(data.luckyDraw);
-
-      const uniqueParticipants = Array.from(
-        new Set(data.participants)
-      ) as string[];
-
-      setParticipants(uniqueParticipants);
-
-      const extendedList = createExtendedList(
-        uniqueParticipants,
-        animationSettings.spinnerItemCount
-      );
-      setSpinnerItems(extendedList);
-
-      setCenterIndex(0);
-      setAnimationOffset(0);
-
-      if (data.winners && Array.isArray(data.winners)) {
-        setWinners(data.winners);
-      }
-    } catch (err: any) {
-      setError("Failed to load data.");
-      console.error(err);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const handleDeleteLuckyDraw = async () => {
-    if (!luckydrawId) return;
-
-    try {
-      setDeleteLoading(true);
-      const res = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Failed to delete lucky draw");
-
-      router.push("/admin/luckydraw");
-      toast.success("Lucky draw deleted");
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || "Error deleting lucky draw");
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
   const createExtendedList = useCallback(
     (items: string[], targetLength: number): string[] => {
       if (items.length === 0) return [];
@@ -287,6 +198,107 @@ export default function LuckyDrawCY() {
     animationSettings,
     createExtendedList,
   ]);
+
+  // Initialize audio
+  useEffect(() => {
+    window.scrollTo(0, document.body.scrollHeight);
+
+    if (typeof Audio !== "undefined") {
+      spinSound.current = new Audio("/sounds/spin4.mp3");
+      celebrateSound.current = new Audio("/sounds/celebrate.wav");
+      applauseSound.current = new Audio("/sounds/applause1.mp3");
+
+      // Preload audio
+      if (spinSound.current) spinSound.current.load();
+      if (celebrateSound.current) celebrateSound.current.load();
+      if (applauseSound.current) applauseSound.current.load();
+    }
+
+    // Add right-click event listener to trigger spin
+    const handleRightClick = (e: MouseEvent) => {
+      e.preventDefault(); // Prevent context menu
+      handleSpin();
+    };
+
+    document.addEventListener("contextmenu", handleRightClick);
+
+    return () => {
+      document.body.style.overflow = "auto";
+
+      // Cleanup audio
+      if (spinSound.current) spinSound.current = null;
+      if (celebrateSound.current) celebrateSound.current = null;
+      if (applauseSound.current) applauseSound.current = null;
+
+      // Remove right-click event listener
+      document.removeEventListener("contextmenu", handleRightClick);
+    };
+  }, [handleSpin]);
+
+  // Fetch lucky draw data
+  useEffect(() => {
+    if (!luckydrawId) return;
+    fetchLuckyDrawData();
+  }, [luckydrawId]);
+
+  const fetchLuckyDrawData = async () => {
+    try {
+      const res = await fetch(`/api/admin/luckydraw/${luckydrawId}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to fetch data");
+      }
+
+      setLuckyDraw(data.luckyDraw);
+
+      const uniqueParticipants = Array.from(
+        new Set(data.participants)
+      ) as string[];
+
+      // Keep all participants in the UI - don't filter out winners
+      setParticipants(uniqueParticipants);
+
+      const extendedList = createExtendedList(
+        uniqueParticipants,
+        animationSettings.spinnerItemCount
+      );
+      setSpinnerItems(extendedList);
+
+      setCenterIndex(0);
+      setAnimationOffset(0);
+
+      if (data.winners && Array.isArray(data.winners)) {
+        setWinners(data.winners);
+      }
+    } catch (err: any) {
+      setError("Failed to load data.");
+      console.error(err);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const handleDeleteLuckyDraw = async () => {
+    if (!luckydrawId) return;
+
+    try {
+      setDeleteLoading(true);
+      const res = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete lucky draw");
+
+      router.push("/admin/luckydraw");
+      toast.success("Lucky draw deleted");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error deleting lucky draw");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const animateSpinnerByIndex = useCallback(
     (
@@ -404,10 +416,9 @@ export default function LuckyDrawCY() {
         });
 
         if (response.ok) {
-          setWinners((prev) => [
-            ...prev,
-            { workId: winner, wonAt: new Date().toISOString() },
-          ]);
+          const newWinner = { workId: winner, wonAt: new Date().toISOString() };
+          setWinners((prev) => [...prev, newWinner]);
+          // Note: We don't remove the winner from participants - they stay visible but can't win again
         }
       } catch (error) {
         console.error("Error recording winner:", error);
@@ -439,6 +450,7 @@ export default function LuckyDrawCY() {
 
         if (response.ok) {
           setWinners((prev) => prev.filter((w) => w.workId !== winnerWorkId));
+          // Note: We don't need to add back to participants since they were never removed
           toast.success("Winner removed successfully");
         } else {
           toast.error("Failed to remove winner");
@@ -542,6 +554,24 @@ export default function LuckyDrawCY() {
     };
   }, []);
 
+  // Dynamic background style based on settings
+  const backgroundStyle = useMemo(() => {
+    if (animationSettings.backgroundMode === "solid") {
+      return {
+        background: animationSettings.backgroundSolidColor,
+      } as React.CSSProperties;
+    }
+    return {
+      background: `linear-gradient(${animationSettings.backgroundGradientAngle}deg, ${animationSettings.backgroundGradientFrom}, ${animationSettings.backgroundGradientTo})`,
+    } as React.CSSProperties;
+  }, [
+    animationSettings.backgroundMode,
+    animationSettings.backgroundSolidColor,
+    animationSettings.backgroundGradientAngle,
+    animationSettings.backgroundGradientFrom,
+    animationSettings.backgroundGradientTo,
+  ]);
+
   // Calculate visible items
   const renderedItems = useMemo(() => {
     if (spinnerItems.length === 0) return [];
@@ -579,11 +609,17 @@ export default function LuckyDrawCY() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gray-50">
-      {/* Background */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-white/40" />
-      </div>
+    <div
+      className="min-h-screen relative overflow-hidden"
+      style={backgroundStyle}
+    >
+      {/* Overlay veil for contrast */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background: `rgba(255,255,255,${animationSettings.backgroundOverlayOpacity})`,
+        }}
+      />
 
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 p-3 sm:p-6 flex justify-between items-center z-40">
@@ -675,23 +711,35 @@ export default function LuckyDrawCY() {
               }}
             />
 
-            {/* Center Indicator */}
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none z-30">
-              <div className="relative">
+            {/* Center Arrow Indicator */}
+            <div className="absolute left-1 sm:left-2 md:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-30">
+              <div className="relative flex items-center">
+                {/* Arrow character */}
                 <div
-                  className="h-[2px] w-full"
+                  className="text-2xl sm:text-3xl lg:text-4xl font-bold select-none"
                   style={{
-                    background: `linear-gradient(90deg, transparent 0%, ${currentColors[1]}60 20%, ${currentColors[1]}80 50%, ${currentColors[1]}60 80%, transparent 100%)`,
-                    boxShadow: `0 0 20px ${currentColors[1]}30`,
+                    color: currentColors[1],
+                    filter: `drop-shadow(0 0 ${
+                      typeof window !== "undefined" && window.innerWidth < 640
+                        ? "8px"
+                        : "12px"
+                    } ${currentColors[1]}60)`,
+                    textShadow: `0 0 20px ${currentColors[1]}40`,
                   }}
-                />
+                >
+                  ▶
+                </div>
+                {/* Glow effect behind arrow */}
                 <div
-                  className="absolute inset-0 h-[1px] w-full top-[1px]"
+                  className="absolute inset-0 text-2xl sm:text-3xl lg:text-4xl font-bold select-none"
                   style={{
-                    background: `linear-gradient(90deg, transparent 0%, ${currentColors[3]}40 20%, ${currentColors[3]}60 50%, ${currentColors[3]}40 80%, transparent 100%)`,
+                    color: currentColors[3],
                     filter: "blur(4px)",
+                    opacity: 0.6,
                   }}
-                />
+                >
+                  ▶
+                </div>
               </div>
             </div>
           </div>
@@ -719,7 +767,7 @@ export default function LuckyDrawCY() {
                   <motion.div
                     className="text-xs sm:text-sm uppercase tracking-[0.2em] mb-1 font-semibold"
                     style={{
-                      background: `linear-gradient(90deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 100%)`,
+                      background: `linear-gradient(90deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 10%)`,
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                       backgroundClip: "text",
@@ -767,6 +815,11 @@ export default function LuckyDrawCY() {
             <AlertDialogTrigger asChild>
               <Button
                 variant={"ghost"}
+                size={
+                  typeof window !== "undefined" && window.innerWidth < 640
+                    ? "sm"
+                    : "default"
+                }
                 className="backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg text-xs sm:text-sm"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -812,16 +865,7 @@ export default function LuckyDrawCY() {
                       ? "sm"
                       : "default"
                   }
-                  className="relative overflow-hidden text-xs sm:text-sm font-medium"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.1)",
-                    backdropFilter: "blur(20px) saturate(180%)",
-                    WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                    border: "1px solid rgba(255, 255, 255, 0.18)",
-                    boxShadow:
-                      "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
-                    color: "#1a1a1a",
-                  }}
+                  className="backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg text-xs sm:text-sm font-medium"
                 >
                   <Trophy
                     className="w-4 h-4 mr-2"
@@ -907,23 +951,12 @@ export default function LuckyDrawCY() {
               onClick={handleSpin}
               disabled={isSpinning || participants.length === 0}
               className={cn(
-                "relative group overflow-hidden",
+                "backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg",
                 "px-4 sm:px-8 lg:px-12 py-2 sm:py-3 lg:py-4",
-                "rounded-full",
-                "transition-all duration-500 ease-out",
-                "disabled:cursor-not-allowed"
+                "rounded-full text-sm sm:text-base font-semibold tracking-widest uppercase",
+                "transition-all duration-300 ease-out",
+                "disabled:cursor-not-allowed disabled:opacity-50"
               )}
-              style={{
-                background: isSpinning
-                  ? `linear-gradient(135deg, ${currentColors[0]}15 0%, ${currentColors[1]}20 100%)`
-                  : "rgba(255, 255, 255, 0.1)",
-                backdropFilter: "blur(20px) saturate(180%)",
-                WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                border: "1px solid rgba(255, 255, 255, 0.18)",
-                boxShadow: isSpinning
-                  ? `0 8px 32px 0 ${currentColors[1]}20, inset 0 0 0 1px rgba(255, 255, 255, 0.1)`
-                  : "0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1)",
-              }}
             >
               {/* Button text */}
               <motion.span
@@ -1019,7 +1052,6 @@ export default function LuckyDrawCY() {
             transition={{ duration: 0.4 }}
             className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
           >
-            {/* Elegant backdrop with subtle blur */}
             <motion.div
               className="absolute inset-0"
               initial={{ opacity: 0 }}
@@ -1046,22 +1078,12 @@ export default function LuckyDrawCY() {
               }}
               className="text-center relative px-10 py-12 max-w-lg mx-4"
             >
-              {/* Elegant glassmorphic card */}
+              {/* Winner Card */}
               <motion.div
                 className="absolute inset-0 rounded-3xl"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1, duration: 0.5 }}
-                style={{
-                  background: `linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.10) 100%)`,
-                  backdropFilter: "blur(20px) saturate(180%)",
-                  WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                  boxShadow: `
-                    0 25px 45px -10px rgba(0,0,0,0.25),
-                    0 10px 25px -5px ${currentColors[1]}15,
-                    inset 0 0 0 1px rgba(255,255,255,0.2)
-                  `,
-                }}
               />
 
               {/* Content */}
@@ -1076,7 +1098,7 @@ export default function LuckyDrawCY() {
                   <div
                     className="text-sm font-medium uppercase tracking-[0.3em]"
                     style={{
-                      background: `linear-gradient(135deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 100%)`,
+                      background: `linear-gradient(135deg, ${currentColors[1]} 0%, ${currentColors[2]} 100%)`,
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                       backgroundClip: "text",
