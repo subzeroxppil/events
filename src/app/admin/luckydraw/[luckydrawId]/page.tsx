@@ -755,7 +755,7 @@ export default function LuckyDrawCY() {
                   <motion.div
                     className="text-xs sm:text-sm uppercase tracking-[0.2em] mb-1 font-semibold"
                     style={{
-                      background: `linear-gradient(90deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 100%)`,
+                      background: `linear-gradient(90deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 10%)`,
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                       backgroundClip: "text",
