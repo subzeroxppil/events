@@ -1190,7 +1190,6 @@ export default function LuckyDraw() {
                   )}
                 </motion.div>
 
-                {/* Congratulations message */}
                 <motion.div
                   initial={{ y: 15, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
