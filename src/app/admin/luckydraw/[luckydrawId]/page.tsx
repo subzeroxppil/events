@@ -475,7 +475,7 @@ export default function LuckyDraw() {
         if (response.ok) {
           setWinners((prev) => prev.filter((w) => w.workId !== winnerWorkId));
           // Note: We don't need to add back to participants since they were never removed
-          toast.success("Winner removed successfully");
+          toast.success("Winner removed");
         } else {
           toast.error("Failed to remove winner");
         }

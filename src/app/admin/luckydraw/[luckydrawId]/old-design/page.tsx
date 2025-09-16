@@ -384,7 +384,7 @@ export default function Page() {
         setWinners((prev) =>
           prev.filter((winner) => winner.workId !== winnerWorkId)
         );
-        toast.success("Winner removed successfully");
+        toast.success("Winner removed");
       } else {
         const errorData = await response.json();
         toast.error(errorData.message || "Failed to remove winner");
@@ -477,14 +477,18 @@ export default function Page() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy`)}
+                onClick={() =>
+                  router.push(`/admin/luckydraw/${luckydrawId}/cy`)
+                }
               >
                 <Sparkles className="w-4 h-4 mr-2" />
                 Vertical
               </Button>
               <Button
                 variant="outline"
-                onClick={() => router.push(`/admin/luckydraw/${luckydrawId}/cy2`)}
+                onClick={() =>
+                  router.push(`/admin/luckydraw/${luckydrawId}/cy2`)
+                }
               >
                 <Sparkles className="w-4 h-4 mr-2" />
                 Minimal
