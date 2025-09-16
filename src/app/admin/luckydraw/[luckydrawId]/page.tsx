@@ -803,6 +803,11 @@ export default function LuckyDrawCY() {
             <AlertDialogTrigger asChild>
               <Button
                 variant={"ghost"}
+                size={
+                  typeof window !== "undefined" && window.innerWidth < 640
+                    ? "sm"
+                    : "default"
+                }
                 className="backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg text-xs sm:text-sm"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
