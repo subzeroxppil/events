@@ -789,9 +789,9 @@ export default function LuckyDraw() {
 
                 <div className="relative z-10">
                   <motion.div
-                    className="text-xs sm:text-sm uppercase tracking-[0.2em] mb-1 font-semibold"
+                    className="text-sm sm:text-base lg:text-lg uppercase tracking-[0.2em] mb-2 font-semibold"
                     style={{
-                      background: `linear-gradient(90deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 10%)`,
+                      background: `linear-gradient(90deg, ${currentColors[1]}99 0%, ${currentColors[2]}99 10%)`,
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                       backgroundClip: "text",
@@ -800,7 +800,7 @@ export default function LuckyDraw() {
                     Previous Winner
                   </motion.div>
                   <motion.div
-                    className="text-lg sm:text-xl font-bold text-gray-900 mb-1"
+                    className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2"
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
@@ -808,7 +808,7 @@ export default function LuckyDraw() {
                     {winners[winners.length - 1].workId}
                   </motion.div>
                   <motion.div
-                    className="text-xs tracking-wide text-gray-600 flex items-center gap-1"
+                    className="text-sm sm:text-base tracking-wide text-gray-600 flex items-center gap-1"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
