@@ -1101,7 +1101,7 @@ export default function LuckyDrawCY() {
                   <div
                     className="text-sm font-medium uppercase tracking-[0.3em]"
                     style={{
-                      background: `linear-gradient(135deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 100%)`,
+                      background: `linear-gradient(135deg, ${currentColors[1]} 0%, ${currentColors[2]} 100%)`,
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                       backgroundClip: "text",
