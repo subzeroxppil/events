@@ -153,6 +153,7 @@ export default function LuckyDrawCY() {
         new Set(data.participants)
       ) as string[];
 
+      // Keep all participants in the UI - don't filter out winners
       setParticipants(uniqueParticipants);
 
       const extendedList = createExtendedList(
@@ -404,10 +405,9 @@ export default function LuckyDrawCY() {
         });
 
         if (response.ok) {
-          setWinners((prev) => [
-            ...prev,
-            { workId: winner, wonAt: new Date().toISOString() },
-          ]);
+          const newWinner = { workId: winner, wonAt: new Date().toISOString() };
+          setWinners((prev) => [...prev, newWinner]);
+          // Note: We don't remove the winner from participants - they stay visible but can't win again
         }
       } catch (error) {
         console.error("Error recording winner:", error);
@@ -439,6 +439,7 @@ export default function LuckyDrawCY() {
 
         if (response.ok) {
           setWinners((prev) => prev.filter((w) => w.workId !== winnerWorkId));
+          // Note: We don't need to add back to participants since they were never removed
           toast.success("Winner removed successfully");
         } else {
           toast.error("Failed to remove winner");
