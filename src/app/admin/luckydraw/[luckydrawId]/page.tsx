@@ -650,7 +650,7 @@ export default function LuckyDraw() {
         <BackButton />
         <div className="flex items-center gap-3">
           <h1 className="text-lg sm:text-2xl font-bold tracking-tight leading-tight text-gray-900">
-            {luckyDraw?.name}
+            🎉 {luckyDraw?.name}
           </h1>
         </div>
       </div>
@@ -789,7 +789,7 @@ export default function LuckyDraw() {
 
                 <div className="relative z-10">
                   <motion.div
-                    className="text-sm sm:text-base lg:text-lg uppercase tracking-[0.2em] mb-2 font-semibold"
+                    className="text-xs sm:text-sm uppercase tracking-[0.2em] mb-1 font-semibold"
                     style={{
                       background: `linear-gradient(90deg, ${currentColors[1]}90 0%, ${currentColors[2]}90 10%)`,
                       WebkitBackgroundClip: "text",
@@ -800,7 +800,7 @@ export default function LuckyDraw() {
                     Previous Winner
                   </motion.div>
                   <motion.div
-                    className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2"
+                    className="text-lg sm:text-xl font-bold text-gray-900 mb-1"
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
@@ -808,7 +808,7 @@ export default function LuckyDraw() {
                     {winners[winners.length - 1].workId}
                   </motion.div>
                   <motion.div
-                    className="text-sm sm:text-base lg:text-lg tracking-wide text-gray-600 flex items-center gap-1"
+                    className="text-xs tracking-wide text-gray-600 flex items-center gap-1"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
@@ -844,7 +844,7 @@ export default function LuckyDraw() {
                     ? "sm"
                     : "default"
                 }
-                className="backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg text-xs sm:text-sm"
+                className="backdrop-blur-md bg-white/95 border border-white/70 hover:bg-white text-gray-700 shadow-lg text-xs sm:text-sm"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete{" "}
@@ -889,7 +889,7 @@ export default function LuckyDraw() {
                       ? "sm"
                       : "default"
                   }
-                  className="backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg text-xs sm:text-sm font-medium"
+                  className="backdrop-blur-md bg-white/95 border border-white/70 hover:bg-white text-gray-700 shadow-lg text-xs sm:text-sm font-medium"
                 >
                   <Trophy
                     className="w-4 h-4 mr-2"
@@ -975,7 +975,7 @@ export default function LuckyDraw() {
               onClick={handleSpin}
               disabled={isSpinning || participants.length === 0}
               className={cn(
-                "backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg",
+                "backdrop-blur-md bg-white/95 border border-white/70 hover:bg-white text-gray-700 shadow-lg",
                 "px-4 sm:px-8 lg:px-12 py-2 sm:py-3 lg:py-4",
                 "rounded-full text-sm sm:text-base font-semibold tracking-widest uppercase",
                 "transition-all duration-300 ease-out",
@@ -1117,10 +1117,10 @@ export default function LuckyDraw() {
                   initial={{ y: -15, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.4 }}
-                  className="mb-8"
+                  className="mb-6"
                 >
                   <div
-                    className="text-2xl sm:text-3xl lg:text-4xl font-medium uppercase tracking-[0.3em]"
+                    className="text-sm font-medium uppercase tracking-[0.3em]"
                     style={{
                       background: `linear-gradient(135deg, ${currentColors[1]} 0%, ${currentColors[2]} 100%)`,
                       WebkitBackgroundClip: "text",
@@ -1163,7 +1163,7 @@ export default function LuckyDraw() {
 
                   {/* Winner text */}
                   <motion.div
-                    className="text-6xl sm:text-7xl lg:text-8xl font-bold tracking-tight"
+                    className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight"
                     style={{
                       color: "#1a1a1a",
                       textShadow: "0 2px 8px rgba(0,0,0,0.1)",
@@ -1179,7 +1179,7 @@ export default function LuckyDraw() {
                       initial={{ y: 10, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.4, duration: 0.4 }}
-                      className="text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight mt-6"
+                      className="text-xl sm:text-2xl lg:text-3xl font-medium tracking-tight mt-4"
                       style={{
                         color: "#4a4a4a",
                         textShadow: "0 1px 4px rgba(0,0,0,0.1)",
@@ -1195,7 +1195,7 @@ export default function LuckyDraw() {
                   initial={{ y: 15, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.5, duration: 0.4 }}
-                  className="text-lg sm:text-xl lg:text-2xl text-gray-700 font-medium tracking-wide"
+                  className="text-sm text-gray-700 font-medium tracking-wide"
                 >
                   Congratulations!
                 </motion.div>
