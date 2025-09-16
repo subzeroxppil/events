@@ -1111,16 +1111,16 @@ export default function LuckyDraw() {
               />
 
               {/* Content */}
-              <div className="relative z-10">
+              <div className="relative z-10 text-center">
                 {/* Winner label */}
                 <motion.div
                   initial={{ y: -15, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.4 }}
-                  className="mb-6"
+                  className="mb-6 text-center"
                 >
                   <div
-                    className="text-xl font-medium uppercase tracking-[0.3em]"
+                    className="text-xl font-medium uppercase tracking-[0.3em] text-center"
                     style={{
                       background: `linear-gradient(135deg, ${currentColors[1]} 0%, ${currentColors[2]} 100%)`,
                       WebkitBackgroundClip: "text",
@@ -1142,7 +1142,7 @@ export default function LuckyDraw() {
                     damping: 15,
                     stiffness: 200,
                   }}
-                  className="relative mb-8"
+                  className="relative mb-8 text-center"
                 >
                   {/* Subtle glow effect */}
                   <motion.div
@@ -1163,7 +1163,7 @@ export default function LuckyDraw() {
 
                   {/* Winner text */}
                   <motion.div
-                    className="text-6xl sm:text-7xl lg:text-8xl font-bold tracking-tight"
+                    className="text-6xl sm:text-7xl lg:text-8xl font-bold tracking-tight text-center"
                     style={{
                       color: "#1a1a1a",
                       textShadow: "0 2px 8px rgba(0,0,0,0.1)",
@@ -1179,7 +1179,7 @@ export default function LuckyDraw() {
                       initial={{ y: 10, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.4, duration: 0.4 }}
-                      className="text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight mt-4"
+                      className="text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight mt-4 text-center"
                       style={{
                         color: "#4a4a4a",
                         textShadow: "0 1px 4px rgba(0,0,0,0.1)",
@@ -1195,7 +1195,7 @@ export default function LuckyDraw() {
                   initial={{ y: 15, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.5, duration: 0.4 }}
-                  className="text-lg sm:text-xl lg:text-2xl text-gray-700 font-medium tracking-wide"
+                  className="text-lg sm:text-xl lg:text-2xl text-gray-700 font-medium tracking-wide text-center"
                 >
                   Congratulations!
                 </motion.div>
