@@ -219,13 +219,15 @@ export default function LuckyDraw() {
       if (applauseSound.current) applauseSound.current.load();
     }
 
-    // Add right-click event listener to trigger spin
-    const handleRightClick = (e: MouseEvent) => {
-      e.preventDefault(); // Prevent context menu
-      handleSpin();
+    // Add event listener to trigger spin when F5 is pressed
+    const handleF5KeyPress = (e: KeyboardEvent) => {
+      if (e.key === "F5") {
+        e.preventDefault(); // Prevent page refresh
+        handleSpin();
+      }
     };
 
-    document.addEventListener("contextmenu", handleRightClick);
+    document.addEventListener("keydown", handleF5KeyPress);
 
     return () => {
       document.body.style.overflow = "auto";
@@ -235,8 +237,8 @@ export default function LuckyDraw() {
       if (celebrateSound.current) celebrateSound.current = null;
       if (applauseSound.current) applauseSound.current = null;
 
-      // Remove right-click event listener
-      document.removeEventListener("contextmenu", handleRightClick);
+      // Remove F5 keydown event listener
+      document.removeEventListener("keydown", handleF5KeyPress);
     };
   }, [handleSpin]);
 
