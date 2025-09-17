@@ -74,6 +74,8 @@ import BackButton from "@/components/BackButton";
 
 const headers: Record<string, string> = {
   groupNumber: "Group Number",
+  team: "Team",
+  group: "Group",
   workId: "Corp Pass ID",
   registeredAt: "Registration Time",
   prizeName: "Prize",
@@ -280,7 +282,7 @@ export default function Page() {
     const includePrize = !!detailsData?.event.hasLuckyDraw;
     const includeBusinessUnit = Object.keys(businessUnitMap).length > 0;
 
-    const exportData = usersData.map((user) => {
+    const exportData = usersData.map((user, index) => {
       const row: Record<string, string | number> = {
         [headers.registeredAt]: user.registeredAt
           ? new Date(user.registeredAt).toLocaleString("en-SG", {
@@ -297,7 +299,13 @@ export default function Page() {
       }
 
       if (includeGroupNumber) {
-        row[headers.groupNumber] = user.groupNumber;
+        if (isSDC18Event) {
+          row[headers.team] =
+            TEAM_NAME_MAP[user.groupNumber] || user.groupNumber;
+          row[headers.group] = index < 120 ? "A" : "B";
+        } else {
+          row[headers.groupNumber] = user.groupNumber;
+        }
       }
 
       if (includePrize) {
@@ -366,6 +374,22 @@ export default function Page() {
   ];
 
   const getColor = (index: number) => PIE_COLORS[index % PIE_COLORS.length];
+
+  // Team name mapping for SDC 18 event
+  const TEAM_NAME_MAP: Record<number, string> = {
+    1: "Black",
+    2: "Red",
+    3: "White",
+    4: "Fuschia",
+    5: "Purple",
+    6: "Green",
+    7: "Light Blue",
+    8: "Orange",
+    9: "Yellow",
+    10: "Dark Blue",
+  };
+
+  const isSDC18Event = detailsData?.event.name === "[TEST] SDC 18";
 
   const createdByCorpId =
     typeof detailsData?.event.createdBy === "string"
@@ -677,7 +701,9 @@ export default function Page() {
                                   </SelectItem>
                                   {detailsData?.event.groupingStrategy && (
                                     <SelectItem value="groupNumber">
-                                      {headers.groupNumber}
+                                      {isSDC18Event
+                                        ? headers.team
+                                        : headers.groupNumber}
                                     </SelectItem>
                                   )}
                                   {detailsData?.event.hasLuckyDraw && (
@@ -704,7 +730,18 @@ export default function Page() {
                                   <TableHead>{headers.businessUnit}</TableHead>
                                 )}
                                 {detailsData?.event.groupingStrategy && (
-                                  <TableHead>{headers.groupNumber}</TableHead>
+                                  <>
+                                    {isSDC18Event ? (
+                                      <>
+                                        <TableHead>{headers.team}</TableHead>
+                                        <TableHead>{headers.group}</TableHead>
+                                      </>
+                                    ) : (
+                                      <TableHead>
+                                        {headers.groupNumber}
+                                      </TableHead>
+                                    )}
+                                  </>
                                 )}
                                 {detailsData?.event.hasLuckyDraw && (
                                   <TableHead>{headers.prizeName}</TableHead>
@@ -712,7 +749,7 @@ export default function Page() {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {usersData.map((user) => (
+                              {usersData.map((user, index) => (
                                 <TableRow key={user.workId}>
                                   <TableCell className="font-medium">
                                     {user.registeredAt
@@ -735,7 +772,23 @@ export default function Page() {
                                     </TableCell>
                                   )}
                                   {detailsData?.event.groupingStrategy && (
-                                    <TableCell>{user.groupNumber}</TableCell>
+                                    <>
+                                      {isSDC18Event ? (
+                                        <>
+                                          <TableCell>
+                                            {TEAM_NAME_MAP[user.groupNumber] ||
+                                              user.groupNumber}
+                                          </TableCell>
+                                          <TableCell>
+                                            {index < 120 ? "A" : "B"}
+                                          </TableCell>
+                                        </>
+                                      ) : (
+                                        <TableCell>
+                                          {user.groupNumber}
+                                        </TableCell>
+                                      )}
+                                    </>
                                   )}
                                   {detailsData?.event.hasLuckyDraw && (
                                     <TableCell>
