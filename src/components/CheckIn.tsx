@@ -375,9 +375,9 @@ const CheckIn = ({ className }: CheckInProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [isTermsAgree, setIsTermsAgree] = useState(false);
-  const [eventAttendanceCount, setEventAttendanceCount] = useState<
-    number | null
-  >(null);
+  const [registrationOrder, setRegistrationOrder] = useState<number | null>(
+    null
+  );
 
   const submitText = "Check in";
 
@@ -453,8 +453,7 @@ const CheckIn = ({ className }: CheckInProps) => {
         setGroupNumber(result.groupNumber);
         setShowResult(true);
         // revert after sdc18
-        setEventAttendanceCount(result.count ?? null);
-        console.log("data.count", result.count);
+        setRegistrationOrder(result.registrationOrder ?? null);
       } else {
         setError(result.message || "An error occurred, please try again");
         setLoading(false);
@@ -555,11 +554,9 @@ const CheckIn = ({ className }: CheckInProps) => {
                         Welcome! You're in
                         <br />
                         <span className="font-bold">
-                          {eventAttendanceCount != null && (
+                          {registrationOrder != null && (
                             <>
-                              {eventAttendanceCount <= 120
-                                ? "Group A"
-                                : "Group B"}
+                              {registrationOrder <= 120 ? "Group A" : "Group B"}
                               , {""}
                             </>
                           )}
