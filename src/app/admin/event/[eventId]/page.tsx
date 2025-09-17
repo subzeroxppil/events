@@ -1180,7 +1180,7 @@ export default function Page() {
     10: "Dark Blue",
   };
 
-  const isSDC18Event = detailsData?.event.name === "[TEST] SDC 18";
+  const isSDC18Event = detailsData?.event.name === "SDC 18";
 
   // Sort users by registration time to determine group A/B for SDC18
   const sortedByRegistration = isSDC18Event
