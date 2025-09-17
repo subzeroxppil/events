@@ -552,7 +552,7 @@ const CheckIn = ({ className }: CheckInProps) => {
                   <>
                     {hasGrouping && groupNumber != null ? (
                       <>
-                        Welcome! You're in:
+                        Welcome! You're in
                         <br />
                         <span className="font-bold">
                           {eventAttendanceCount != null && (
