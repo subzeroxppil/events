@@ -105,7 +105,7 @@ export default function Page() {
         ) : (
           <>
             <DraggableCardDemo />
-            <div className="flex flex-col py-2 px-7 md:py-3 md:px-14 bg-[hsl(108,33%,90%)] rounded-lg mt-2 justify-center items-center w-full">
+            <div className="flex flex-col py-2 px-7 md:py-3 md:px-14 bg-[hsl(108,33%,90%)] rounded-lg mt-2 justify-center items-center">
               {checkinsLoading ? (
                 <>
                   <Skeleton className="h-16 md:h-20 w-32 md:w-40 bg-[#548164]/20" />
