@@ -42,7 +42,7 @@ export function EventCard({
         pathname: `/admin/event/${id}`,
       }}
     >
-      <Card className="fade-in hover:bg-slate-100">
+      <Card className="fade-in hover:bg-slate-100 transition-colors">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
           <CardDescription>
