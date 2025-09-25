@@ -83,17 +83,17 @@ export default function Page() {
             className="text-center text-lg sm:text-xl text-muted-foreground font-bold"
             speed={60}
             sequence={[
-              "Organise Events",
+              "📅 Organise Events",
               1500,
-              "Host Spin-&-Win Games",
+              "🎡 Host Spin-&-Win Games",
               1500,
-              "Run Lucky Draws",
+              "🎲 Run Lucky Draws",
               1500,
-              "Monitor Attendance Live",
+              "📊 Monitor Attendance Live",
               1500,
-              "Auto-Assign Groups in Real-Time",
+              "⚡ Auto-Assign Groups in Real-Time",
               1500,
-              "Generate Check-In QR Codes",
+              "📱 Generate Check-In QR Codes",
               1500,
             ]}
             repeat={Infinity}
