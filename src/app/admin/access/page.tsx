@@ -113,22 +113,6 @@ export default function Page() {
               alt="paypal icon"
             />
             <p className="mb-2 text-2xl font-bold">Admin Portal Access</p>
-            <p className="text-muted-foreground">
-              See who has access to organise events
-            </p>
-          </div>
-          <div className="flex flex-col gap-3">
-            {admins.map((admin) => (
-              <AdminCard
-                key={admin.email}
-                email={admin.email}
-                onDelete={
-                  currentUserRole === "SUPERADMIN"
-                    ? () => handleDelete(admin.email)
-                    : undefined
-                }
-              />
-            ))}
           </div>
           {currentUserRole === "SUPERADMIN" && (
             <div className="flex flex-col mt-4">
@@ -157,6 +141,19 @@ export default function Page() {
               )}
             </div>
           )}
+          <div className="flex flex-col gap-3">
+            {admins.map((admin) => (
+              <AdminCard
+                key={admin.email}
+                email={admin.email}
+                onDelete={
+                  currentUserRole === "SUPERADMIN"
+                    ? () => handleDelete(admin.email)
+                    : undefined
+                }
+              />
+            ))}
+          </div>
         </Card>
       </div>
     </div>
