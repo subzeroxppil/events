@@ -37,9 +37,8 @@ export function DraggableCardDemo() {
       className: "absolute top-20 right-[45%] rotate-[2deg]",
     },
     {
-      title: "Coming soon...",
-      image:
-        "https://images.unsplash.com/photo-1505142468610-359e7d316be0?q=80&w=3070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: "SDC 18",
+      image: "/sdc18.jpg",
       className: "absolute top-24 left-[55%] rotate-[-7deg]",
     },
     {
