@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Copy } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import Image from "next/image";
-import Lottie from "lottie-react";
+import BackButton from "@/components/BackButton";
 
 interface QrDisplayCardProps {
   title: string;
@@ -32,13 +32,10 @@ export const QrDisplayCard = ({
 
   return (
     <div className="flex flex-col gap-4">
+      <BackButton className="self-start" />
       <Card className="p-10 pb-15 bg-[#f8f8f8] border-0 shadow-none">
         <div className="flex flex-col items-center text-center">
           <div className="flex flex-col md:flex-row items-center">
-            <Lottie
-              animationData={animationData}
-              className={`${animationClassName} shrink-0`}
-            />
             <span className="text-[60px] font-bold">{headingText}</span>
           </div>
           <Card className="p-10 mt-2 flex flex-col items-center bg-white">

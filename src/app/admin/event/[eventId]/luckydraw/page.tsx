@@ -56,7 +56,7 @@ export default function Page() {
         <QrDisplayCard
           title={eventTitle}
           qrLink={qrLink}
-          headingText="Scan to enter the Lucky Draw!"
+          headingText="🎁 Scan to enter the Lucky Draw!"
           animationData={luckydrawAnimation}
           animationClassName="h-[140px] mr-[-20px] mt-[-15px]"
         />

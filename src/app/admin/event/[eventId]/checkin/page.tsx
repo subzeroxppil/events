@@ -51,7 +51,7 @@ export default function Page() {
         <QrDisplayCard
           title={eventTitle}
           qrLink={qrLink}
-          headingText="Welcome! Scan to check in"
+          headingText="👋🏻 Welcome! Scan to check in"
           animationData={checkinAnimation}
         />
       )}
