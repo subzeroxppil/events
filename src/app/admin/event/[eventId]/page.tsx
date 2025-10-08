@@ -223,6 +223,7 @@ export default function Page() {
 
     const data = await res.json();
 
+    // hardcoded settings specific for impact day event
     if (data?.event?.name?.toLowerCase() === "impact day") {
       await fetchBusinessUnitMappings();
       const chartBreakdown = await fetchBusinessUnitBreakdown(eventId);
@@ -574,7 +575,7 @@ export default function Page() {
                       <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-1 font-bold">
                           <LoaderPinwheel size={20} />
-                          Lucky Draw Completions:
+                          Spin & Win Completions:
                           <span className="font-bold text-black">
                             {detailsData?.stats.luckyDrawCompleted}
                           </span>
