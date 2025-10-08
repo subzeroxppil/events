@@ -43,7 +43,7 @@ export function DraggableCardDemo() {
     },
     {
       title: "SDC 18",
-      image: "/sdc18.jpg",
+      image: "/sdc18.JPG",
       className: "absolute top-8 left-[40%] rotate-[4deg]",
     },
   ];
