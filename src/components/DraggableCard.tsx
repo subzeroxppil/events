@@ -37,13 +37,13 @@ export function DraggableCardDemo() {
       className: "absolute top-20 right-[45%] rotate-[2deg]",
     },
     {
-      title: "SDC 18",
-      image: "/sdc18.jpg",
+      title: "Impact Day 2025",
+      image: `/impact_day.jpeg`,
       className: "absolute top-24 left-[55%] rotate-[-7deg]",
     },
     {
-      title: "Impact Day 2025",
-      image: `/impact_day.jpeg`,
+      title: "SDC 18",
+      image: "/sdc18.jpg",
       className: "absolute top-8 left-[40%] rotate-[4deg]",
     },
   ];
