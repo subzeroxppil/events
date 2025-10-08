@@ -75,7 +75,7 @@ export default function Page() {
         setAdmins(data.admins);
         setCurrentUserRole(data.currentUserRole); // 👈 store role
       })
-      .catch(() => toast("Failed to fetch admin list"));
+      .catch(() => toast.error("Failed to fetch admin list"));
   }, []);
 
   const handleDelete = async (email: string) => {

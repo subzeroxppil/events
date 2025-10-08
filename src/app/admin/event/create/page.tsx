@@ -190,7 +190,7 @@ export default function Page() {
 
       if (res.ok) {
         router.push(`/admin`);
-        toast("Event has been created 🙌");
+        toast.success("Event has been created");
       } else {
         setError(result.message || "An error occurred, please try again");
       }
