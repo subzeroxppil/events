@@ -1,28 +1,27 @@
 # Events Portal
+
 https://pp-events-609469738206.asia-southeast1.run.app | https://pp-events.vercel.app
+
 > **Cloud deployment:** This project is hosted on both GCP & vercel. Changes are deployed automatically whenever there is a commit to main branch. But for changes to be deployed to vercel, it the commit has to be made by subzeroxppil github user
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+DATABASE_URL
+DIRECT_URL
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+NEXT_PUBLIC_BASE_URL
+JWT_SECRET
+```
 
 ## Getting Started for local development
 
 ```bash
-docker build -t paypal-events .
-docker run -p 3000:3000 paypal-events
-```
-
-### Teardown
-
-**To Stop and remove the running container**
-
-```bash
-docker ps              # Get the container ID
-docker stop <id>       # Stop the container
-docker rm <id>         # Remove the container
-```
-
-**To remove the image**
-
-```bash
-docker rmi paypal-events
+npm install
+npm run dev
 ```
 
 ## How to make changes to production database
