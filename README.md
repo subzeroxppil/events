@@ -1,3 +1,6 @@
+# Events Portal
+> **Cloud deployment:** This project is hosted on both GCP & vercel. Changes are deployed automatically whenever there is a commit to main branch. But for changes to be deployed to vercel, it the commit has to be made by subzeroxppil github user
+
 ## Getting Started for local development
 
 ```bash
