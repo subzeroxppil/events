@@ -2,7 +2,7 @@
 
 https://pp-events-609469738206.asia-southeast1.run.app | https://pp-events.vercel.app
 
-> **Cloud deployment:** This project is hosted on both GCP & vercel. Changes are deployed automatically whenever there is a commit to main branch. But for changes to be deployed to vercel, it the commit has to be made by subzeroxppil github user
+> **Cloud deployment:** This project is hosted on both GCP & vercel. Changes are deployed automatically whenever there is a commit to main branch. But for changes to be deployed to vercel, the commit has to be made by subzeroxppil github user
 
 ## Environment Variables
 
