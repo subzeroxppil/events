@@ -25,20 +25,18 @@ export function DraggableCardDemo() {
       className: "absolute top-5 left-[50%] rotate-[8deg]",
     },
     {
-      title: "Coming soon...",
-      image:
-        "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=3648&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: "Impact Day 2025",
+      image: "/impact_day.jpeg",
       className: "absolute top-32 left-[55%] rotate-[10deg]",
     },
     {
-      title: "Coming soon...",
-      image:
-        "https://images.unsplash.com/photo-1421789665209-c9b2a435e3dc?q=80&w=3542&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: "SG60 Rise Sharing",
+      image: "/SG60_Rise_Sharing.jpg",
       className: "absolute top-20 right-[45%] rotate-[2deg]",
     },
     {
-      title: "Impact Day 2025",
-      image: `/impact_day.jpeg`,
+      title: "Employee Appreciation Week",
+      image: `/employee_appreciation_week.jpg`,
       className: "absolute top-24 left-[55%] rotate-[-7deg]",
     },
     {
