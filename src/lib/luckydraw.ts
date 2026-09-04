@@ -83,11 +83,27 @@ export const buildRenderedItems = (
  */
 export const triggerFireworks = (
   confetti: (opts: Record<string, unknown>) => void,
-  settings: Pick<ViewSettings, "fireworksDuration" | "fireworksParticleCount">
+  settings: Pick<
+    ViewSettings,
+    | "fireworksDuration"
+    | "fireworksParticleCount"
+    | "useCustomColors"
+    | "customColors"
+  >
 ): (() => void) => {
   const duration = settings.fireworksDuration;
   const animationEnd = Date.now() + duration;
-  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+  // The draw's own accent colours, plus white for sparkle — confetti's default
+  // rainbow reads as generic next to the PayPal palette everything else uses.
+  const colors = [...resolveColors(settings), "#ffffff"];
+  const defaults = {
+    startVelocity: 30,
+    spread: 360,
+    ticks: 60,
+    zIndex: 0,
+    colors,
+    disableForReducedMotion: true,
+  };
 
   const randomInRange = (min: number, max: number) =>
     Math.random() * (max - min) + min;

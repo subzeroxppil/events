@@ -91,10 +91,7 @@ export default function ViewOnlyShareSheet({
           className="backdrop-blur-md bg-white/95 border border-white/70 hover:bg-white text-gray-700 shadow-lg text-xs sm:text-sm"
         >
           <Share2 className="w-4 h-4 mr-2" />
-          <span className="hidden sm:inline">
-            Share (create view-only public url)
-          </span>
-          <span className="sm:hidden">Share</span>
+          Share
         </Button>
       </SheetTrigger>
 

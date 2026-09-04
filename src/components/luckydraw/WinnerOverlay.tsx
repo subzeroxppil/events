@@ -8,6 +8,8 @@ interface WinnerOverlayProps {
   /** Real name for the winning corp id, when the CSV mapping has one. */
   winnerName?: string;
   accentColors: string[];
+  /** Text palette. "dark" is for the view-only page's dark skins. */
+  tone?: "light" | "dark";
 }
 
 /**
@@ -19,7 +21,9 @@ export default function WinnerOverlay({
   winner,
   winnerName,
   accentColors,
+  tone = "light",
 }: WinnerOverlayProps) {
+  const isDark = tone === "dark";
   return (
     <AnimatePresence>
       {show && winner && (
@@ -36,8 +40,9 @@ export default function WinnerOverlay({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             style={{
-              background:
-                "radial-gradient(circle at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 100%)",
+              background: isDark
+                ? "radial-gradient(circle at center, rgba(4,12,32,0.72) 0%, rgba(2,6,20,0.92) 100%)"
+                : "radial-gradient(circle at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 100%)",
               backdropFilter: "blur(12px) saturate(150%)",
               WebkitBackdropFilter: "blur(12px) saturate(150%)",
             }}
@@ -67,7 +72,9 @@ export default function WinnerOverlay({
                 <div
                   className="text-base sm:text-xl font-medium uppercase tracking-[0.3em] text-center"
                   style={{
-                    background: `linear-gradient(135deg, ${accentColors[1]} 0%, ${accentColors[2]} 100%)`,
+                    background: isDark
+                      ? `linear-gradient(135deg, ${accentColors[3]} 0%, ${accentColors[1]} 100%)`
+                      : `linear-gradient(135deg, ${accentColors[1]} 0%, ${accentColors[2]} 100%)`,
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                     backgroundClip: "text",
@@ -108,8 +115,10 @@ export default function WinnerOverlay({
                 <motion.div
                   className="text-4xl sm:text-6xl lg:text-8xl font-bold tracking-tight text-center break-words px-2"
                   style={{
-                    color: "#1a1a1a",
-                    textShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    color: isDark ? "#ffffff" : "#1a1a1a",
+                    textShadow: isDark
+                      ? `0 0 28px ${accentColors[3]}80`
+                      : "0 2px 8px rgba(0,0,0,0.1)",
                     letterSpacing: "-0.025em",
                   }}
                 >
@@ -123,8 +132,10 @@ export default function WinnerOverlay({
                     transition={{ delay: 0.4, duration: 0.4 }}
                     className="text-2xl sm:text-4xl lg:text-5xl font-medium tracking-tight mt-3 sm:mt-4 text-center break-words px-2"
                     style={{
-                      color: "#4a4a4a",
-                      textShadow: "0 1px 4px rgba(0,0,0,0.1)",
+                      color: isDark ? "rgba(226,232,240,0.85)" : "#4a4a4a",
+                      textShadow: isDark
+                        ? "none"
+                        : "0 1px 4px rgba(0,0,0,0.1)",
                     }}
                   >
                     ({winnerName})
@@ -136,7 +147,10 @@ export default function WinnerOverlay({
                 initial={{ y: 15, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.4 }}
-                className="text-base sm:text-xl lg:text-2xl text-gray-700 font-medium tracking-wide text-center"
+                className={
+                  "text-base sm:text-xl lg:text-2xl font-medium tracking-wide text-center " +
+                  (isDark ? "text-white/75" : "text-gray-700")
+                }
               >
                 Congratulations!
               </motion.div>

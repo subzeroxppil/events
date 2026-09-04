@@ -2,7 +2,7 @@
 
 import React from "react";
 import GradualBlur from "@/components/GradualBlur";
-import SpinnerItem from "@/components/luckydraw/SpinnerItem";
+import SpinnerItem, { type ReelTheme } from "@/components/luckydraw/SpinnerItem";
 import { buildRenderedItems } from "@/lib/luckydraw";
 
 interface SpinnerReelProps {
@@ -17,12 +17,21 @@ interface SpinnerReelProps {
   /** Drives the arrow indicator's glow. */
   accentColors: string[];
   isAnimating: boolean;
+  /** Card/text palette for the rows. Defaults to the original light look. */
+  theme?: ReelTheme;
+  /** Height of the fade masks at the top and bottom of the reel. */
+  fadeHeight?: string;
+  /** Draws a focus band across the centre row. */
+  showFocusBand?: boolean;
 }
 
 /**
  * The vertical slot-machine reel. Shared by the admin draw screen and the
  * public view-only page so the two can never drift apart visually.
  */
+const REEL_MASK =
+  "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.35) 6%, #000 20%, #000 80%, rgba(0,0,0,0.35) 94%, transparent 100%)";
+
 export default function SpinnerReel({
   spinnerItems,
   centerIndex,
@@ -34,6 +43,9 @@ export default function SpinnerReel({
   maxBlur,
   accentColors,
   isAnimating,
+  theme = "light",
+  fadeHeight = "8rem",
+  showFocusBand = false,
 }: SpinnerReelProps) {
   const renderedItems = React.useMemo(
     () => buildRenderedItems(spinnerItems, centerIndex, visibleRange),
@@ -42,6 +54,27 @@ export default function SpinnerReel({
 
   return (
     <div className="relative h-full flex items-center justify-center overflow-hidden">
+      {showFocusBand && (
+        <div
+          className="absolute left-0 right-0 top-1/2 -translate-y-1/2 z-[5] pointer-events-none rounded-2xl"
+          style={{
+            height: itemHeight * centerItemScale + 8,
+            background: `linear-gradient(90deg, transparent, ${accentColors[1]}14 15%, ${accentColors[1]}1f 50%, ${accentColors[1]}14 85%, transparent)`,
+            boxShadow: `inset 0 1px 0 ${accentColors[3]}33, inset 0 -1px 0 ${accentColors[3]}33`,
+          }}
+        />
+      )}
+
+      {/* The rows are masked rather than covered, so they fade out against
+          whatever the skin's background happens to be instead of needing a
+          matching opaque gradient at each end. */}
+      <div
+        className="absolute inset-0 overflow-hidden"
+        style={{
+          maskImage: REEL_MASK,
+          WebkitMaskImage: REEL_MASK,
+        }}
+      >
       <div
         className="absolute w-full"
         style={{
@@ -81,15 +114,18 @@ export default function SpinnerReel({
               opacity={opacity}
               blur={blur}
               isAnimating={isAnimating}
+              theme={theme}
+              accent={accentColors[1]}
             />
           );
         })}
+      </div>
       </div>
 
       {/* Gradual Blur */}
       <GradualBlur
         position="top"
-        height="8rem"
+        height={fadeHeight}
         strength={2.5}
         divCount={10}
         opacity={0.95}
@@ -98,7 +134,7 @@ export default function SpinnerReel({
       />
       <GradualBlur
         position="bottom"
-        height="8rem"
+        height={fadeHeight}
         strength={2.5}
         divCount={10}
         opacity={0.95}
@@ -106,33 +142,39 @@ export default function SpinnerReel({
         style={{ zIndex: 20, pointerEvents: "none" }}
       />
 
-      {/* Center Arrow Indicator */}
+      {/* Centre indicator.
+          Drawn as an SVG rather than the "▶" character: U+25B6 carries an
+          emoji presentation, and Chrome on Android picks it — the reel showed
+          a colour ▶️ emoji on phones instead of the accent-tinted arrow. */}
       <div className="absolute left-1 sm:left-2 md:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-30">
-        <div className="relative flex items-center">
-          {/* Arrow character */}
-          <div
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold select-none"
-            style={{
-              color: accentColors[1],
-              filter: `drop-shadow(0 0 10px ${accentColors[1]}60)`,
-              textShadow: `0 0 20px ${accentColors[1]}40`,
-            }}
-          >
-            ▶
-          </div>
-          {/* Glow effect behind arrow */}
-          <div
-            className="absolute inset-0 text-2xl sm:text-3xl lg:text-4xl font-bold select-none"
-            style={{
-              color: accentColors[3],
-              filter: "blur(4px)",
-              opacity: 0.6,
-            }}
-          >
-            ▶
-          </div>
-        </div>
+        <ReelArrow color={accentColors[1]} glow={accentColors[3]} />
+      </div>
+      <div className="absolute right-1 sm:right-2 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none z-30 rotate-180">
+        <ReelArrow color={accentColors[1]} glow={accentColors[3]} />
       </div>
     </div>
+  );
+}
+
+function ReelArrow({ color, glow }: { color: string; glow: string }) {
+  return (
+    <span className="relative block">
+      <svg
+        viewBox="0 0 12 16"
+        aria-hidden="true"
+        className="block w-3 h-4 sm:w-4 sm:h-5 lg:w-5 lg:h-7"
+        style={{ filter: `drop-shadow(0 0 8px ${glow}80)` }}
+      >
+        <path d="M1 1.2 L11 8 L1 14.8 Z" fill={color} />
+      </svg>
+      <svg
+        viewBox="0 0 12 16"
+        aria-hidden="true"
+        className="absolute inset-0 block w-3 h-4 sm:w-4 sm:h-5 lg:w-5 lg:h-7"
+        style={{ filter: "blur(4px)", opacity: 0.6 }}
+      >
+        <path d="M1 1.2 L11 8 L1 14.8 Z" fill={glow} />
+      </svg>
+    </span>
   );
 }
