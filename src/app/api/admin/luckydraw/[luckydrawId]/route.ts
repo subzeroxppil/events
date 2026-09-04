@@ -25,6 +25,7 @@ export async function GET(
         eventIds: true,
         createdAt: true,
         createdBy: true,
+        viewOnlyEnabled: true,
       },
     });
 
@@ -83,6 +84,7 @@ export async function GET(
         eventIds: luckyDraw.eventIds,
         createdAt: luckyDraw.createdAt,
         createdBy: luckyDraw.createdBy,
+        viewOnlyEnabled: luckyDraw.viewOnlyEnabled,
       },
       participants: uniqueWorkIds,
       participantCount: uniqueWorkIds.length,
