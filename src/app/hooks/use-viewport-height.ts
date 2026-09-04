@@ -3,17 +3,26 @@
 import { useEffect } from "react";
 
 /**
- * Publishes the height of the *visible* viewport as `--live-vh`, and locks the
- * document against scrolling for as long as the caller is mounted.
+ * Sizes a full-screen, non-scrolling page to the area the browser is actually
+ * showing, and locks the document against scrolling while it is mounted.
  *
- * `100dvh` gets close, but on Chrome for Android the bottom toolbar is not part
- * of the layout viewport and the dvh value only settles after the toolbar has
- * finished animating — so a full-height page has its last ~55px hidden behind
- * the browser chrome. `visualViewport.height` is what is actually on screen at
- * this moment, which is exactly what a non-scrolling full-screen page needs.
+ * There are two ways to ask how tall that area is, and each of them is wrong on
+ * some browser at some moment:
  *
- * The lock matters for the same reason: any scrollability at all lets the phone
- * rubber-band the page under the toolbar.
+ *   - `100dvh` is the browser's own answer and is usually right, but it is
+ *     recomputed as the chrome animates.
+ *   - `visualViewport.height` is what is on screen this instant, but iOS
+ *     reports it too small on a cold start — the address bar is compacted a
+ *     moment after first paint and the property does not always follow, which
+ *     left the page short by the height of a toolbar until switching apps and
+ *     back forced a relayout.
+ *
+ * So take the larger of the two. That is deliberately asymmetric: a box that is
+ * a few pixels too tall costs nothing, because the layout is a flex column with
+ * safe-area padding at both ends and the footer sits inside it, whereas a box
+ * that is too short leaves a visible band of nothing and pushes the content up
+ * the screen. Under-reporting from either source is corrected by the other, and
+ * only a source over-reporting could hurt — which neither does.
  */
 export function useViewportHeight() {
   useEffect(() => {
@@ -30,11 +39,23 @@ export function useViewportHeight() {
     body.style.overflow = "hidden";
     body.style.overscrollBehavior = "none";
 
-    const viewport = window.visualViewport;
+    // Reports whatever `100dvh` currently resolves to. Measured off a probe
+    // rather than the page itself, because the page's own height is the thing
+    // being set here and would just report back what it was last told.
+    // Collapses to 0 where dvh is unsupported, which the max() then ignores.
+    const probe = document.createElement("div");
+    probe.setAttribute("aria-hidden", "true");
+    probe.style.cssText =
+      "position:fixed;top:0;left:0;width:0;height:100dvh;" +
+      "pointer-events:none;visibility:hidden;";
+    body.appendChild(probe);
 
     const apply = () => {
-      const height = Math.round(viewport?.height ?? window.innerHeight);
+      const dvh = probe.getBoundingClientRect().height;
+      const visual = window.visualViewport?.height ?? 0;
+      const height = Math.round(Math.max(dvh, visual)) || window.innerHeight;
       if (height <= 0) return;
+
       // Compared against what is actually set rather than a remembered value,
       // so the property is restored even if something else clobbers it.
       const next = `${height}px`;
@@ -43,39 +64,36 @@ export function useViewportHeight() {
       }
     };
 
-    // Some browsers resize their own chrome without firing anything we can
-    // listen for. iOS Chrome opens with a tall address bar and compacts it a
-    // moment after first paint, and neither visualViewport's resize nor
-    // window's always follows — so a page measured once at mount stays short,
-    // leaving a strip of blank below it until something forces a relayout
-    // (which is why switching apps and back "fixed" it).
-    //
-    // So after every signal, keep re-reading on each frame for a short window.
-    // It is a property read and an integer compare; the cost is nil next to
-    // the reel animation already running.
+    // Browsers resize their own chrome without always firing an event for it,
+    // so after every signal keep re-reading for a few seconds. Polled rather
+    // than run per-frame: each read forces a layout flush, and the reel is
+    // animating.
     let settleUntil = 0;
-    let frame: number | null = null;
+    let settleTimer: ReturnType<typeof setInterval> | null = null;
 
-    const settle = () => {
-      apply();
-      if (performance.now() < settleUntil) {
-        frame = requestAnimationFrame(settle);
-      } else {
-        frame = null;
+    const stopSettling = () => {
+      if (settleTimer !== null) {
+        clearInterval(settleTimer);
+        settleTimer = null;
       }
     };
 
     const nudge = () => {
       apply();
-      settleUntil = performance.now() + 2500;
-      if (frame === null) frame = requestAnimationFrame(settle);
+      settleUntil = performance.now() + 3000;
+      if (settleTimer === null) {
+        settleTimer = setInterval(() => {
+          apply();
+          if (performance.now() >= settleUntil) stopSettling();
+        }, 120);
+      }
     };
 
     nudge();
 
     const targets: [EventTarget | null | undefined, string][] = [
-      [viewport, "resize"],
-      [viewport, "scroll"],
+      [window.visualViewport, "resize"],
+      [window.visualViewport, "scroll"],
       [window, "resize"],
       [window, "orientationchange"],
       // Returning from the app switcher or the bfcache.
@@ -88,8 +106,7 @@ export function useViewportHeight() {
       target?.addEventListener(event, nudge);
     }
 
-    // Last resort for a chrome change that fires no event at all. Once a second
-    // is imperceptible to correct and cheap enough to leave running.
+    // Last resort for a chrome change that fires nothing at all.
     const safety = window.setInterval(apply, 1000);
 
     return () => {
@@ -97,7 +114,8 @@ export function useViewportHeight() {
         target?.removeEventListener(event, nudge);
       }
       window.clearInterval(safety);
-      if (frame !== null) cancelAnimationFrame(frame);
+      stopSettling();
+      probe.remove();
 
       root.style.overflow = previous.rootOverflow;
       body.style.overflow = previous.bodyOverflow;
