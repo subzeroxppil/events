@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileSync, existsSync } from "fs";
-import { join } from "path";
+import { readCorpIdMapping } from "@/lib/corpid-mapping";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,45 +16,7 @@ export async function GET(request: NextRequest) {
     // Decode the lucky draw name
     const luckyDrawName = decodeURIComponent(encodedLuckyDrawName);
 
-    // Construct the CSV file path based on the lucky draw name
-    const csvPath = join(
-      process.cwd(),
-      "src",
-      "app",
-      "assets",
-      "corpPassToNameMapping",
-      `${luckyDrawName}.csv`
-    );
-
-    // Check if the CSV file exists
-    if (!existsSync(csvPath)) {
-      return NextResponse.json({ mapping: {} });
-    }
-
-    // Read and parse the CSV file
-    const csvContent = readFileSync(csvPath, "utf-8");
-    const lines = csvContent.split("\n");
-
-    // Skip header line and create mapping
-    const mapping: Record<string, string> = {};
-
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-
-      // Split by comma and handle potential commas in names
-      const commaIndex = line.indexOf(",");
-      if (commaIndex === -1) continue;
-
-      const email = line.substring(0, commaIndex).trim();
-      const name = line.substring(commaIndex + 1).trim();
-
-      if (email && name) {
-        // Extract corp ID (part before @)
-        const corpId = email.split("@")[0];
-        mapping[corpId] = name;
-      }
-    }
+    const mapping = readCorpIdMapping(luckyDrawName);
 
     return NextResponse.json({ mapping });
   } catch (error) {

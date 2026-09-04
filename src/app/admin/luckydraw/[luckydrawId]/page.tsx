@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import GradualBlur from "@/components/GradualBlur";
 import confetti from "canvas-confetti";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Trophy } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import {
@@ -23,7 +23,19 @@ import LuckyDrawSettings, {
   AnimationSettings,
   DEFAULT_SETTINGS,
 } from "./LuckyDrawSettings";
-import SpinnerItem from "./SpinnerItem";
+import SpinnerReel from "@/components/luckydraw/SpinnerReel";
+import WinnerOverlay from "@/components/luckydraw/WinnerOverlay";
+import PreviousWinner from "@/components/luckydraw/PreviousWinner";
+import ViewOnlyShareSheet from "@/components/luckydraw/ViewOnlyShareSheet";
+import { useItemHeight } from "@/app/hooks/use-item-height";
+import {
+  backgroundStyleFor,
+  createExtendedList,
+  resolveColors,
+  rouletteEasing,
+  triggerFireworks as runFireworks,
+} from "@/lib/luckydraw";
+import { toViewSettings } from "@/lib/luckydraw-settings";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -46,14 +58,7 @@ type LuckyDraw = {
   eventIds: number[];
   createdAt: string;
   createdBy: string;
-};
-
-const BASE_COLORS = ["#173066", "#509bff", "#0463ce", "#63cbfb"];
-
-// Smooth easing function
-const rouletteEasing = (progress: number, exponent: number): number => {
-  const smoothExponent = 2 + (exponent - 2) * Math.pow(progress, 1.5);
-  return 1 - Math.pow(1 - progress, smoothExponent);
+  viewOnlyEnabled: boolean;
 };
 
 export default function LuckyDraw() {
@@ -84,19 +89,16 @@ export default function LuckyDraw() {
     {}
   );
 
-  // Memoized values for performance
-  const itemHeight = useMemo(() => {
-    if (typeof window === "undefined") return 96;
-    if (window.innerWidth < 640) return 64;
-    if (window.innerWidth < 1024) return 80;
-    return 96;
-  }, []);
+  // Recomputed on resize/rotate rather than measured once.
+  const itemHeight = useItemHeight();
 
-  const currentColors = useMemo(() => {
-    return animationSettings.useCustomColors
-      ? animationSettings.customColors
-      : BASE_COLORS;
-  }, [animationSettings.useCustomColors, animationSettings.customColors]);
+  const currentColors = useMemo(
+    () => resolveColors(animationSettings),
+    [animationSettings.useCustomColors, animationSettings.customColors]
+  );
+
+  // Public view-only page toggle.
+  const [viewOnlyEnabled, setViewOnlyEnabled] = useState(false);
 
   // Vertical spinner states
   const [spinnerItems, setSpinnerItems] = useState<string[]>([]);
@@ -111,19 +113,6 @@ export default function LuckyDraw() {
   const spinSound = useRef<HTMLAudioElement | null>(null);
   const celebrateSound = useRef<HTMLAudioElement | null>(null);
   const applauseSound = useRef<HTMLAudioElement | null>(null);
-
-  const createExtendedList = useCallback(
-    (items: string[], targetLength: number): string[] => {
-      if (items.length === 0) return [];
-      const result = [];
-      while (result.length < targetLength) {
-        const shuffled = [...items].sort(() => Math.random() - 0.5);
-        result.push(...shuffled);
-      }
-      return result.slice(0, targetLength);
-    },
-    []
-  );
 
   const handleSpin = useCallback(async () => {
     if (isSpinning || participants.length === 0) return;
@@ -189,6 +178,25 @@ export default function LuckyDraw() {
     const randomOffset = Math.random() * 0.9;
     const finalTarget = baseTarget + randomOffset;
 
+    // Publish to the view-only page before starting our own animation, so the
+    // network hop overlaps the spin rather than delaying it. Deliberately not
+    // awaited — a failed broadcast must never stall the draw on the big screen.
+    if (viewOnlyEnabled) {
+      fetch(`/api/admin/luckydraw/${luckydrawId}/spin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          spinnerItems: newSpinnerItems,
+          winner: intendedWinner,
+          winnerIndex,
+          finalTarget,
+          duration: animationSettings.duration,
+          easeExponent: animationSettings.easeExponent,
+          settings: toViewSettings(animationSettings),
+        }),
+      }).catch((err) => console.error("Failed to broadcast spin:", err));
+    }
+
     animateSpinnerByIndex(
       0,
       finalTarget,
@@ -201,10 +209,13 @@ export default function LuckyDraw() {
     participants,
     winners,
     animationSettings,
-    createExtendedList,
+    viewOnlyEnabled,
+    luckydrawId,
   ]);
 
-  // Initialize audio
+  // Initialize audio. Deliberately kept separate from the F5 handler below:
+  // `handleSpin` changes identity on every winner/settings change, and tying
+  // the Audio objects to it tore them down and rebuilt them each time.
   useEffect(() => {
     window.scrollTo(0, document.body.scrollHeight);
 
@@ -219,7 +230,18 @@ export default function LuckyDraw() {
       if (applauseSound.current) applauseSound.current.load();
     }
 
-    // Add event listener to trigger spin when F5 is pressed
+    return () => {
+      document.body.style.overflow = "auto";
+
+      // Cleanup audio
+      if (spinSound.current) spinSound.current = null;
+      if (celebrateSound.current) celebrateSound.current = null;
+      if (applauseSound.current) applauseSound.current = null;
+    };
+  }, []);
+
+  // Presenter clickers send F5 — use it to trigger the spin.
+  useEffect(() => {
     const handleF5KeyPress = (e: KeyboardEvent) => {
       if (e.key === "F5") {
         e.preventDefault(); // Prevent page refresh
@@ -228,18 +250,7 @@ export default function LuckyDraw() {
     };
 
     document.addEventListener("keydown", handleF5KeyPress);
-
-    return () => {
-      document.body.style.overflow = "auto";
-
-      // Cleanup audio
-      if (spinSound.current) spinSound.current = null;
-      if (celebrateSound.current) celebrateSound.current = null;
-      if (applauseSound.current) applauseSound.current = null;
-
-      // Remove F5 keydown event listener
-      document.removeEventListener("keydown", handleF5KeyPress);
-    };
+    return () => document.removeEventListener("keydown", handleF5KeyPress);
   }, [handleSpin]);
 
   // Fetch lucky draw data
@@ -258,6 +269,7 @@ export default function LuckyDraw() {
       }
 
       setLuckyDraw(data.luckyDraw);
+      setViewOnlyEnabled(Boolean(data.luckyDraw?.viewOnlyEnabled));
 
       // Fetch corp ID mapping based on lucky draw name
       if (data.luckyDraw?.name) {
@@ -490,33 +502,7 @@ export default function LuckyDraw() {
   );
 
   const triggerFireworks = useCallback(() => {
-    const duration = animationSettings.fireworksDuration;
-    const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-
-    const randomInRange = (min: number, max: number) =>
-      Math.random() * (max - min) + min;
-
-    const interval = window.setInterval(() => {
-      const timeLeft = animationEnd - Date.now();
-
-      if (timeLeft <= 0) {
-        return clearInterval(interval);
-      }
-
-      const particleCount =
-        animationSettings.fireworksParticleCount * (timeLeft / duration);
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-      });
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-      });
-    }, 250);
+    runFireworks(confetti, animationSettings);
   }, [animationSettings]);
 
   // Idle animation
@@ -581,42 +567,13 @@ export default function LuckyDraw() {
   }, []);
 
   // Dynamic background style based on settings
-  const backgroundStyle = useMemo(() => {
-    if (animationSettings.backgroundMode === "solid") {
-      return {
-        background: animationSettings.backgroundSolidColor,
-      } as React.CSSProperties;
-    }
-    return {
-      background: `linear-gradient(${animationSettings.backgroundGradientAngle}deg, ${animationSettings.backgroundGradientFrom}, ${animationSettings.backgroundGradientTo})`,
-    } as React.CSSProperties;
-  }, [
+  const backgroundStyle = useMemo(() => backgroundStyleFor(animationSettings), [
     animationSettings.backgroundMode,
     animationSettings.backgroundSolidColor,
     animationSettings.backgroundGradientAngle,
     animationSettings.backgroundGradientFrom,
     animationSettings.backgroundGradientTo,
   ]);
-
-  // Calculate visible items
-  const renderedItems = useMemo(() => {
-    if (spinnerItems.length === 0) return [];
-    const items = [];
-    const totalItems = spinnerItems.length;
-    const visibleRange = animationSettings.visibleRange;
-
-    for (let i = -visibleRange; i <= visibleRange; i++) {
-      const absoluteIndex = centerIndex + i;
-      const wrappedIndex =
-        ((absoluteIndex % totalItems) + totalItems) % totalItems;
-      items.push({
-        text: spinnerItems[wrappedIndex],
-        offset: i,
-        key: `${absoluteIndex}-${spinnerItems[wrappedIndex]}`,
-      });
-    }
-    return items;
-  }, [spinnerItems, centerIndex, animationSettings.visibleRange]);
 
   if (initialLoading) {
     return (
@@ -662,174 +619,30 @@ export default function LuckyDraw() {
         {/* Spinner Container */}
         <div className="relative w-full max-w-sm sm:max-w-2xl lg:max-w-3xl h-screen">
           {/* Vertical Spinner */}
-          <div className="relative h-full flex items-center justify-center overflow-hidden">
-            <div
-              ref={spinnerRef}
-              className="absolute w-full"
-              style={{
-                top: "50%",
-                transform: `translateY(calc(-50% - ${animationOffset}px))`,
-                willChange: "transform",
-                transition: "none",
-              }}
-            >
-              {renderedItems.map((item) => {
-                const distanceFromCenter = Math.abs(item.offset);
-                const isCenter = item.offset === 0;
-                const isNearCenter = distanceFromCenter <= 2;
-
-                const scale = isCenter
-                  ? animationSettings.centerItemScale
-                  : isNearCenter
-                  ? animationSettings.nearCenterScale
-                  : 1;
-                const opacity = isCenter
-                  ? 1
-                  : Math.max(0.3, 1 - distanceFromCenter * 0.05);
-                const blur =
-                  distanceFromCenter > 8
-                    ? Math.min(
-                        animationSettings.maxBlur,
-                        (distanceFromCenter - 8) * 0.1
-                      )
-                    : 0;
-
-                return (
-                  <SpinnerItem
-                    key={item.key}
-                    text={item.text}
-                    offset={item.offset}
-                    itemHeight={itemHeight}
-                    isCenter={isCenter}
-                    isNearCenter={isNearCenter}
-                    scale={scale}
-                    opacity={opacity}
-                    blur={blur}
-                    isAnimating={isIdleAnimating || isSpinning}
-                  />
-                );
-              })}
-            </div>
-
-            {/* Gradual Blur */}
-            <GradualBlur
-              position="top"
-              height="8rem"
-              strength={2.5}
-              divCount={10}
-              opacity={0.95}
-              exponential={true}
-              style={{
-                zIndex: 20,
-                pointerEvents: "none",
-              }}
-            />
-            <GradualBlur
-              position="bottom"
-              height="8rem"
-              strength={2.5}
-              divCount={10}
-              opacity={0.95}
-              exponential={true}
-              style={{
-                zIndex: 20,
-                pointerEvents: "none",
-              }}
-            />
-
-            {/* Center Arrow Indicator */}
-            <div className="absolute left-1 sm:left-2 md:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-30">
-              <div className="relative flex items-center">
-                {/* Arrow character */}
-                <div
-                  className="text-2xl sm:text-3xl lg:text-4xl font-bold select-none"
-                  style={{
-                    color: currentColors[1],
-                    filter: `drop-shadow(0 0 ${
-                      typeof window !== "undefined" && window.innerWidth < 640
-                        ? "8px"
-                        : "12px"
-                    } ${currentColors[1]}60)`,
-                    textShadow: `0 0 20px ${currentColors[1]}40`,
-                  }}
-                >
-                  ▶
-                </div>
-                {/* Glow effect behind arrow */}
-                <div
-                  className="absolute inset-0 text-2xl sm:text-3xl lg:text-4xl font-bold select-none"
-                  style={{
-                    color: currentColors[3],
-                    filter: "blur(4px)",
-                    opacity: 0.6,
-                  }}
-                >
-                  ▶
-                </div>
-              </div>
-            </div>
-          </div>
+          <SpinnerReel
+            spinnerItems={spinnerItems}
+            centerIndex={centerIndex}
+            animationOffset={animationOffset}
+            itemHeight={itemHeight}
+            visibleRange={animationSettings.visibleRange}
+            centerItemScale={animationSettings.centerItemScale}
+            nearCenterScale={animationSettings.nearCenterScale}
+            maxBlur={animationSettings.maxBlur}
+            accentColors={currentColors}
+            isAnimating={isIdleAnimating || isSpinning}
+          />
         </div>
 
         {/* Previous Winner */}
-        <div className="absolute left-2 sm:left-4 lg:left-8 top-1/2 -translate-y-1/2 z-40 hidden sm:block">
-          <AnimatePresence mode="wait">
-            {winners.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, x: -30, scale: 0.9 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -30, scale: 0.9 }}
-                transition={{
-                  type: "spring",
-                  damping: 25,
-                  stiffness: 300,
-                }}
-                className="relative p-4 sm:p-5 lg:p-6 rounded-2xl overflow-hidden"
-              >
-                {/* Subtle gradient overlay */}
-                <motion.div className="absolute inset-0 opacity-30" />
-
-                <div className="relative z-10">
-                  <motion.div
-                    className="text-sm sm:text-base lg:text-lg uppercase tracking-[0.2em] mb-2 font-semibold"
-                    style={{
-                      background: `linear-gradient(90deg, ${currentColors[1]}99 0%, ${currentColors[2]}99 10%)`,
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    Previous Winner
-                  </motion.div>
-                  <motion.div
-                    className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
-                    {winners[winners.length - 1].workId}
-                  </motion.div>
-                  <motion.div
-                    className="text-sm sm:text-base tracking-wide text-gray-600 flex items-center gap-1"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    {new Date(
-                      winners[winners.length - 1].wonAt
-                    ).toLocaleTimeString("en-SG", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </motion.div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        <PreviousWinner winners={winners} accentColors={currentColors} />
 
         {/* Settings Button */}
         <div className="fixed right-2 sm:right-4 lg:right-8 bottom-2 sm:bottom-4 lg:bottom-8 z-40 flex gap-2 items-center">
+          <ViewOnlyShareSheet
+            luckydrawId={String(luckydrawId)}
+            enabled={viewOnlyEnabled}
+            onEnabledChange={setViewOnlyEnabled}
+          />
           <LuckyDrawSettings
             settings={animationSettings}
             onSettingsChange={setAnimationSettings}
@@ -1069,141 +882,12 @@ export default function LuckyDraw() {
       </div>
 
       {/* Winner Display */}
-      <AnimatePresence>
-        {showWinner && currentWinner && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
-          >
-            <motion.div
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              style={{
-                background:
-                  "radial-gradient(circle at center, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 100%)",
-                backdropFilter: "blur(12px) saturate(150%)",
-                WebkitBackdropFilter: "blur(12px) saturate(150%)",
-              }}
-            />
-
-            {/* Winner card container */}
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 30 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: -20 }}
-              transition={{
-                type: "spring",
-                damping: 20,
-                stiffness: 300,
-                duration: 0.6,
-              }}
-              className="text-center relative px-10 py-12 max-w-lg mx-4"
-            >
-              {/* Winner Card */}
-              <motion.div
-                className="absolute inset-0 rounded-3xl"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1, duration: 0.5 }}
-              />
-
-              {/* Content */}
-              <div className="relative z-10 text-center flex flex-col items-center">
-                {/* Winner label */}
-                <motion.div
-                  initial={{ y: -15, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.2, duration: 0.4 }}
-                  className="mb-6 text-center"
-                >
-                  <div
-                    className="text-xl font-medium uppercase tracking-[0.3em] text-center"
-                    style={{
-                      background: `linear-gradient(135deg, ${currentColors[1]} 0%, ${currentColors[2]} 100%)`,
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    Winner
-                  </div>
-                </motion.div>
-
-                {/* Winner name with subtle glow */}
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{
-                    delay: 0.3,
-                    type: "spring",
-                    damping: 15,
-                    stiffness: 200,
-                  }}
-                  className="relative mb-8 text-center"
-                >
-                  {/* Subtle glow effect */}
-                  <motion.div
-                    className="absolute -inset-4 rounded-xl opacity-20"
-                    style={{
-                      background: `radial-gradient(ellipse, ${currentColors[1]}30 0%, transparent 70%)`,
-                      filter: "blur(15px)",
-                    }}
-                    animate={{
-                      opacity: [0.15, 0.25, 0.15],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  />
-
-                  {/* Winner text */}
-                  <motion.div
-                    className="text-6xl sm:text-7xl lg:text-8xl font-bold tracking-tight text-center"
-                    style={{
-                      color: "#1a1a1a",
-                      textShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                      letterSpacing: "-0.025em",
-                    }}
-                  >
-                    {currentWinner}
-                  </motion.div>
-
-                  {currentWinner && corpIdMapping[currentWinner] && (
-                    <motion.div
-                      initial={{ y: 10, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.4, duration: 0.4 }}
-                      className="text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight mt-4 text-center"
-                      style={{
-                        color: "#4a4a4a",
-                        textShadow: "0 1px 4px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                      ({corpIdMapping[currentWinner]})
-                    </motion.div>
-                  )}
-                </motion.div>
-
-                <motion.div
-                  initial={{ y: 15, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 0.4 }}
-                  className="text-lg sm:text-xl lg:text-2xl text-gray-700 font-medium tracking-wide text-center"
-                >
-                  Congratulations!
-                </motion.div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <WinnerOverlay
+        show={showWinner}
+        winner={currentWinner}
+        winnerName={currentWinner ? corpIdMapping[currentWinner] : undefined}
+        accentColors={currentColors}
+      />
     </div>
   );
 }

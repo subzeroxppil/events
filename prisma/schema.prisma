@@ -98,6 +98,13 @@ model events_portal_luckydraw {
   createdAt DateTime @default(now())
   createdBy String
   eventIds  Int[]    @default([])
+
+  // View-only public page ("/live/<id>"): server-side on/off gate plus the
+  // spin broadcast bus that the SSE stream polls.
+  viewOnlyEnabled Boolean   @default(false)
+  liveSpin        Json?
+  liveSpinAt      DateTime?
+
   events_portal_luckydraw_winners events_portal_luckydraw_winners[]
 }
 
