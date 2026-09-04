@@ -28,7 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { pixelFontVars } from "@/lib/pixel-font";
 import {
-  LIVE_VIEWPORT_STYLE,
+  LIVE_VIEWPORT_CLASS,
   useRootBackground,
   useViewportHeight,
 } from "@/app/hooks/use-viewport-height";
@@ -82,12 +82,12 @@ export default function PixelAdminScreen({
   const draw = useAdminDraw();
 
   useViewportHeight();
-  useRootBackground(variant.background);
+  useRootBackground(variant.background, variant.backgroundBase);
 
   if (draw.initialLoading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
+        className={`${LIVE_VIEWPORT_CLASS} flex items-center justify-center`}
         style={{ background: variant.background }}
       >
         <LoadingSpinner />
@@ -98,7 +98,7 @@ export default function PixelAdminScreen({
   if (draw.error) {
     return (
       <div
-        className={`${pixelFontVars} min-h-screen flex items-center justify-center px-6`}
+        className={`${pixelFontVars} ${LIVE_VIEWPORT_CLASS} flex items-center justify-center px-6`}
         style={{ background: variant.background }}
       >
         <div className="font-pixel text-[11px] leading-[1.8] text-[#e04b4b] text-center">
@@ -112,8 +112,8 @@ export default function PixelAdminScreen({
 
   return (
     <div
-      className={`${pixelFontVars} fixed inset-x-0 top-0 w-full overflow-hidden overscroll-none`}
-      style={{ ...LIVE_VIEWPORT_STYLE, background: variant.background }}
+      className={`${pixelFontVars} ${LIVE_VIEWPORT_CLASS}`}
+      style={{ background: variant.background }}
     >
       <PixelBackdrop variant={variant} />
       <PixelCrt variant={variant} />

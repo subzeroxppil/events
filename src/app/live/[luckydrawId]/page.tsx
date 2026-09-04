@@ -18,7 +18,7 @@ import {
 } from "@/components/luckydraw/live/pixel/variants";
 import type { LiveStageProps } from "@/components/luckydraw/live/types";
 import {
-  LIVE_VIEWPORT_STYLE,
+  LIVE_VIEWPORT_CLASS,
   useRootBackground,
   useViewportHeight,
 } from "@/app/hooks/use-viewport-height";
@@ -102,6 +102,8 @@ function pixelSkins(): Record<string, Skin> {
 
 const FALLBACK_BACKGROUND =
   "radial-gradient(120% 90% at 50% -10%, #1e4fa8 0%, #10265c 45%, #071634 100%)";
+/** The colour the fallback gradient ends on — see `useRootBackground`. */
+const FALLBACK_BASE = "#071634";
 
 export default function LiveLuckyDrawPage() {
   return (
@@ -155,10 +157,7 @@ function LiveLuckyDraw() {
   const Welcome = skin.Welcome;
 
   return (
-    <div
-      className="fixed inset-x-0 top-0 w-full overflow-hidden overscroll-none"
-      style={LIVE_VIEWPORT_STYLE}
-    >
+    <div className={LIVE_VIEWPORT_CLASS}>
       <Stage live={live} />
 
       {!live.started &&
@@ -184,11 +183,11 @@ function LiveLuckyDraw() {
 
 /** Full-bleed branded box used for the loading, not-live and error states. */
 function LiveShell({ children }: { children: React.ReactNode }) {
-  useRootBackground(FALLBACK_BACKGROUND);
+  useRootBackground(FALLBACK_BACKGROUND, FALLBACK_BASE);
   return (
     <div
-      className="fixed inset-x-0 top-0 w-full flex items-center justify-center overflow-hidden"
-      style={{ ...LIVE_VIEWPORT_STYLE, background: FALLBACK_BACKGROUND }}
+      className={`${LIVE_VIEWPORT_CLASS} flex items-center justify-center`}
+      style={{ background: FALLBACK_BACKGROUND }}
     >
       {children}
     </div>

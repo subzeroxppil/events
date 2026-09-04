@@ -14,12 +14,14 @@ import { useRootBackground } from "@/app/hooks/use-viewport-height";
  */
 const MIDNIGHT_BACKGROUND =
   "radial-gradient(130% 80% at 50% 0%, #123163 0%, #0a1836 38%, #03081c 100%)";
+/** The colour the gradient ends on — see `useRootBackground`. */
+const MIDNIGHT_BASE = "#03081c";
 
 export default function MidnightStage({ live }: LiveStageProps) {
   const latest = live.winners[live.winners.length - 1];
   const glow = live.accentColors[3];
 
-  useRootBackground(MIDNIGHT_BACKGROUND);
+  useRootBackground(MIDNIGHT_BACKGROUND, MIDNIGHT_BASE);
 
   return (
     <div

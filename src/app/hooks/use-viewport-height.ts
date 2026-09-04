@@ -3,26 +3,29 @@
 import { useEffect } from "react";
 
 /**
- * Sizes a full-screen, non-scrolling page to the area the browser is actually
- * showing, and locks the document against scrolling while it is mounted.
+ * Locks the document against scrolling for a full-screen page, and publishes
+ * `--live-vh`: the height `visualViewport` says is on screen right now.
  *
- * There are two ways to ask how tall that area is, and each of them is wrong on
- * some browser at some moment:
+ * The height itself is not applied here. `.live-viewport` in globals.css takes
+ * the largest of three independent answers — the layout viewport via
+ * `inset: 0`, the browser's own `100dvh`, and this measurement — and each is
+ * only ever allowed to raise the floor, never lower it. That matters because
+ * every one of them is wrong on some browser at some moment:
  *
- *   - `100dvh` is the browser's own answer and is usually right, but it is
- *     recomputed as the chrome animates.
+ *   - `100dvh` is usually right, but it is recomputed as the chrome animates
+ *     and has been seen to settle short after a cold start.
  *   - `visualViewport.height` is what is on screen this instant, but iOS
  *     reports it too small on a cold start — the address bar is compacted a
- *     moment after first paint and the property does not always follow, which
- *     left the page short by the height of a toolbar until switching apps and
- *     back forced a relayout.
+ *     moment after first paint and the property does not always follow.
+ *   - `inset: 0` never lags, being the browser's own layout viewport, but on
+ *     iOS it stays at the toolbars-shown size while the toolbars are minimised.
  *
- * So take the larger of the two. That is deliberately asymmetric: a box that is
- * a few pixels too tall costs nothing, because the layout is a flex column with
- * safe-area padding at both ends and the footer sits inside it, whereas a box
- * that is too short leaves a visible band of nothing and pushes the content up
- * the screen. Under-reporting from either source is corrected by the other, and
- * only a source over-reporting could hurt — which neither does.
+ * Taking the maximum is deliberately asymmetric. A box a few pixels too tall
+ * costs nothing — the layout is a flex column with safe-area padding at both
+ * ends — whereas a box too short leaves a visible band of bare page and pushes
+ * the content up the screen, which was the bug this arrangement replaces. So
+ * a source that under-reports is corrected by the other two, and a stale value
+ * left behind by a backgrounded tab can no longer shrink the page on its own.
  */
 export function useViewportHeight() {
   useEffect(() => {
@@ -100,7 +103,10 @@ export function useViewportHeight() {
       [window, "pageshow"],
       [window, "focus"],
       [window, "load"],
+      // Chrome discards and thaws backgrounded tabs; both come back through
+      // here, and a thawed tab is exactly where a stale measurement lives.
       [document, "visibilitychange"],
+      [document, "resume"],
     ];
     for (const [target, event] of targets) {
       target?.addEventListener(event, nudge);
@@ -128,13 +134,16 @@ export function useViewportHeight() {
 /**
  * Paints `css` behind the document while the caller is mounted.
  *
- * Belt and braces for the above: the page is a fixed box sized from a
- * measurement, and a measurement can briefly be wrong. Without this, being
- * short by even a frame shows as a band of the body's white — obvious against
- * every one of the skins. Painting the same background on the root makes any
- * such gap invisible rather than merely rare.
+ * Belt and braces for the above: `.live-viewport` covers the screen by
+ * construction, but this makes the page underneath it the right colour anyway,
+ * including in the moment before hydration.
+ *
+ * `base` is the solid colour the gradient ends on. Without it a gradient that
+ * ends up shorter than the canvas *repeats* — the failure looked like a pale
+ * band of near-white under the handheld skin, not the transparent gap you
+ * would expect — so pin a colour under it and stop the tiling.
  */
-export function useRootBackground(css: string | undefined) {
+export function useRootBackground(css: string | undefined, base?: string) {
   useEffect(() => {
     if (!css) return;
     const root = document.documentElement;
@@ -144,17 +153,26 @@ export function useRootBackground(css: string | undefined) {
       body: body.style.background,
     };
 
-    root.style.background = css;
-    body.style.background = css;
+    for (const el of [root, body]) {
+      // The shorthand first: it resets colour and repeat, which the two lines
+      // below then set deliberately.
+      el.style.background = css;
+      if (base) {
+        el.style.backgroundColor = base;
+        el.style.backgroundRepeat = "no-repeat";
+      }
+    }
 
     return () => {
       root.style.background = previous.root;
       body.style.background = previous.body;
     };
-  }, [css]);
+  }, [css, base]);
 }
 
-/** Full-screen box that tracks the visible viewport. */
-export const LIVE_VIEWPORT_STYLE = {
-  height: "var(--live-vh, 100dvh)",
-} as const;
+/**
+ * Full-screen box that always covers at least the visible viewport.
+ * Defined in globals.css — see the comment there for why it is a floor rather
+ * than a height.
+ */
+export const LIVE_VIEWPORT_CLASS = "live-viewport";

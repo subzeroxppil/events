@@ -130,29 +130,10 @@ export function PixelBackdrop({ variant }: { variant: PixelVariant }) {
   if (variant.backdrop === "dots") {
     return (
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* The grid you can see between a handheld's pixels. */}
-        <div
-          className="absolute inset-0 opacity-[0.35]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, rgba(23,48,102,0.16) 1px, transparent 1px), linear-gradient(to bottom, rgba(23,48,102,0.16) 1px, transparent 1px)",
-            backgroundSize: "8px 8px",
-          }}
-        />
-
-        {/* A tile map scrolling under everything, the way a handheld's
-            background layer does. Inset negatively so the drift never
-            uncovers an edge. */}
-        <div
-          className="pixel-tile-drift absolute -inset-24 opacity-[0.5]"
-          style={{
-            backgroundImage:
-              "repeating-conic-gradient(rgba(23,48,102,0.07) 0% 25%, transparent 0% 50%)",
-            backgroundSize: "32px 32px",
-          }}
-        />
-
-        {/* Sprite clouds, three sizes at three speeds. */}
+        {/* Clouds and nothing else. The pixel grid, the scrolling tile map and
+            the LCD ghosting band that used to sit under them all read as noise
+            on a phone rather than as texture, and they were the only things
+            competing with the reel for attention. */}
         {LCD_CLOUDS.map((c, i) => (
           <div
             key={i}
@@ -172,16 +153,6 @@ export function PixelBackdrop({ variant }: { variant: PixelVariant }) {
             <PixelCloud scale={c.scale} />
           </div>
         ))}
-
-        {/* Ghosting band, as an LCD of this vintage would show when the
-            picture changes. */}
-        <div
-          className="pixel-lcd-sweep absolute inset-y-0 w-1/3"
-          style={{
-            background:
-              "linear-gradient(to right, transparent, rgba(23,48,102,0.06), transparent)",
-          }}
-        />
       </div>
     );
   }

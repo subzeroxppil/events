@@ -209,6 +209,37 @@
   }
 }
 
+/* Full-screen, non-scrolling draw pages — the public view-only page and the
+   pixel admin screen.
+
+   The height is set as a *floor* fed by three independent sources rather than
+   as one exact measurement, because each source is wrong on some browser at
+   some moment and only one direction of error hurts. A box a few pixels too
+   tall clips nothing anyone reads; a box too short strands the UI up the
+   screen with a band of bare page beneath it, which is the failure this
+   replaces.
+
+     inset: 0     the layout viewport, maintained by the browser with no
+                  measurement of ours involved. It is the baseline that holds
+                  even if every script on the page fails.
+     100dvh       the browser's own answer, re-resolved live as the address bar
+                  animates, so it needs no event to stay current.
+     --live-vh    what `visualViewport` reports is on screen this instant, set
+                  by useViewportHeight. The only one of the three that is right
+                  during an iOS cold start, where the other two read short.
+
+   A stale or under-reported value from any one of them can now only be
+   overruled by the others, never obeyed. */
+.live-viewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  /* Ordered by support: browsers without dvh keep the measured floor. */
+  min-height: var(--live-vh, 0px);
+  min-height: max(100dvh, var(--live-vh, 0px));
+}
+
 .roulette-pro-regular-image-wrapper {
   display: none !important;
   background: transparent !important;
@@ -553,18 +584,9 @@
   }
 }
 
-/* Handheld-LCD backdrop.
+/* Handheld-LCD backdrop — drifting cloud sprites, and nothing else.
    steps() throughout: a sprite on a handheld moves in whole pixels at a low
    frame rate, and easing it smoothly is the giveaway that it isn't one. */
-@keyframes pixel-tile-drift {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 64px 64px;
-  }
-}
-
 @keyframes pixel-drift-x {
   from {
     transform: translateX(-40vw);
@@ -572,19 +594,6 @@
   to {
     transform: translateX(140vw);
   }
-}
-
-@keyframes pixel-lcd-sweep {
-  0% {
-    transform: translateX(-70%);
-  }
-  100% {
-    transform: translateX(170%);
-  }
-}
-
-.pixel-tile-drift {
-  animation: pixel-tile-drift 16s steps(8, end) infinite;
 }
 
 .pixel-drift {
@@ -595,19 +604,11 @@
   animation-iteration-count: infinite;
 }
 
-.pixel-lcd-sweep {
-  animation: pixel-lcd-sweep 9s steps(24, end) infinite;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .pixel-tile-drift,
-  .pixel-drift,
-  .pixel-lcd-sweep {
-    animation: none;
-  }
-  /* The drift keyframe is what puts a cloud on screen at all, so park each
-     one at a fixed spot rather than letting them pile up at the left edge. */
   .pixel-drift {
+    animation: none;
+    /* The drift keyframe is what puts a cloud on screen at all, so park each
+       one at a fixed spot rather than letting them pile up at the left edge. */
     transform: translateX(var(--cloud-x, 40vw));
   }
 }

@@ -17,6 +17,12 @@ export type PixelVariant = {
   /** Which skin this is. Always sits on its own line under the tagline. */
   edition: string;
   background: string;
+  /**
+   * The solid colour `background` ends on. Painted under the gradient on the
+   * document root, where a gradient shorter than the canvas would otherwise
+   * tile and show its opening colour again as a band.
+   */
+  backgroundBase: string;
   backdrop: "stars" | "dots" | "checker";
   /** Scanlines and vignette. Off for the handheld skin, which is not a CRT. */
   crt: boolean;
@@ -55,6 +61,7 @@ const ARCADE_NIGHT: PixelVariant = {
   tagline: "LUCKY DRAW",
   edition: "<ARCADE NIGHT>",
   background: "linear-gradient(180deg, #173066 0%, #0d1f47 45%, #050d22 100%)",
+  backgroundBase: "#050d22",
   backdrop: "stars",
   crt: true,
   reelTheme: "pixel",
@@ -89,6 +96,7 @@ const HANDHELD: PixelVariant = {
   tagline: "LUCKY DRAW",
   edition: "<PORTABLE EDITION>",
   background: "linear-gradient(180deg, #eaf2ff 0%, #d3e2f8 55%, #b9cdec 100%)",
+  backgroundBase: "#b9cdec",
   backdrop: "dots",
   crt: false,
   reelTheme: "pixel-lcd",
@@ -123,6 +131,7 @@ const QUEST: PixelVariant = {
   tagline: "LUCKY DRAW",
   edition: "<QUEST MODE>",
   background: "linear-gradient(180deg, #0a1638 0%, #061027 60%, #03081a 100%)",
+  backgroundBase: "#03081a",
   backdrop: "checker",
   crt: false,
   reelTheme: "pixel-quest",

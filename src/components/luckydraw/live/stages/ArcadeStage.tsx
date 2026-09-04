@@ -16,12 +16,14 @@ import { useRootBackground } from "@/app/hooks/use-viewport-height";
  */
 const ARCADE_BACKGROUND =
   "linear-gradient(165deg, #0463ce 0%, #123f8f 55%, #0b2258 100%)";
+/** The colour the gradient ends on — see `useRootBackground`. */
+const ARCADE_BASE = "#0b2258";
 
 export default function ArcadeStage({ live }: LiveStageProps) {
   const latest = live.winners[live.winners.length - 1];
   const accent = live.accentColors[1];
 
-  useRootBackground(ARCADE_BACKGROUND);
+  useRootBackground(ARCADE_BACKGROUND, ARCADE_BASE);
 
   return (
     <div

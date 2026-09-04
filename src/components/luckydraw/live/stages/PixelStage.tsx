@@ -32,7 +32,7 @@ export default function PixelStage({
 }: LiveStageProps & { variant?: PixelVariant }) {
   const latest = live.winners[live.winners.length - 1];
 
-  useRootBackground(variant.background);
+  useRootBackground(variant.background, variant.backgroundBase);
 
   return (
     <div
