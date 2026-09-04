@@ -50,7 +50,7 @@ export type PixelVariant = {
 /** Deep-space cabinet: starfield, scanlines, cyan on near-black navy. */
 const ARCADE_NIGHT: PixelVariant = {
   id: "pixel",
-  tagline: "LUCKY DRAW",
+  tagline: "LUCKY DRAW (ARCADE NIGHT)",
   background: "linear-gradient(180deg, #173066 0%, #0d1f47 45%, #050d22 100%)",
   backdrop: "stars",
   crt: true,
@@ -83,7 +83,7 @@ const ARCADE_NIGHT: PixelVariant = {
 /** Handheld LCD: dark pixels on a pale screen, heavy bezel, no scanlines. */
 const HANDHELD: PixelVariant = {
   id: "pixel-lcd",
-  tagline: "PORTABLE EDITION",
+  tagline: "LUCKY DRAW (PORTABLE EDITION)",
   background: "linear-gradient(180deg, #eaf2ff 0%, #d3e2f8 55%, #b9cdec 100%)",
   backdrop: "dots",
   crt: false,
@@ -116,7 +116,7 @@ const HANDHELD: PixelVariant = {
 /** Quest log: tiled floor, double-ruled white frames, dialogue-box footer. */
 const QUEST: PixelVariant = {
   id: "pixel-quest",
-  tagline: "★ QUEST ★",
+  tagline: "LUCKY DRAW (QUEST MODE)",
   background: "linear-gradient(180deg, #0a1638 0%, #061027 60%, #03081a 100%)",
   backdrop: "checker",
   crt: false,

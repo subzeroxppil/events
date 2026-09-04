@@ -552,3 +552,60 @@
     animation: none;
   }
 }
+
+/* Handheld-LCD backdrop.
+   steps() throughout: a sprite on a handheld moves in whole pixels at a low
+   frame rate, and easing it smoothly is the giveaway that it isn't one. */
+@keyframes pixel-tile-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 64px 64px;
+  }
+}
+
+@keyframes pixel-drift-x {
+  from {
+    transform: translateX(-40vw);
+  }
+  to {
+    transform: translateX(140vw);
+  }
+}
+
+@keyframes pixel-lcd-sweep {
+  0% {
+    transform: translateX(-70%);
+  }
+  100% {
+    transform: translateX(170%);
+  }
+}
+
+.pixel-tile-drift {
+  animation: pixel-tile-drift 16s steps(8, end) infinite;
+}
+
+.pixel-drift {
+  animation-name: pixel-drift-x;
+  animation-timing-function: steps(36, end);
+  animation-iteration-count: infinite;
+}
+
+.pixel-lcd-sweep {
+  animation: pixel-lcd-sweep 9s steps(24, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-tile-drift,
+  .pixel-drift,
+  .pixel-lcd-sweep {
+    animation: none;
+  }
+  /* The drift keyframe is what puts a cloud on screen at all, so park each
+     one at a fixed spot rather than letting them pile up at the left edge. */
+  .pixel-drift {
+    transform: translateX(var(--cloud-x, 40vw));
+  }
+}

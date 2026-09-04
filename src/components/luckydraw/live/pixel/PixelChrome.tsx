@@ -128,16 +128,56 @@ export function PixelBackdrop({ variant }: { variant: PixelVariant }) {
   }
 
   if (variant.backdrop === "dots") {
-    // The LCD grid you can see between a handheld's pixels.
     return (
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.35]"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, rgba(23,48,102,0.16) 1px, transparent 1px), linear-gradient(to bottom, rgba(23,48,102,0.16) 1px, transparent 1px)",
-          backgroundSize: "8px 8px",
-        }}
-      />
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* The grid you can see between a handheld's pixels. */}
+        <div
+          className="absolute inset-0 opacity-[0.35]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, rgba(23,48,102,0.16) 1px, transparent 1px), linear-gradient(to bottom, rgba(23,48,102,0.16) 1px, transparent 1px)",
+            backgroundSize: "8px 8px",
+          }}
+        />
+
+        {/* A tile map scrolling under everything, the way a handheld's
+            background layer does. Inset negatively so the drift never
+            uncovers an edge. */}
+        <div
+          className="pixel-tile-drift absolute -inset-24 opacity-[0.5]"
+          style={{
+            backgroundImage:
+              "repeating-conic-gradient(rgba(23,48,102,0.07) 0% 25%, transparent 0% 50%)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+
+        {/* Sprite clouds, three sizes at three speeds. */}
+        {LCD_CLOUDS.map((c, i) => (
+          <div
+            key={i}
+            className="pixel-drift absolute"
+            style={{
+              top: `${c.top}%`,
+              animationDuration: `${c.duration}s`,
+              animationDelay: `${c.delay}s`,
+              ["--cloud-x" as string]: `${c.restX}vw`,
+            }}
+          >
+            <PixelCloud scale={c.scale} />
+          </div>
+        ))}
+
+        {/* Ghosting band, as an LCD of this vintage would show when the
+            picture changes. */}
+        <div
+          className="pixel-lcd-sweep absolute inset-y-0 w-1/3"
+          style={{
+            background:
+              "linear-gradient(to right, transparent, rgba(23,48,102,0.06), transparent)",
+          }}
+        />
+      </div>
     );
   }
 
@@ -208,4 +248,53 @@ export function pixelButtonStyle(variant: PixelVariant): React.CSSProperties {
     boxShadow: `0 0 0 4px ${variant.buttonOutline}, 6px 6px 0 0 ${variant.buttonShadow}`,
     borderRadius: 0,
   };
+}
+
+
+/** Cloud sprites: position, size and speed. Fixed so renders agree. */
+const LCD_CLOUDS = [
+  { top: 12, scale: 4, duration: 64, delay: 0, restX: 14 },
+  { top: 34, scale: 2, duration: 96, delay: 12, restX: 62 },
+  { top: 58, scale: 5, duration: 52, delay: 26, restX: 30 },
+  { top: 78, scale: 3, duration: 78, delay: 6, restX: 74 },
+];
+
+/**
+ * A cloud drawn on a 12x5 grid, one <rect> per lit pixel — the shape a
+ * handheld would have had room for.
+ */
+const CLOUD_ROWS = [
+  "....XXXX....",
+  "..XXXXXXXX..",
+  ".XXXXXXXXXX.",
+  "XXXXXXXXXXXX",
+  ".XXXXXXXXXX.",
+];
+
+function PixelCloud({ scale }: { scale: number }) {
+  return (
+    <svg
+      width={12 * scale}
+      height={5 * scale}
+      viewBox="0 0 12 5"
+      aria-hidden="true"
+      shapeRendering="crispEdges"
+      className="block opacity-[0.34]"
+    >
+      {CLOUD_ROWS.flatMap((row, y) =>
+        row.split("").map((cell, x) =>
+          cell === "X" ? (
+            <rect
+              key={`${x}-${y}`}
+              x={x}
+              y={y}
+              width={1}
+              height={1}
+              fill="#173066"
+            />
+          ) : null
+        )
+      )}
+    </svg>
+  );
 }

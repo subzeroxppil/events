@@ -55,7 +55,7 @@ export default function PixelWelcome({
   }, [onEnter, variant.confetti]);
 
   const stats = [
-    { label: "ENTRIES", value: participantCount },
+    { label: "PLAYERS", value: participantCount },
     { label: "DRAWN", value: winnerCount },
     { label: "SOUND", value: "ON" },
   ];
@@ -75,7 +75,7 @@ export default function PixelWelcome({
             {/* Above the scanlines: striping the wordmark is the one place the
                 CRT effect costs more than it gives. */}
             <div
-              className="pixel-bob relative z-50 bg-white px-3 py-2"
+              className="pixel-bob relative z-50 bg-white px-4 py-3"
               style={{
                 boxShadow: `0 0 0 4px ${variant.panelOutline}, 6px 6px 0 0 ${variant.panelShadow}`,
               }}
@@ -86,7 +86,7 @@ export default function PixelWelcome({
                 width={128}
                 height={72}
                 priority
-                className="pixelated h-4 sm:h-5 w-auto"
+                className="pixelated h-7 sm:h-9 w-auto"
               />
             </div>
 
@@ -134,8 +134,8 @@ export default function PixelWelcome({
               style={{ color: variant.dim }}
             >
               This is the live, view-only screen for the lucky draw. Every spin
-              plays here the moment it happens on the main screen — you
-              don&apos;t need to do a thing.
+              plays right here the moment the host starts it — no buttons to
+              press, just watch for your name to land.
             </p>
             <p
               className="mt-2 font-pixel text-[10px] leading-[1.8]"
@@ -163,7 +163,7 @@ export default function PixelWelcome({
               className="pixel-blink mt-4 font-pixel text-[8px] tracking-[0.16em]"
               style={{ color: variant.accent }}
             >
-              PRESS ENTER TO WATCH
+              PRESS ENTER TO PLAY
             </p>
             <p
               className="mt-2 font-pixel-body text-lg leading-none"

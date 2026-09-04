@@ -239,8 +239,8 @@ export default function LiveWelcome({
             <div className="mt-5 landscape:mt-0 text-center landscape:text-left">
               <p className="text-[13px] sm:text-sm text-white/75 leading-relaxed">
                 This is the live, view-only page for the lucky draw. Every spin
-                plays here the moment it happens on the main screen — you
-                don&apos;t need to do a thing.
+                plays right here the moment the host starts it — no buttons to
+                press, just watch for your name to land.
               </p>
               <p className="mt-2 text-sm font-bold text-white">
                 Sit back and good luck! 🍀

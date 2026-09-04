@@ -75,7 +75,7 @@ export default function PixelStage({
             className="mt-1.5 flex items-center justify-center gap-4 font-pixel text-[7px] tracking-[0.14em]"
             style={{ color: variant.dim }}
           >
-            <span>ENTRIES {live.snapshot?.participants.length ?? 0}</span>
+            <span>PLAYERS {live.snapshot?.participants.length ?? 0}</span>
             <span>DRAWN {live.winners.length}</span>
           </div>
         </header>

@@ -147,7 +147,7 @@ function PixelAdminLuckyDraw() {
             className="mt-1.5 flex items-center justify-center gap-4 font-pixel text-[7px] tracking-[0.14em]"
             style={{ color: variant.dim }}
           >
-            <span>ENTRIES {draw.participants.length}</span>
+            <span>PLAYERS {draw.participants.length}</span>
             <span>DRAWN {draw.winners.length}</span>
           </div>
         </header>
