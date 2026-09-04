@@ -7,7 +7,7 @@ https://pp-events-609469738206.asia-southeast1.run.app | https://pp-events.verce
 ## Lucky draw URLs
 
 Replace `<id>` with the lucky draw's id — the number in the address bar on the
-admin draw screen.
+admin draw screen
 
 ### View-only page (public, no login)
 
