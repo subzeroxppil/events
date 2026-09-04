@@ -23,6 +23,12 @@ interface SpinnerReelProps {
   fadeHeight?: string;
   /** Draws a focus band across the centre row. */
   showFocusBand?: boolean;
+  /** Soft blur at the reel's ends. Off for the pixel skin, which has no blur. */
+  blurEdges?: boolean;
+  /** "stepped" fades the ends in hard bands rather than a smooth ramp. */
+  fade?: "smooth" | "stepped";
+  /** Centre indicator style. */
+  arrow?: "smooth" | "pixel" | "none";
 }
 
 /**
@@ -31,6 +37,10 @@ interface SpinnerReelProps {
  */
 const REEL_MASK =
   "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.35) 6%, #000 20%, #000 80%, rgba(0,0,0,0.35) 94%, transparent 100%)";
+
+/** Hard bands rather than a ramp, so the ends dissolve in visible steps. */
+const REEL_MASK_STEPPED =
+  "linear-gradient(to bottom, transparent 0 6%, rgba(0,0,0,0.25) 6% 11%, rgba(0,0,0,0.6) 11% 17%, #000 17% 83%, rgba(0,0,0,0.6) 83% 89%, rgba(0,0,0,0.25) 89% 94%, transparent 94% 100%)";
 
 export default function SpinnerReel({
   spinnerItems,
@@ -46,6 +56,9 @@ export default function SpinnerReel({
   theme = "light",
   fadeHeight = "8rem",
   showFocusBand = false,
+  blurEdges = true,
+  fade = "smooth",
+  arrow = "smooth",
 }: SpinnerReelProps) {
   const renderedItems = React.useMemo(
     () => buildRenderedItems(spinnerItems, centerIndex, visibleRange),
@@ -71,8 +84,8 @@ export default function SpinnerReel({
       <div
         className="absolute inset-0 overflow-hidden"
         style={{
-          maskImage: REEL_MASK,
-          WebkitMaskImage: REEL_MASK,
+          maskImage: fade === "stepped" ? REEL_MASK_STEPPED : REEL_MASK,
+          WebkitMaskImage: fade === "stepped" ? REEL_MASK_STEPPED : REEL_MASK,
         }}
       >
       <div
@@ -123,35 +136,51 @@ export default function SpinnerReel({
       </div>
 
       {/* Gradual Blur */}
-      <GradualBlur
-        position="top"
-        height={fadeHeight}
-        strength={2.5}
-        divCount={10}
-        opacity={0.95}
-        exponential={true}
-        style={{ zIndex: 20, pointerEvents: "none" }}
-      />
-      <GradualBlur
-        position="bottom"
-        height={fadeHeight}
-        strength={2.5}
-        divCount={10}
-        opacity={0.95}
-        exponential={true}
-        style={{ zIndex: 20, pointerEvents: "none" }}
-      />
+      {blurEdges && (
+        <>
+          <GradualBlur
+            position="top"
+            height={fadeHeight}
+            strength={2.5}
+            divCount={10}
+            opacity={0.95}
+            exponential={true}
+            style={{ zIndex: 20, pointerEvents: "none" }}
+          />
+          <GradualBlur
+            position="bottom"
+            height={fadeHeight}
+            strength={2.5}
+            divCount={10}
+            opacity={0.95}
+            exponential={true}
+            style={{ zIndex: 20, pointerEvents: "none" }}
+          />
+        </>
+      )}
 
       {/* Centre indicator.
           Drawn as an SVG rather than the "▶" character: U+25B6 carries an
           emoji presentation, and Chrome on Android picks it — the reel showed
           a colour ▶️ emoji on phones instead of the accent-tinted arrow. */}
-      <div className="absolute left-1 sm:left-2 md:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-30">
-        <ReelArrow color={accentColors[1]} glow={accentColors[3]} />
-      </div>
-      <div className="absolute right-1 sm:right-2 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none z-30 rotate-180">
-        <ReelArrow color={accentColors[1]} glow={accentColors[3]} />
-      </div>
+      {arrow !== "none" && (
+        <>
+          <div className="absolute left-1 sm:left-2 md:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-30">
+            {arrow === "pixel" ? (
+              <PixelArrow color={accentColors[3]} />
+            ) : (
+              <ReelArrow color={accentColors[1]} glow={accentColors[3]} />
+            )}
+          </div>
+          <div className="absolute right-1 sm:right-2 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none z-30 rotate-180">
+            {arrow === "pixel" ? (
+              <PixelArrow color={accentColors[3]} />
+            ) : (
+              <ReelArrow color={accentColors[1]} glow={accentColors[3]} />
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -176,5 +205,32 @@ function ReelArrow({ color, glow }: { color: string; glow: string }) {
         <path d="M1 1.2 L11 8 L1 14.8 Z" fill={glow} />
       </svg>
     </span>
+  );
+}
+
+/**
+ * The same arrow drawn on a 5x9 grid, one <rect> per pixel column. No
+ * anti-aliased hypotenuse and no glow, so it belongs on the pixel skin.
+ */
+function PixelArrow({ color }: { color: string }) {
+  // [x, y, height] per column, forming a stepped triangle.
+  const columns: [number, number, number][] = [
+    [0, 0, 9],
+    [1, 1, 7],
+    [2, 2, 5],
+    [3, 3, 3],
+    [4, 4, 1],
+  ];
+  return (
+    <svg
+      viewBox="0 0 5 9"
+      aria-hidden="true"
+      shapeRendering="crispEdges"
+      className="block w-2.5 h-[1.125rem] sm:w-3 sm:h-[1.35rem] lg:w-4 lg:h-[1.8rem]"
+    >
+      {columns.map(([x, y, h]) => (
+        <rect key={x} x={x} y={y} width={1} height={h} fill={color} />
+      ))}
+    </svg>
   );
 }

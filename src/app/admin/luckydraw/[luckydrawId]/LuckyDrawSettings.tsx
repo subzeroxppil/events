@@ -30,6 +30,10 @@ interface LuckyDrawSettingsProps {
   isSpinning: boolean;
   showSettings: boolean;
   onShowSettingsChange: (show: boolean) => void;
+  /** Replaces the trigger's classes, for skins with their own button style. */
+  triggerClassName?: string;
+  /** Inline styles for the trigger, for palettes that aren't in Tailwind. */
+  triggerStyle?: React.CSSProperties;
 }
 
 const LuckyDrawSettings: React.FC<LuckyDrawSettingsProps> = React.memo(
@@ -39,6 +43,8 @@ const LuckyDrawSettings: React.FC<LuckyDrawSettingsProps> = React.memo(
     isSpinning,
     showSettings,
     onShowSettingsChange,
+    triggerClassName,
+    triggerStyle,
   }) => {
     const [showAdvancedSettings, setShowAdvancedSettings] =
       React.useState(false);
@@ -60,11 +66,18 @@ const LuckyDrawSettings: React.FC<LuckyDrawSettingsProps> = React.memo(
           <Button
             variant="ghost"
             size={isMobile ? "sm" : "default"}
-            className="backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg text-xs sm:text-sm"
-            style={{
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-            }}
+            className={
+              triggerClassName ??
+              "backdrop-blur-md bg-white/80 border border-white/50 hover:bg-white/90 text-gray-700 shadow-lg text-xs sm:text-sm"
+            }
+            style={
+              triggerClassName
+                ? triggerStyle
+                : {
+                    backdropFilter: "blur(16px)",
+                    WebkitBackdropFilter: "blur(16px)",
+                  }
+            }
           >
             <Settings className="w-4 h-4 sm:mr-2" />
             <span className="hidden sm:inline">Settings</span>

@@ -20,12 +20,18 @@ interface ViewOnlyShareSheetProps {
   luckydrawId: string;
   enabled: boolean;
   onEnabledChange: (enabled: boolean) => void;
+  /** Replaces the trigger's classes, for skins with their own button style. */
+  triggerClassName?: string;
+  /** Inline styles for the trigger, for palettes that aren't in Tailwind. */
+  triggerStyle?: React.CSSProperties;
 }
 
 export default function ViewOnlyShareSheet({
   luckydrawId,
   enabled,
   onEnabledChange,
+  triggerClassName,
+  triggerStyle,
 }: ViewOnlyShareSheetProps) {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -88,7 +94,11 @@ export default function ViewOnlyShareSheet({
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          className="backdrop-blur-md bg-white/95 border border-white/70 hover:bg-white text-gray-700 shadow-lg text-xs sm:text-sm"
+          className={
+            triggerClassName ??
+            "backdrop-blur-md bg-white/95 border border-white/70 hover:bg-white text-gray-700 shadow-lg text-xs sm:text-sm"
+          }
+          style={triggerStyle}
         >
           <Share2 className="w-4 h-4 mr-2" />
           Share

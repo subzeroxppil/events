@@ -5,11 +5,15 @@ import confetti from "canvas-confetti";
 import { useItemHeight } from "@/app/hooks/use-item-height";
 import {
   backgroundStyleFor,
-  createExtendedList,
   resolveColors,
   rouletteEasing,
   triggerFireworks,
 } from "@/lib/luckydraw";
+import {
+  EPOCH_ANCHOR,
+  idlePositionAt,
+  type IdleAnchor,
+} from "@/lib/luckydraw-idle";
 import {
   DEFAULT_VIEW_SETTINGS,
   type ViewSettings,
@@ -18,15 +22,26 @@ import type { SpinPayload, Winner } from "@/lib/luckydraw-live";
 
 export type LiveStatus = "loading" | "not-live" | "ready" | "error";
 
+/** The last spin, carried only so a late joiner can line up its idle drift. */
+export type SpinAnchor = {
+  spinId: number;
+  spinnerItems: string[];
+  finalTarget: number;
+  duration: number;
+  settings: ViewSettings | null;
+};
+
 export type Snapshot = {
   name: string;
   participants: string[];
   winners: Winner[];
   corpIdMapping: Record<string, string>;
+  /** Built server-side so every viewer gets the identical reel. */
+  idleItems: string[];
+  serverNow: number;
   lastSpinId: number;
+  lastSpin: SpinAnchor | null;
 };
-
-const IDLE_ITEM_COUNT = 200;
 
 /**
  * Everything the public view-only page does that isn't pixels: fetching the
@@ -37,6 +52,23 @@ const IDLE_ITEM_COUNT = 200;
  * `?ui=` can share one implementation — the visual variants can't drift in
  * timing, sound or sync behaviour, only in how they look.
  */
+/**
+ * The spin's resting row, and the moment it got there in server time. The
+ * animation runs for `duration` from the instant the server stamped the spin,
+ * so `spinId + duration` is when every viewer's reel settles.
+ */
+function anchorForSpin(spin: {
+  spinId: number;
+  finalTarget: number;
+  duration: number;
+}): IdleAnchor {
+  return {
+    atMs: spin.spinId + spin.duration,
+    // Fractional on purpose — it is the exact resting position, not the row.
+    index: spin.finalTarget,
+  };
+}
+
 export function useLiveDraw(luckydrawId: string | undefined) {
   const [status, setStatus] = useState<LiveStatus>("loading");
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
@@ -54,6 +86,15 @@ export function useLiveDraw(luckydrawId: string | undefined) {
   const [isIdleAnimating, setIsIdleAnimating] = useState(false);
   const [currentWinner, setCurrentWinner] = useState<string | null>(null);
   const [showWinner, setShowWinner] = useState(false);
+
+  // Difference between this device's clock and the server's. Without it a
+  // phone whose clock is a few seconds out drifts a few rows away from the
+  // rest of the room.
+  const clockOffsetRef = useRef(0);
+
+  // Where the shared idle timeline is pinned. Before any spin every viewer
+  // drifts from the epoch, so they agree without having to talk to each other.
+  const idleAnchorRef = useRef<IdleAnchor>(EPOCH_ANCHOR);
 
   const itemHeight = useItemHeight();
   const accentColors = useMemo(() => resolveColors(settings), [settings]);
@@ -99,6 +140,7 @@ export function useLiveDraw(luckydrawId: string | undefined) {
 
     const load = async () => {
       try {
+        const sentAt = Date.now();
         const res = await fetch(`/api/live/${luckydrawId}`);
         if (res.status === 404) {
           if (!cancelled) setStatus("not-live");
@@ -109,14 +151,30 @@ export function useLiveDraw(luckydrawId: string | undefined) {
         const data: Snapshot = await res.json();
         if (cancelled) return;
 
+        // Half the round trip is the better estimate of when the server's
+        // clock reading was taken.
+        if (typeof data.serverNow === "number") {
+          const receivedAt = Date.now();
+          const latency = (receivedAt - sentAt) / 2;
+          clockOffsetRef.current = data.serverNow + latency - receivedAt;
+        }
+
         setSnapshot(data);
         setWinners(data.winners ?? []);
-        setSpinnerItems(
-          createExtendedList(
-            Array.from(new Set(data.participants ?? [])),
-            IDLE_ITEM_COUNT
-          )
-        );
+
+        // A draw that has already spun resumes from where that spin landed;
+        // one that has not drifts from the epoch. Either way the answer is the
+        // same on every device.
+        const last = data.lastSpin;
+        if (last && last.spinnerItems?.length) {
+          setSpinnerItems(last.spinnerItems);
+          if (last.settings) setSettings(last.settings);
+          idleAnchorRef.current = anchorForSpin(last);
+        } else {
+          setSpinnerItems(data.idleItems ?? []);
+          idleAnchorRef.current = EPOCH_ANCHOR;
+        }
+
         setStatus("ready");
       } catch (err) {
         console.error(err);
@@ -236,6 +294,12 @@ export function useLiveDraw(luckydrawId: string | undefined) {
         void spinSound.current.play().catch(() => {});
       }
 
+      // Pin the shared timeline to where this spin will come to rest. Every
+      // viewer derives the same anchor from the same payload, so idle drift
+      // stays in step afterwards — including for anyone who joins later and
+      // reads the spin back from the snapshot.
+      idleAnchorRef.current = anchorForSpin(payload);
+
       const startTime = Date.now();
       const totalIndices = payload.finalTarget;
       const itemsLength = payload.spinnerItems.length || 1;
@@ -302,34 +366,38 @@ export function useLiveDraw(luckydrawId: string | undefined) {
     [handleSpinComplete, soundsOn, stopAnimations]
   );
 
-  // Idle drift between spins — the same loop the admin screen runs.
+  // Idle drift between spins.
+  //
+  // Both the row at the centre and the sub-row offset are computed from server
+  // time rather than accumulated locally, so a phone that joined an hour ago
+  // and one that joined a second ago show the same name in the same place.
+  // The row index advances at a screen-independent rate; only the sub-row
+  // offset is scaled by this device's row height. It keeps running behind the
+  // winner overlay, so nothing jumps in the frame the overlay clears.
   useEffect(() => {
-    if (!started || isSpinning || showWinner || spinnerItems.length === 0) {
+    if (!started || isSpinning || spinnerItems.length === 0) {
       setIsIdleAnimating(false);
       return;
     }
 
     setIsIdleAnimating(true);
-    let accumulatedOffset = animationOffset;
-    let lastTime = performance.now();
 
-    const animateIdle = () => {
-      const now = performance.now();
-      const delta = (now - lastTime) / 1000;
-      lastTime = now;
+    const tick = () => {
+      const serverNow = Date.now() + clockOffsetRef.current;
+      const { index, fraction } = idlePositionAt(
+        serverNow,
+        idleAnchorRef.current,
+        settings.idleSpeed,
+        spinnerItems.length
+      );
 
-      accumulatedOffset += settings.idleSpeed * delta;
+      setCenterIndex(index);
+      setAnimationOffset(fraction * itemHeightRef.current);
 
-      if (accumulatedOffset >= itemHeight) {
-        setCenterIndex((prev) => (prev + 1) % spinnerItems.length);
-        accumulatedOffset = accumulatedOffset % itemHeight;
-      }
-
-      setAnimationOffset(accumulatedOffset);
-      idleAnimationRef.current = requestAnimationFrame(animateIdle);
+      idleAnimationRef.current = requestAnimationFrame(tick);
     };
 
-    idleAnimationRef.current = requestAnimationFrame(animateIdle);
+    idleAnimationRef.current = requestAnimationFrame(tick);
 
     return () => {
       if (idleAnimationRef.current) {
@@ -338,16 +406,7 @@ export function useLiveDraw(luckydrawId: string | undefined) {
       }
       setIsIdleAnimating(false);
     };
-    // `animationOffset` is intentionally excluded — it is the loop's own output.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    started,
-    isSpinning,
-    showWinner,
-    spinnerItems.length,
-    settings.idleSpeed,
-    itemHeight,
-  ]);
+  }, [started, isSpinning, spinnerItems.length, settings.idleSpeed]);
 
   // -------------------------------------------------------------------- SSE
 

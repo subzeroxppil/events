@@ -5,7 +5,51 @@ import { cn } from "@/lib/utils";
  * Row palettes. "light" is the original look used by the admin screen; the
  * other two exist for the public view-only page's alternate skins.
  */
-export type ReelTheme = "light" | "dark" | "arcade";
+export type ReelTheme =
+  | "light"
+  | "dark"
+  | "arcade"
+  | "pixel"
+  | "pixel-lcd"
+  | "pixel-quest";
+
+/**
+ * Row palettes for the three pixel skins. All hard edges — no radius, no blur,
+ * and a stepped drop shadow rather than a soft one, because anything smooth
+ * breaks the illusion. Colours stay on the PayPal ramp throughout.
+ */
+const PIXEL_PALETTES = {
+  pixel: {
+    centerBg: "#ffffff",
+    centerBorder: "#173066",
+    centerText: "#173066",
+    rowBg: "rgba(80, 155, 255, 0.10)",
+    rowBorder: "rgba(99, 203, 251, 0.35)",
+    rowText: "#7fb7ff",
+    shadow: null, // falls back to the draw's accent
+  },
+  "pixel-lcd": {
+    centerBg: "#173066",
+    centerBorder: "#0a1638",
+    centerText: "#e8f1ff",
+    rowBg: "rgba(23, 48, 102, 0.08)",
+    rowBorder: "rgba(23, 48, 102, 0.28)",
+    rowText: "#3c5f9e",
+    shadow: "#7a9bd4",
+  },
+  "pixel-quest": {
+    centerBg: "#63cbfb",
+    centerBorder: "#ffffff",
+    centerText: "#0a1638",
+    rowBg: "rgba(10, 22, 56, 0.72)",
+    rowBorder: "#2a4a86",
+    rowText: "#a9c7f5",
+    shadow: "#0463ce",
+  },
+} as const;
+
+const isPixelTheme = (theme: ReelTheme): theme is keyof typeof PIXEL_PALETTES =>
+  theme in PIXEL_PALETTES;
 
 interface SpinnerItemProps {
   text: string;
@@ -43,6 +87,18 @@ const cardStyleFor = (
     };
   }
 
+  if (isPixelTheme(theme)) {
+    const p = PIXEL_PALETTES[theme];
+    return {
+      borderRadius: 0,
+      background: isCenter ? p.centerBg : p.rowBg,
+      border: isCenter
+        ? `4px solid ${p.centerBorder}`
+        : `2px solid ${p.rowBorder}`,
+      boxShadow: isCenter ? `6px 6px 0 0 ${p.shadow ?? accent}` : "none",
+    };
+  }
+
   if (theme === "arcade") {
     return {
       background: isCenter ? "#ffffff" : "rgba(255, 255, 255, 0.14)",
@@ -71,6 +127,10 @@ const cardStyleFor = (
 };
 
 const textColorFor = (theme: ReelTheme, isCenter: boolean): string => {
+  if (isPixelTheme(theme)) {
+    const p = PIXEL_PALETTES[theme];
+    return isCenter ? p.centerText : p.rowText;
+  }
   if (isCenter) return theme === "light" ? "#000000" : "#0b1220";
   if (theme === "dark") return "rgba(203, 213, 225, 0.72)";
   if (theme === "arcade") return "rgba(255, 255, 255, 0.86)";
@@ -111,19 +171,27 @@ const SpinnerItem: React.FC<SpinnerItemProps> = React.memo(
       [theme, isCenter, accent]
     );
 
+    const isPixel = isPixelTheme(theme);
+
     const textStyle = React.useMemo(
       () => ({
         color: textColorFor(theme, isCenter),
-        fontSize: isCenter
+        // Press Start 2P runs much wider than a proportional face, so the
+        // pixel skin needs its own, smaller ramp to fit the same row.
+        fontSize: isPixel
+          ? isCenter
+            ? "clamp(0.9rem, 3vw, 1.6rem)"
+            : "clamp(0.55rem, 1.8vw, 0.95rem)"
+          : isCenter
           ? "clamp(1.25rem, 4vw, 2.25rem)"
           : "clamp(0.875rem, 2.5vw, 1.5rem)",
-        fontWeight: isCenter ? 800 : 500,
-        letterSpacing: isCenter ? "0.02em" : "0.01em",
+        fontWeight: isPixel ? 400 : isCenter ? 800 : 500,
+        letterSpacing: isPixel ? "0" : isCenter ? "0.02em" : "0.01em",
         textShadow:
           isCenter && theme === "light" ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
         willChange: "transform",
       }),
-      [theme, isCenter]
+      [theme, isCenter, isPixel]
     );
 
     return (
@@ -133,15 +201,22 @@ const SpinnerItem: React.FC<SpinnerItemProps> = React.memo(
       >
         <div
           className={cn(
-            "relative px-4 sm:px-6 lg:px-10 py-2 sm:py-3 lg:py-4 rounded-xl sm:rounded-2xl overflow-hidden",
-            "transition-all duration-300"
+            "relative px-4 sm:px-6 lg:px-10 py-2 sm:py-3 lg:py-4 overflow-hidden",
+            isPixel
+              ? "font-pixel"
+              : "rounded-xl sm:rounded-2xl transition-all duration-300"
           )}
           style={cardStyle}
         >
           <span
             className={cn(
-              "relative z-10 font-semibold transition-all duration-300 block text-center",
-              isCenter && "font-bold"
+              "relative z-10 block text-center",
+              isPixel
+                ? "font-normal"
+                : cn(
+                    "font-semibold transition-all duration-300",
+                    isCenter && "font-bold"
+                  )
             )}
             style={textStyle}
           >
