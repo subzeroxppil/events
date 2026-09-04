@@ -91,10 +91,14 @@ export default function PixelWelcome({
             </div>
 
             <p
-              className="mt-4 font-pixel text-[8px] tracking-[0.2em]"
+              className="mt-4 font-pixel text-[11px] sm:text-sm leading-[1.7] tracking-[0.12em] text-center landscape:text-left"
               style={{ color: variant.accent }}
             >
-              {variant.tagline}
+              {/* Two lines by construction. Left to wrap on its own it broke
+                  mid-edition on a narrow phone — "LUCKY DRAW <PORTABLE" over
+                  "EDITION>". */}
+              <span className="block">{variant.tagline}</span>
+              <span className="block">{variant.edition}</span>
             </p>
 
             <h1
@@ -133,9 +137,8 @@ export default function PixelWelcome({
               className="font-pixel-body text-xl leading-[1.35]"
               style={{ color: variant.dim }}
             >
-              This is the live, view-only screen for the lucky draw. Every spin
-              plays right here the moment the host starts it — no buttons to
-              press, just watch for your name to land.
+              Every spin lands right here, live. No buttons, no refreshing —
+              just watch for your name.
             </p>
             <p
               className="mt-2 font-pixel text-[10px] leading-[1.8]"
