@@ -10,6 +10,12 @@ import LiveWelcome, {
 import AuroraStage from "@/components/luckydraw/live/stages/AuroraStage";
 import MidnightStage from "@/components/luckydraw/live/stages/MidnightStage";
 import ArcadeStage from "@/components/luckydraw/live/stages/ArcadeStage";
+import PixelStage from "@/components/luckydraw/live/stages/PixelStage";
+import PixelWelcome from "@/components/luckydraw/live/pixel/PixelWelcome";
+import {
+  PIXEL_VARIANTS,
+  type PixelVariant,
+} from "@/components/luckydraw/live/pixel/variants";
 import type { LiveStageProps } from "@/components/luckydraw/live/types";
 import {
   LIVE_VIEWPORT_STYLE,
@@ -24,10 +30,22 @@ import { useLiveDraw } from "./use-live-draw";
  *
  * Chosen with `?ui=`; anything unrecognised falls back to "aurora".
  */
-const SKINS: Record<
-  string,
-  { Stage: (props: LiveStageProps) => React.ReactElement; welcome: WelcomeTone }
-> = {
+type WelcomeProps = {
+  drawName?: string;
+  participantCount: number;
+  winnerCount: number;
+  onEnter: () => void;
+};
+
+type Skin = {
+  Stage: (props: LiveStageProps) => React.ReactElement;
+  /** Tone for the shared welcome screen. */
+  welcome: WelcomeTone;
+  /** Replaces the shared welcome entirely, when a skin needs its own. */
+  Welcome?: (props: WelcomeProps) => React.ReactElement;
+};
+
+const SKINS: Record<string, Skin> = {
   aurora: { Stage: AuroraStage, welcome: DEFAULT_WELCOME_TONE },
   midnight: {
     Stage: MidnightStage,
@@ -53,7 +71,32 @@ const SKINS: Record<
       confetti: ["#ffd166", "#63cbfb", "#ffffff", "#509bff"],
     },
   },
+  ...pixelSkins(),
 };
+
+/**
+ * The three pixel skins, each on its own `?ui=` value. They share one stage and
+ * one title screen and differ only through the variant table, so picking
+ * between them is a palette decision rather than three codebases.
+ */
+function pixelSkins(): Record<string, Skin> {
+  const bind = (variant: PixelVariant): Skin => ({
+    Stage: (props: LiveStageProps) => (
+      <PixelStage {...props} variant={variant} />
+    ),
+    // Nothing of the shared welcome survives the pixel treatment, so these
+    // skins bring their own title screen; `welcome` is unused but keeps the
+    // shape uniform.
+    Welcome: (props: WelcomeProps) => (
+      <PixelWelcome {...props} variant={variant} />
+    ),
+    welcome: DEFAULT_WELCOME_TONE,
+  });
+
+  return Object.fromEntries(
+    Object.entries(PIXEL_VARIANTS).map(([id, variant]) => [id, bind(variant)])
+  );
+}
 
 const FALLBACK_BACKGROUND =
   "radial-gradient(120% 90% at 50% -10%, #1e4fa8 0%, #10265c 45%, #071634 100%)";
@@ -107,6 +150,7 @@ function LiveLuckyDraw() {
   }
 
   const { Stage } = skin;
+  const Welcome = skin.Welcome;
 
   return (
     <div
@@ -115,15 +159,23 @@ function LiveLuckyDraw() {
     >
       <Stage live={live} />
 
-      {!live.started && (
-        <LiveWelcome
-          drawName={live.snapshot?.name}
-          participantCount={live.snapshot?.participants.length ?? 0}
-          winnerCount={live.winners.length}
-          onEnter={live.enter}
-          tone={skin.welcome}
-        />
-      )}
+      {!live.started &&
+        (Welcome ? (
+          <Welcome
+            drawName={live.snapshot?.name}
+            participantCount={live.snapshot?.participants.length ?? 0}
+            winnerCount={live.winners.length}
+            onEnter={live.enter}
+          />
+        ) : (
+          <LiveWelcome
+            drawName={live.snapshot?.name}
+            participantCount={live.snapshot?.participants.length ?? 0}
+            winnerCount={live.winners.length}
+            onEnter={live.enter}
+            tone={skin.welcome}
+          />
+        ))}
     </div>
   );
 }

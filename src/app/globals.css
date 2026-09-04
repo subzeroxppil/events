@@ -468,3 +468,87 @@
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Pixel skin (/live/[luckydrawId]?ui=pixel)
+   -------------------------------------------------------------------------*/
+
+.font-pixel {
+  font-family: var(--font-pixel), "Courier New", monospace;
+}
+
+.font-pixel-body {
+  font-family: var(--font-pixel-body), "Courier New", monospace;
+}
+
+/* Crisp upscaling — a pixel skin must never smooth its own art. */
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+@keyframes pixel-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pixel-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes pixel-scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes pixel-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.pixel-blink {
+  animation: pixel-blink 0.9s steps(1, end) infinite;
+}
+
+.pixel-twinkle {
+  animation: pixel-twinkle 2.4s steps(3, end) infinite;
+}
+
+.pixel-scan {
+  animation: pixel-scan 5s linear infinite;
+}
+
+.pixel-bob {
+  /* steps() so it hops between positions rather than gliding. */
+  animation: pixel-bob 0.9s steps(2, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-blink,
+  .pixel-twinkle,
+  .pixel-scan,
+  .pixel-bob {
+    animation: none;
+  }
+}

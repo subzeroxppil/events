@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { readCorpIdMapping } from "@/lib/corpid-mapping";
 import { readWinners } from "@/lib/live-hub";
+import { buildIdleList } from "@/lib/luckydraw-idle";
+import { isSpinPayload } from "@/lib/luckydraw-live";
+
+/** Kept in step with the client's reel length. */
+const IDLE_ITEM_COUNT = 200;
 
 /**
  * Public read-only snapshot for the view-only page (`/live/[luckydrawId]`).
@@ -28,6 +33,7 @@ export async function GET(
         name: true,
         eventIds: true,
         viewOnlyEnabled: true,
+        liveSpin: true,
         liveSpinAt: true,
       },
     });
@@ -48,14 +54,37 @@ export async function GET(
     );
 
     const winners = await readWinners(luckydrawIdNum);
+    const lastSpinId = luckyDraw.liveSpinAt ? luckyDraw.liveSpinAt.getTime() : 0;
+
+    // The last spin, replayed only as an anchor: it tells a late joiner which
+    // reel and which row the draw came to rest on, so its idle drift lines up
+    // with the phones that watched the spin happen. It is never animated.
+    const spin = luckyDraw.liveSpin;
+    const lastSpin =
+      lastSpinId && isSpinPayload(spin)
+        ? {
+            spinId: lastSpinId,
+            spinnerItems: spin.spinnerItems,
+            finalTarget: spin.finalTarget,
+            duration: spin.duration,
+            settings: spin.settings,
+          }
+        : null;
 
     return NextResponse.json({
       name: luckyDraw.name,
       participants,
       winners,
       corpIdMapping: readCorpIdMapping(luckyDraw.name),
+      // Built here rather than on each phone: a locally shuffled reel would
+      // give every viewer a different set of names.
+      idleItems: buildIdleList(participants, luckydrawIdNum, IDLE_ITEM_COUNT),
+      // Lets the page correct for a device clock that is off by a few seconds,
+      // which would otherwise show as a few rows of drift.
+      serverNow: Date.now(),
       // So the page can subscribe without being replayed a finished spin.
-      lastSpinId: luckyDraw.liveSpinAt ? luckyDraw.liveSpinAt.getTime() : 0,
+      lastSpinId,
+      lastSpin,
     });
   } catch (error) {
     console.error("Error fetching public lucky draw:", error);
