@@ -36,10 +36,10 @@ export type AnimationSettings = {
 };
 
 export const DEFAULT_SETTINGS: AnimationSettings = {
-  duration: 13000,
+  duration: 14500,
   easeExponent: 4,
   minSpins: 3,
-  maxSpins: 5,
+  maxSpins: 4,
   spinnerItemCount: 200,
   idleSpeed: 30,
   enableFireworks: true,

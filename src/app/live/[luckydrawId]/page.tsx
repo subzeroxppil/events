@@ -28,7 +28,8 @@ import { useLiveDraw } from "./use-live-draw";
  * they differ only in how they are painted, so one can be picked by taste on
  * the day without any risk to the sync.
  *
- * Chosen with `?ui=`; anything unrecognised falls back to "aurora".
+ * Chosen with `?ui=`; a bare URL, or anything unrecognised, gets the
+ * handheld-LCD pixel skin.
  */
 type WelcomeProps = {
   drawName?: string;
@@ -117,7 +118,7 @@ function LiveLuckyDraw() {
     ? params.luckydrawId[0]
     : params?.luckydrawId;
 
-  const skin = SKINS[searchParams.get("ui") ?? ""] ?? SKINS.aurora;
+  const skin = SKINS[searchParams.get("ui") ?? ""] ?? SKINS["pixel-lcd"];
   const live = useLiveDraw(luckydrawId);
 
   useViewportHeight();
