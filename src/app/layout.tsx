@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Suspense } from "react";
@@ -19,6 +19,17 @@ export const metadata: Metadata = {
   icons: {
     icon: "/paypal_logo.png",
   },
+};
+
+/**
+ * `viewport-fit=cover` is what makes `env(safe-area-inset-*)` report real
+ * values — without it the public draw page's bottom chip sits under the iPhone
+ * home indicator, because every inset reads as 0.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({

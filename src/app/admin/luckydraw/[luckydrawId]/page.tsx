@@ -636,60 +636,11 @@ export default function LuckyDraw() {
         {/* Previous Winner */}
         <PreviousWinner winners={winners} accentColors={currentColors} />
 
-        {/* Settings Button */}
-        <div className="fixed right-2 sm:right-4 lg:right-8 bottom-2 sm:bottom-4 lg:bottom-8 z-40 flex gap-2 items-center">
-          <ViewOnlyShareSheet
-            luckydrawId={String(luckydrawId)}
-            enabled={viewOnlyEnabled}
-            onEnabledChange={setViewOnlyEnabled}
-          />
-          <LuckyDrawSettings
-            settings={animationSettings}
-            onSettingsChange={setAnimationSettings}
-            isSpinning={isSpinning}
-            showSettings={showSettings}
-            onShowSettingsChange={setShowSettings}
-          />
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant={"ghost"}
-                size={
-                  typeof window !== "undefined" && window.innerWidth < 640
-                    ? "sm"
-                    : "default"
-                }
-                className="backdrop-blur-md bg-white/95 border border-white/70 hover:bg-white text-gray-700 shadow-lg text-xs sm:text-sm"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete{" "}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete lucky draw?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete your lucky draw and all data
-                  related to it.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteLuckyDraw}
-                  className="w-full sm:w-[75px] "
-                  disabled={deleteLoading}
-                >
-                  {deleteLoading ? <LoadingSpinner /> : "Delete"}
-                </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-
+        {/* Bottom control bar. One row rather than two pinned corners — on a
+            phone the left and right groups sat on top of each other. */}
+        <div className="fixed inset-x-2 sm:inset-x-4 lg:inset-x-8 bottom-2 sm:bottom-4 lg:bottom-8 z-40 flex flex-wrap gap-2 items-center justify-end">
         {/* Winners Button */}
-        <div className="fixed left-2 sm:left-4 lg:left-8 bottom-2 sm:bottom-4 lg:bottom-8 z-40">
+        <div className="mr-auto">
           <Sheet>
             <SheetTrigger asChild>
               <motion.div
@@ -772,6 +723,56 @@ export default function LuckyDraw() {
             </SheetContent>
           </Sheet>
         </div>
+          <ViewOnlyShareSheet
+            luckydrawId={String(luckydrawId)}
+            enabled={viewOnlyEnabled}
+            onEnabledChange={setViewOnlyEnabled}
+          />
+          <LuckyDrawSettings
+            settings={animationSettings}
+            onSettingsChange={setAnimationSettings}
+            isSpinning={isSpinning}
+            showSettings={showSettings}
+            onShowSettingsChange={setShowSettings}
+          />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant={"ghost"}
+                size={
+                  typeof window !== "undefined" && window.innerWidth < 640
+                    ? "sm"
+                    : "default"
+                }
+                className="backdrop-blur-md bg-white/95 border border-white/70 hover:bg-white text-gray-700 shadow-lg text-xs sm:text-sm"
+              >
+                <Trash2 className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Delete</span>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete lucky draw?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete your lucky draw and all data
+                  related to it.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteLuckyDraw}
+                  className="w-full sm:w-[75px] "
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? <LoadingSpinner /> : "Delete"}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+
 
         {/* SPIN Button */}
         <div className="absolute right-2 sm:right-6 lg:right-12 top-1/2 -translate-y-1/2 z-40">

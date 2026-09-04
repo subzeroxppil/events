@@ -66,8 +66,8 @@ const LuckyDrawSettings: React.FC<LuckyDrawSettingsProps> = React.memo(
               WebkitBackdropFilter: "blur(16px)",
             }}
           >
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
+            <Settings className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Settings</span>
           </Button>
         </SheetTrigger>
         <SheetContent className="overflow-y-auto w-[400px] sm:w-[540px]">

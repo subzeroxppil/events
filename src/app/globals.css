@@ -279,3 +279,192 @@
 .animate-blob {
   animation: blob 7s infinite;
 }
+
+/* ---------------------------------------------------------------------------
+   Public view-only lucky draw page (/live/[luckydrawId])
+   -------------------------------------------------------------------------*/
+
+/* Blinking "LIVE" indicator. */
+@keyframes live-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.75);
+  }
+}
+
+@keyframes live-dot-ring {
+  0% {
+    opacity: 0.65;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+.live-dot {
+  animation: live-dot-pulse 1.15s ease-in-out infinite;
+}
+
+.live-dot-ring {
+  animation: live-dot-ring 1.7s ease-out infinite;
+}
+
+/* Welcome screen. */
+@keyframes live-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes live-shimmer {
+  0% {
+    transform: translateX(-140%) skewX(-18deg);
+  }
+  60%,
+  100% {
+    transform: translateX(240%) skewX(-18deg);
+  }
+}
+
+@keyframes live-orb {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -22px, 0) scale(1.12);
+  }
+}
+
+@keyframes live-rise {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: var(--rise-opacity, 0.5);
+  }
+  100% {
+    transform: translateY(-115vh) rotate(320deg);
+    opacity: 0;
+  }
+}
+
+.live-float {
+  animation: live-float 4.5s ease-in-out infinite;
+}
+
+.live-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  animation: live-shimmer 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.live-orb {
+  animation: live-orb 9s ease-in-out infinite;
+}
+
+.live-rise {
+  animation: live-rise linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot,
+  .live-dot-ring,
+  .live-float,
+  .live-orb,
+  .live-rise,
+  .live-shimmer::after {
+    animation: none;
+  }
+}
+
+/* Arcade-cabinet welcome screen. */
+@keyframes live-marquee-blink {
+  0%,
+  49% {
+    opacity: 1;
+    box-shadow: 0 0 8px currentColor;
+  }
+  50%,
+  100% {
+    opacity: 0.25;
+    box-shadow: none;
+  }
+}
+
+@keyframes live-neon {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px var(--neon-1), 0 0 18px var(--neon-2),
+      inset 0 0 22px rgba(255, 255, 255, 0.06);
+  }
+  50% {
+    box-shadow: 0 0 0 1px var(--neon-1), 0 0 34px var(--neon-2),
+      inset 0 0 22px rgba(255, 255, 255, 0.1);
+  }
+}
+
+@keyframes live-blink-text {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0.18;
+  }
+}
+
+.live-marquee-bulb {
+  animation: live-marquee-blink 1.1s steps(1, end) infinite;
+}
+
+.live-neon {
+  animation: live-neon 2.6s ease-in-out infinite;
+}
+
+.live-blink {
+  animation: live-blink-text 1.25s steps(1, end) infinite;
+}
+
+/* Scanlines — subtle enough to read as CRT, not as a broken screen. */
+.live-scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.16) 0px,
+    rgba(0, 0, 0, 0.16) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-marquee-bulb,
+  .live-neon,
+  .live-blink {
+    animation: none;
+  }
+}
