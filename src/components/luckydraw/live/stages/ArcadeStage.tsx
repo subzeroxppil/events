@@ -8,21 +8,26 @@ import LiveBadge from "@/components/luckydraw/live/LiveBadge";
 import MuteButton from "@/components/luckydraw/live/MuteButton";
 import type { LiveStageProps } from "@/components/luckydraw/live/types";
 import { formatWonAt } from "@/components/luckydraw/live/format";
+import { useRootBackground } from "@/app/hooks/use-viewport-height";
 
 /**
  * "Arcade" skin — the reel sits inside a physical-looking machine cabinet on a
  * saturated PayPal-blue ground. The most gamified of the three.
  */
+const ARCADE_BACKGROUND =
+  "linear-gradient(165deg, #0463ce 0%, #123f8f 55%, #0b2258 100%)";
+
 export default function ArcadeStage({ live }: LiveStageProps) {
   const latest = live.winners[live.winners.length - 1];
   const accent = live.accentColors[1];
+
+  useRootBackground(ARCADE_BACKGROUND);
 
   return (
     <div
       className="relative h-full w-full overflow-hidden"
       style={{
-        background:
-          "linear-gradient(165deg, #0463ce 0%, #123f8f 55%, #0b2258 100%)",
+        background: ARCADE_BACKGROUND,
       }}
     >
       {/* Dot grid */}

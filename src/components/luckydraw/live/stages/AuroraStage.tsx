@@ -6,6 +6,7 @@ import LiveBadge from "@/components/luckydraw/live/LiveBadge";
 import MuteButton from "@/components/luckydraw/live/MuteButton";
 import type { LiveStageProps } from "@/components/luckydraw/live/types";
 import { formatWonAt } from "@/components/luckydraw/live/format";
+import { useRootBackground } from "@/app/hooks/use-viewport-height";
 
 /**
  * Default skin: the admin screen's own palette, rebuilt as a phone-first
@@ -14,6 +15,8 @@ import { formatWonAt } from "@/components/luckydraw/live/format";
  */
 export default function AuroraStage({ live }: LiveStageProps) {
   const latest = live.winners[live.winners.length - 1];
+
+  useRootBackground(live.backgroundStyle.background as string | undefined);
 
   return (
     <div className="relative h-full w-full overflow-hidden" style={live.backgroundStyle}>

@@ -4,6 +4,7 @@ import { Volume2, VolumeX } from "lucide-react";
 import SpinnerReel from "@/components/luckydraw/SpinnerReel";
 import type { LiveStageProps } from "@/components/luckydraw/live/types";
 import { formatWonAt } from "@/components/luckydraw/live/format";
+import { useRootBackground } from "@/app/hooks/use-viewport-height";
 import { pixelFontVars } from "@/lib/pixel-font";
 import {
   PixelBackdrop,
@@ -30,6 +31,8 @@ export default function PixelStage({
   variant = DEFAULT_PIXEL_VARIANT,
 }: LiveStageProps & { variant?: PixelVariant }) {
   const latest = live.winners[live.winners.length - 1];
+
+  useRootBackground(variant.background);
 
   return (
     <div

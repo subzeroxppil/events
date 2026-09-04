@@ -160,7 +160,12 @@ export function PixelBackdrop({ variant }: { variant: PixelVariant }) {
             style={{
               top: `${c.top}%`,
               animationDuration: `${c.duration}s`,
-              animationDelay: `${c.delay}s`,
+              animationTimingFunction: `steps(${Math.round(
+                c.duration / CLOUD_HOP_SECONDS
+              )}, end)`,
+              // Negative: start each cloud part-way along, so the sky is
+              // populated from the first frame and stays that way.
+              animationDelay: `-${(c.duration * c.offset).toFixed(1)}s`,
               ["--cloud-x" as string]: `${c.restX}vw`,
             }}
           >
@@ -251,13 +256,30 @@ export function pixelButtonStyle(variant: PixelVariant): React.CSSProperties {
 }
 
 
-/** Cloud sprites: position, size and speed. Fixed so renders agree. */
+/**
+ * Cloud sprites. Fixed values rather than random ones so the server and client
+ * renders agree, but deliberately uneven so the drift never looks marshalled.
+ *
+ * `offset` is how far through its journey a cloud already is when the page
+ * opens, applied as a negative animation-delay. A positive delay would have
+ * held each cloud off-screen until its turn came, which is why so few were
+ * ever visible — and why the ones that were looked frozen.
+ */
 const LCD_CLOUDS = [
-  { top: 12, scale: 4, duration: 64, delay: 0, restX: 14 },
-  { top: 34, scale: 2, duration: 96, delay: 12, restX: 62 },
-  { top: 58, scale: 5, duration: 52, delay: 26, restX: 30 },
-  { top: 78, scale: 3, duration: 78, delay: 6, restX: 74 },
+  { top: 10, scale: 4, duration: 58, offset: 0.05, restX: 14 },
+  { top: 26, scale: 2, duration: 82, offset: 0.42, restX: 62 },
+  { top: 41, scale: 5, duration: 47, offset: 0.71, restX: 30 },
+  { top: 57, scale: 3, duration: 68, offset: 0.23, restX: 74 },
+  { top: 72, scale: 2, duration: 91, offset: 0.58, restX: 46 },
+  { top: 86, scale: 4, duration: 54, offset: 0.87, restX: 8 },
 ];
+
+/**
+ * Seconds between hops. The clouds keep their slow pace; the steps are just
+ * finer, so a cloud visibly moves a pixel or two rather than sitting still for
+ * the best part of two seconds and then jumping.
+ */
+const CLOUD_HOP_SECONDS = 0.7;
 
 /**
  * A cloud drawn on a 12x5 grid, one <rect> per lit pixel — the shape a

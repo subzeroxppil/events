@@ -6,21 +6,26 @@ import LiveBadge from "@/components/luckydraw/live/LiveBadge";
 import MuteButton from "@/components/luckydraw/live/MuteButton";
 import type { LiveStageProps } from "@/components/luckydraw/live/types";
 import { formatWonAt } from "@/components/luckydraw/live/format";
+import { useRootBackground } from "@/app/hooks/use-viewport-height";
 
 /**
  * "Midnight" skin — a dark stage with a spotlight on the centre row. Built for
  * a dimmed hall, where the light skin is the brightest thing in the room.
  */
+const MIDNIGHT_BACKGROUND =
+  "radial-gradient(130% 80% at 50% 0%, #123163 0%, #0a1836 38%, #03081c 100%)";
+
 export default function MidnightStage({ live }: LiveStageProps) {
   const latest = live.winners[live.winners.length - 1];
   const glow = live.accentColors[3];
+
+  useRootBackground(MIDNIGHT_BACKGROUND);
 
   return (
     <div
       className="relative h-full w-full overflow-hidden"
       style={{
-        background:
-          "radial-gradient(130% 80% at 50% 0%, #123163 0%, #0a1836 38%, #03081c 100%)",
+        background: MIDNIGHT_BACKGROUND,
       }}
     >
       {/* Spotlight cone onto the centre row */}

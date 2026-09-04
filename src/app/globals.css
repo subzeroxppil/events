@@ -589,6 +589,8 @@
 
 .pixel-drift {
   animation-name: pixel-drift-x;
+  /* Step count is set per cloud, so each hops at the same rate despite
+     travelling at different speeds. */
   animation-timing-function: steps(36, end);
   animation-iteration-count: infinite;
 }

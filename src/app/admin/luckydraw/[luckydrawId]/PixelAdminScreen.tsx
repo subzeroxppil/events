@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { pixelFontVars } from "@/lib/pixel-font";
 import {
   LIVE_VIEWPORT_STYLE,
+  useRootBackground,
   useViewportHeight,
 } from "@/app/hooks/use-viewport-height";
 import {
@@ -81,6 +82,7 @@ export default function PixelAdminScreen({
   const draw = useAdminDraw();
 
   useViewportHeight();
+  useRootBackground(variant.background);
 
   if (draw.initialLoading) {
     return (

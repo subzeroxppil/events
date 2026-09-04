@@ -19,6 +19,7 @@ import {
 import type { LiveStageProps } from "@/components/luckydraw/live/types";
 import {
   LIVE_VIEWPORT_STYLE,
+  useRootBackground,
   useViewportHeight,
 } from "@/app/hooks/use-viewport-height";
 import { useLiveDraw } from "./use-live-draw";
@@ -183,6 +184,7 @@ function LiveLuckyDraw() {
 
 /** Full-bleed branded box used for the loading, not-live and error states. */
 function LiveShell({ children }: { children: React.ReactNode }) {
+  useRootBackground(FALLBACK_BACKGROUND);
   return (
     <div
       className="fixed inset-x-0 top-0 w-full flex items-center justify-center overflow-hidden"
