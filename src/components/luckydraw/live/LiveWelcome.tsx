@@ -145,10 +145,11 @@ export default function LiveWelcome({
         }}
       />
 
-      <div className="relative h-full w-full overflow-y-auto overscroll-contain flex items-center justify-center px-4 pt-[max(env(safe-area-inset-top),0.75rem)] pb-[max(env(safe-area-inset-bottom),0.75rem)]">
-        {/* The cabinet */}
+      <div className="relative h-full w-full overflow-y-auto overscroll-contain flex px-4 pt-[max(env(safe-area-inset-top),0.75rem)] pb-[max(env(safe-area-inset-bottom),0.75rem)]">
+        {/* The cabinet. Auto margins rather than `items-center`, so that when it
+            outgrows the scroll container its top stays reachable. */}
         <div
-          className="live-neon w-full max-w-sm landscape:max-w-3xl rounded-[22px] border border-white/20 overflow-hidden"
+          className="live-neon my-auto mx-auto w-full max-w-sm landscape:max-w-3xl rounded-[22px] border border-white/20 overflow-hidden"
           style={{
             ["--neon-1" as string]: `${tone.orb}66`,
             ["--neon-2" as string]: `${tone.orb}55`,

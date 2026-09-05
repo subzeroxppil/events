@@ -19,8 +19,8 @@ import {
 import type { LiveStageProps } from "@/components/luckydraw/live/types";
 import {
   LIVE_VIEWPORT_CLASS,
+  useFullHeightPage,
   useRootBackground,
-  useViewportHeight,
 } from "@/app/hooks/use-viewport-height";
 import { useLiveDraw } from "./use-live-draw";
 
@@ -124,7 +124,7 @@ function LiveLuckyDraw() {
   const skin = SKINS[searchParams.get("ui") ?? ""] ?? SKINS["pixel-lcd"];
   const live = useLiveDraw(luckydrawId);
 
-  useViewportHeight();
+  useFullHeightPage();
 
   if (live.status === "loading") {
     return (

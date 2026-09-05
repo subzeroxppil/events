@@ -68,8 +68,11 @@ export default function PixelWelcome({
       <PixelBackdrop variant={variant} />
       <PixelCrt variant={variant} />
 
-      <div className="relative z-10 h-full w-full overflow-y-auto overscroll-contain flex items-center justify-center px-5 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1rem)]">
-        <div className="w-full max-w-[22rem] landscape:max-w-3xl landscape:grid landscape:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] landscape:gap-8 landscape:items-center text-center landscape:text-left">
+      <div className="relative z-10 h-full w-full overflow-y-auto overscroll-contain flex px-5 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1rem)]">
+        {/* Auto margins rather than `items-center`: a centred flex item that
+            outgrows its scroll container has its top cut off and unreachable,
+            which is exactly what a short landscape phone does to this card. */}
+        <div className="my-auto mx-auto w-full max-w-[22rem] landscape:max-w-3xl landscape:grid landscape:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] landscape:gap-8 landscape:items-center text-center landscape:text-left">
           {/* Title block */}
           <div className="flex flex-col items-center landscape:items-start">
             {/* Above the scanlines: striping the wordmark is the one place the

@@ -13,7 +13,9 @@ export function SiteHeader() {
   if (pathname.startsWith("/live")) return null;
 
   return (
-    <div className="flex-col md:flex">
+    // The draw screens fill the window and hide this by the attribute — see
+    // `.live-page-host` in globals.css.
+    <div data-site-header className="flex-col md:flex">
       <div className="">
         <div className="flex items-center pr-4 pl-1">
           <div className="flex px-1 pt-1 items-center cursor-default">

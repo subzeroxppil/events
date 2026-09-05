@@ -40,7 +40,7 @@ export default function PixelWinnerOverlay({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className={`${pixelFontVars} fixed inset-0 z-50 flex items-center justify-center px-5 pointer-events-none`}
+          className={`${pixelFontVars} absolute inset-0 z-50 flex items-center justify-center px-5 pointer-events-none`}
           style={{ background: scrim }}
         >
           <motion.div

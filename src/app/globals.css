@@ -212,32 +212,64 @@
 /* Full-screen, non-scrolling draw pages — the public view-only page and the
    pixel admin screen.
 
-   The height is set as a *floor* fed by three independent sources rather than
-   as one exact measurement, because each source is wrong on some browser at
-   some moment and only one direction of error hurts. A box a few pixels too
-   tall clips nothing anyone reads; a box too short strands the UI up the
-   screen with a band of bare page beneath it, which is the failure this
-   replaces.
+   Plain `height: 100%` the whole way down, and nothing else. `100%` resolves
+   against the initial containing block, which *is* the area the browser is
+   showing, so the page is the right size without measuring anything and
+   without a viewport unit that means something different on every phone.
 
-     inset: 0     the layout viewport, maintained by the browser with no
-                  measurement of ours involved. It is the baseline that holds
-                  even if every script on the page fails.
-     100dvh       the browser's own answer, re-resolved live as the address bar
-                  animates, so it needs no event to stay current.
-     --live-vh    what `visualViewport` reports is on screen this instant, set
-                  by useViewportHeight. The only one of the three that is right
-                  during an iOS cold start, where the other two read short.
+   Everything the old version did — `100dvh`, a `visualViewport` reading polled
+   into a custom property, `position: fixed` — was an attempt to describe the
+   visible area from outside it, and each attempt was wrong on some browser at
+   some moment. `position: fixed` was the worst of them: it pins to the layout
+   viewport, and Chrome on Android restores a killed tab with the visual
+   viewport offset inside that, which is what put the UI too high up the screen
+   with the page then sliding down on the first scroll.
 
-   A stale or under-reported value from any one of them can now only be
-   overruled by the others, never obeyed. */
-.live-viewport {
-  position: fixed;
-  inset: 0;
+   Locking the document to exactly its own height also means there is nothing
+   to scroll, so the address bar never animates and the height never changes in
+   the first place.
+
+   `100%` needs an unbroken chain, and the top of that chain is <html> and
+   <body>, which the root layout shares with every other page. So it is claimed
+   by the draw screen itself, twice over:
+
+     - `:has()` matches the server-rendered markup, so the chain is in place at
+       first paint, before any script runs.
+     - `.live-page-host`, added by `useFullHeightPage`, covers browsers too old
+       for `:has()`.
+
+   These have to stay separate rules: a browser that does not understand
+   `:has()` throws out the whole selector list it appears in, which would take
+   the fallback with it. */
+html:has(.live-viewport),
+body:has(.live-viewport) {
+  height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  /* Ordered by support: browsers without dvh keep the measured floor. */
-  min-height: var(--live-vh, 0px);
-  min-height: max(100dvh, var(--live-vh, 0px));
+}
+
+.live-page-host {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* The draw screens fill the window, so the logo bar has nowhere to go and
+   nothing to do — the same call already made for the public page in
+   SiteHeader, applied here to the admin screens as well. */
+body:has(.live-viewport) [data-site-header] {
+  display: none;
+}
+
+.live-page-host [data-site-header] {
+  display: none;
+}
+
+.live-viewport {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 .roulette-pro-regular-image-wrapper {

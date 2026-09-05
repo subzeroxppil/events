@@ -3,130 +3,36 @@
 import { useEffect } from "react";
 
 /**
- * Locks the document against scrolling for a full-screen page, and publishes
- * `--live-vh`: the height `visualViewport` says is on screen right now.
+ * Makes the document exactly as tall as the window while a full-screen page is
+ * mounted, by putting `height: 100%` on `<html>` and `<body>` so the page's own
+ * `h-full` has a chain to resolve against, and locking both against scrolling.
  *
- * The height itself is not applied here. `.live-viewport` in globals.css takes
- * the largest of three independent answers — the layout viewport via
- * `inset: 0`, the browser's own `100dvh`, and this measurement — and each is
- * only ever allowed to raise the floor, never lower it. That matters because
- * every one of them is wrong on some browser at some moment:
+ * That is the whole mechanism. There is no measurement, no `dvh`, no
+ * `visualViewport`, no polling and no `position: fixed`: `100%` resolves
+ * against the initial containing block, which is the area the browser is
+ * actually showing, and the browser keeps it correct on its own.
  *
- *   - `100dvh` is usually right, but it is recomputed as the chrome animates
- *     and has been seen to settle short after a cold start.
- *   - `visualViewport.height` is what is on screen this instant, but iOS
- *     reports it too small on a cold start — the address bar is compacted a
- *     moment after first paint and the property does not always follow.
- *   - `inset: 0` never lags, being the browser's own layout viewport, but on
- *     iOS it stays at the toolbars-shown size while the toolbars are minimised.
+ * Every previous version of this file tried to describe the visible area from
+ * outside it and got it wrong somewhere — most recently on Chrome for Android,
+ * which restores a killed tab with the visual viewport offset inside the layout
+ * viewport that `position: fixed` pins to, leaving the UI high on the screen
+ * until the first scroll shunted it down.
  *
- * Taking the maximum is deliberately asymmetric. A box a few pixels too tall
- * costs nothing — the layout is a flex column with safe-area padding at both
- * ends — whereas a box too short leaves a visible band of bare page and pushes
- * the content up the screen, which was the bug this arrangement replaces. So
- * a source that under-reports is corrected by the other two, and a stale value
- * left behind by a backgrounded tab can no longer shrink the page on its own.
+ * Applied as a class rather than in the root layout so it stays scoped to these
+ * routes; every other page keeps its ordinary scrolling document.
+ *
+ * This is the fallback path. globals.css does the same thing with `:has()` off
+ * the server-rendered markup, which lands at first paint instead of waiting for
+ * hydration — without it there is a visible moment on a cold load where the
+ * chain is missing and the page collapses to the height of its own content.
+ * The class is what browsers too old for `:has()` get instead.
  */
-export function useViewportHeight() {
+export function useFullHeightPage() {
   useEffect(() => {
-    const root = document.documentElement;
-    const { body } = document;
-
-    const previous = {
-      rootOverflow: root.style.overflow,
-      bodyOverflow: body.style.overflow,
-      overscroll: body.style.overscrollBehavior,
-    };
-
-    root.style.overflow = "hidden";
-    body.style.overflow = "hidden";
-    body.style.overscrollBehavior = "none";
-
-    // Reports whatever `100dvh` currently resolves to. Measured off a probe
-    // rather than the page itself, because the page's own height is the thing
-    // being set here and would just report back what it was last told.
-    // Collapses to 0 where dvh is unsupported, which the max() then ignores.
-    const probe = document.createElement("div");
-    probe.setAttribute("aria-hidden", "true");
-    probe.style.cssText =
-      "position:fixed;top:0;left:0;width:0;height:100dvh;" +
-      "pointer-events:none;visibility:hidden;";
-    body.appendChild(probe);
-
-    const apply = () => {
-      const dvh = probe.getBoundingClientRect().height;
-      const visual = window.visualViewport?.height ?? 0;
-      const height = Math.round(Math.max(dvh, visual)) || window.innerHeight;
-      if (height <= 0) return;
-
-      // Compared against what is actually set rather than a remembered value,
-      // so the property is restored even if something else clobbers it.
-      const next = `${height}px`;
-      if (root.style.getPropertyValue("--live-vh") !== next) {
-        root.style.setProperty("--live-vh", next);
-      }
-    };
-
-    // Browsers resize their own chrome without always firing an event for it,
-    // so after every signal keep re-reading for a few seconds. Polled rather
-    // than run per-frame: each read forces a layout flush, and the reel is
-    // animating.
-    let settleUntil = 0;
-    let settleTimer: ReturnType<typeof setInterval> | null = null;
-
-    const stopSettling = () => {
-      if (settleTimer !== null) {
-        clearInterval(settleTimer);
-        settleTimer = null;
-      }
-    };
-
-    const nudge = () => {
-      apply();
-      settleUntil = performance.now() + 3000;
-      if (settleTimer === null) {
-        settleTimer = setInterval(() => {
-          apply();
-          if (performance.now() >= settleUntil) stopSettling();
-        }, 120);
-      }
-    };
-
-    nudge();
-
-    const targets: [EventTarget | null | undefined, string][] = [
-      [window.visualViewport, "resize"],
-      [window.visualViewport, "scroll"],
-      [window, "resize"],
-      [window, "orientationchange"],
-      // Returning from the app switcher or the bfcache.
-      [window, "pageshow"],
-      [window, "focus"],
-      [window, "load"],
-      // Chrome discards and thaws backgrounded tabs; both come back through
-      // here, and a thawed tab is exactly where a stale measurement lives.
-      [document, "visibilitychange"],
-      [document, "resume"],
-    ];
-    for (const [target, event] of targets) {
-      target?.addEventListener(event, nudge);
-    }
-
-    // Last resort for a chrome change that fires nothing at all.
-    const safety = window.setInterval(apply, 1000);
-
+    const targets = [document.documentElement, document.body];
+    for (const el of targets) el.classList.add("live-page-host");
     return () => {
-      for (const [target, event] of targets) {
-        target?.removeEventListener(event, nudge);
-      }
-      window.clearInterval(safety);
-      stopSettling();
-      probe.remove();
-
-      root.style.overflow = previous.rootOverflow;
-      body.style.overflow = previous.bodyOverflow;
-      body.style.overscrollBehavior = previous.overscroll;
-      root.style.removeProperty("--live-vh");
+      for (const el of targets) el.classList.remove("live-page-host");
     };
   }, []);
 }
@@ -134,9 +40,9 @@ export function useViewportHeight() {
 /**
  * Paints `css` behind the document while the caller is mounted.
  *
- * Belt and braces for the above: `.live-viewport` covers the screen by
- * construction, but this makes the page underneath it the right colour anyway,
- * including in the moment before hydration.
+ * Belt and braces: the page fills the window by construction, but this makes
+ * what is underneath it the right colour anyway, including in the moment before
+ * hydration and under an overscroll bounce.
  *
  * `base` is the solid colour the gradient ends on. Without it a gradient that
  * ends up shorter than the canvas *repeats* — the failure looked like a pale
@@ -171,8 +77,7 @@ export function useRootBackground(css: string | undefined, base?: string) {
 }
 
 /**
- * Full-screen box that always covers at least the visible viewport.
- * Defined in globals.css — see the comment there for why it is a floor rather
- * than a height.
+ * The full-window box for a draw screen: `height: 100%` of the host set up by
+ * `useFullHeightPage`, and a positioning context for the overlays inside it.
  */
 export const LIVE_VIEWPORT_CLASS = "live-viewport";

@@ -32,7 +32,7 @@ export default function WinnerOverlay({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
-          className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+          className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
         >
           <motion.div
             className="absolute inset-0"
