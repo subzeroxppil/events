@@ -41,10 +41,10 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  
+
   --animate-cell-ripple: cell-ripple var(--duration, 200ms) ease-out none 1
-  var(--delay, 0ms);
- 
+    var(--delay, 0ms);
+
   @keyframes cell-ripple {
     0% {
       opacity: 0.4;
@@ -266,6 +266,7 @@ body:has(.live-viewport) [data-site-header] {
 }
 
 .live-viewport {
+  height: "100%";
   position: relative;
   height: 100%;
   width: 100%;
@@ -481,11 +482,15 @@ body:has(.live-viewport) [data-site-header] {
 @keyframes live-neon {
   0%,
   100% {
-    box-shadow: 0 0 0 1px var(--neon-1), 0 0 18px var(--neon-2),
+    box-shadow:
+      0 0 0 1px var(--neon-1),
+      0 0 18px var(--neon-2),
       inset 0 0 22px rgba(255, 255, 255, 0.06);
   }
   50% {
-    box-shadow: 0 0 0 1px var(--neon-1), 0 0 34px var(--neon-2),
+    box-shadow:
+      0 0 0 1px var(--neon-1),
+      0 0 34px var(--neon-2),
       inset 0 0 22px rgba(255, 255, 255, 0.1);
   }
 }

@@ -22,6 +22,7 @@ import {
   useFullHeightPage,
   useRootBackground,
 } from "@/app/hooks/use-viewport-height";
+import { useFirstOpenReload } from "./use-first-open-reload";
 import { useLiveDraw } from "./use-live-draw";
 
 /**
@@ -124,6 +125,9 @@ function LiveLuckyDraw() {
   const skin = SKINS[searchParams.get("ui") ?? ""] ?? SKINS["pixel-lcd"];
   const live = useLiveDraw(luckydrawId);
 
+  // Spend one reload on the first arrival in this tab, before anything else
+  // gets attached to a document we didn't load ourselves.
+  useFirstOpenReload(luckydrawId);
   useFullHeightPage();
 
   if (live.status === "loading") {
