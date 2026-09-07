@@ -26,6 +26,7 @@ import {
 import { groupingStrategyTooltips } from "@/app/utils/common";
 import { AdminCard } from "@/components/AdminCard";
 
+import { PageTransition } from "@/components/PageTransition";
 export default function Page() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -102,7 +103,7 @@ export default function Page() {
     }
   };
   return (
-    <div className="flex w-full justify-center p-6 md:p-10 h-full">
+    <PageTransition className="flex w-full justify-center p-6 md:p-10 h-full">
       <div className="flex flex-col gap-4 w-full max-w-xl">
         <Card className="w-full p-6">
           <div className="flex flex-col items-center text-center">
@@ -156,6 +157,6 @@ export default function Page() {
           </div>
         </Card>
       </div>
-    </div>
+    </PageTransition>
   );
 }

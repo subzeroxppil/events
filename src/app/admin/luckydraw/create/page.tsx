@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { CircleAlert } from "lucide-react";
 import BackButton from "@/components/BackButton";
 
+import { PageTransition } from "@/components/PageTransition";
 export default function Page() {
   const [selectedEventIds, setSelectedEventIds] = useState<number[]>([]);
   const router = useRouter();
@@ -57,7 +58,7 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col w-full items-center p-6 md:p-10 max-w-2xl self-center">
+    <PageTransition className="flex flex-col w-full items-center p-6 md:p-10 max-w-2xl self-center">
       <BackButton className="self-start" />
       <Card className="flex flex-col max-w-2xl w-full p-6 gap-0">
         <span className="text-3xl font-bold mb-3">Create Lucky Draw</span>
@@ -101,6 +102,6 @@ export default function Page() {
           {loading ? <LoadingSpinner /> : "Create"}
         </Button>
       </Card>
-    </div>
+    </PageTransition>
   );
 }

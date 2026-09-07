@@ -26,6 +26,7 @@ import {
 import { groupingStrategyTooltips } from "@/app/utils/common";
 import BackButton from "@/components/BackButton";
 
+import { PageTransition } from "@/components/PageTransition";
 export default function Page() {
   const [title, setTitle] = useState("");
   const [terms, setTerms] = useState("");
@@ -202,7 +203,7 @@ export default function Page() {
     }
   };
   return (
-    <div className="flex w-full justify-center p-6 md:p-10 h-full">
+    <PageTransition className="flex w-full justify-center p-6 md:p-10 h-full">
       <div className="flex flex-col gap-4 w-full max-w-xl">
         <BackButton className="self-start" />
         <Card className="w-full p-6">
@@ -520,6 +521,6 @@ export default function Page() {
           </form>
         </Card>
       </div>
-    </div>
+    </PageTransition>
   );
 }

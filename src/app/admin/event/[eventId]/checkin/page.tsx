@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import checkinAnimation from "@/app/assets/checkin-animation.json";
 import { QrDisplayCard } from "@/components/QrDisplayCard";
 
+import { PageTransition } from "@/components/PageTransition";
 export default function Page() {
   const params = useParams();
   const eventId = Array.isArray(params?.eventId)
@@ -42,7 +43,7 @@ export default function Page() {
   }, [eventId]);
 
   return (
-    <div className="flex w-full justify-center p-4 h-full">
+    <PageTransition className="flex w-full justify-center p-4 h-full">
       {initialLoading ? (
         <LoadingSpinner className="mt-5" />
       ) : error ? (
@@ -55,6 +56,6 @@ export default function Page() {
           animationData={checkinAnimation}
         />
       )}
-    </div>
+    </PageTransition>
   );
 }

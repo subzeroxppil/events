@@ -72,6 +72,7 @@ import {
 } from "@/components/ui/chart";
 import BackButton from "@/components/BackButton";
 
+import { PageTransition } from "@/components/PageTransition";
 const headers: Record<string, string> = {
   groupNumber: "Group Number",
   workId: "Corp Pass ID",
@@ -374,7 +375,7 @@ export default function Page() {
       : detailsData?.event.createdBy;
 
   return (
-    <div className="flex flex-1 flex-col">
+    <PageTransition className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-2 md:gap-6 w-full max-w-[2000px] self-center">
           {initialLoading ? (
@@ -772,6 +773,6 @@ export default function Page() {
           )}
         </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

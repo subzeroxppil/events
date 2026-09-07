@@ -13,6 +13,7 @@ import searchAnimationData from "../assets/search-cartoon-animation.json";
 import { useUser } from "../UserContext";
 import { TypeAnimation } from "react-type-animation";
 
+import { PageTransition } from "@/components/PageTransition";
 type Event = {
   id: number;
   title: string;
@@ -70,7 +71,7 @@ export default function Page() {
   };
 
   return (
-    <>
+    <PageTransition className="flex flex-col">
       <div className="w-full flex flex-col px-8 py-8 bg-slate-100 items-center">
         <h1 className="text-center text-4xl font-bold sm:text-5xl">
           Events Portal
@@ -146,6 +147,6 @@ export default function Page() {
           )}
         </div>
       </div>
-    </>
+    </PageTransition>
   );
 }

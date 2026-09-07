@@ -9,6 +9,7 @@ import ghostAnimationData from "@/app/assets/ghost-animation.json";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
+import { PageTransition } from "@/components/PageTransition";
 type LuckyDraw = {
   id: number;
   name: string;
@@ -48,7 +49,7 @@ export default function Page() {
   };
 
   return (
-    <div className="flex min-h-svh w-full justify-center p-6 md:p-10 ">
+    <PageTransition className="flex min-h-svh w-full justify-center p-6 md:p-10 ">
       <div className="max-w-xl flex flex-col w-full">
         <span className="text-4xl font-bold ">Lucky Draw</span>
         <span className="text-md text-muted-foreground mb-2">
@@ -102,6 +103,6 @@ export default function Page() {
           </div>
         )}
       </div>
-    </div>
+    </PageTransition>
   );
 }
