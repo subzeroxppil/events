@@ -36,14 +36,25 @@ export type AnimationSettings = {
 };
 
 export const DEFAULT_SETTINGS: AnimationSettings = {
-  // 18s over a gentler ease: long enough to read on a phone, and the lower
-  // exponent front-loads less of the travel so the reel opens less frantically
-  // rather than merely running longer. Broadcast in the spin payload, so the
-  // live page inherits both.
-  duration: 18000,
-  easeExponent: 3.2,
-  minSpins: 3,
-  maxSpins: 4,
+  // 13s, matching the original screen's `spinningTime={13}`.
+  duration: 13000,
+  easeExponent: 4,
+
+  // How *fast the reel looks* is distance over time, not time. The reel travels
+  // `floor(spins) * spinnerItemCount + winnerIndex` rows in `duration`, so with
+  // the duration fixed at the original 13s the only way to slow the motion down
+  // is to travel fewer rows: cutting the rotations from 3-4 to 1-2 roughly
+  // halves the speed the names fly past at, while the spin still takes exactly
+  // as long as it always did.
+  //
+  // Stretching `duration` instead — which is what 18s did — makes the same
+  // journey take longer without making any single moment of it slower, so the
+  // names blur past just as fast and the spin merely drags.
+  //
+  // Only `finalTarget` is broadcast, not these, so the live page inherits the
+  // shorter journey automatically.
+  minSpins: 1,
+  maxSpins: 3,
   spinnerItemCount: 200,
   idleSpeed: 30,
   enableFireworks: true,
