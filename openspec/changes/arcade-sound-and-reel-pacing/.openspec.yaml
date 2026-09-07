@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-09-08
+goal: Restore the original 13s spin duration and slow the reel by shortening its
+  journey instead, add a scroll-aware white header, and add an opt-in
+  synthesised arcade soundtrack behind ?sound=arcade.
