@@ -1,0 +1,25 @@
+# Local dependency and build output — the image installs from the lockfile and
+# builds inside the container, so shipping these up is both slow and wrong:
+# node_modules may hold platform-specific binaries built for the developer's
+# machine, not for the node:20-slim base.
+node_modules
+.next
+out
+
+# Never let a developer's real credentials into a layer.
+.env
+.env.*
+
+.git
+.gitignore
+.vercel
+npm-debug.log*
+*.tsbuildinfo
+.DS_Store
+
+# Planning artefacts and editor config have no place in a runtime image.
+openspec
+.claude
+.mcp.json
+.playwright-mcp
+README.md

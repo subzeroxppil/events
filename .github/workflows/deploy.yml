@@ -1,0 +1,63 @@
+# Deploy to Cloud Run on every push to master.
+#
+# There are no repository secrets here on purpose. Authentication is by
+# Workload Identity Federation: GitHub mints a short-lived OIDC token for this
+# repository, GCP is configured to trust tokens from exactly this repository,
+# and exchanges it for credentials. Nothing long-lived is stored on either
+# side, and setting it up needed no admin rights on the repository.
+#
+# Everything the build needs — including the NEXT_PUBLIC_* values, which Next
+# inlines at build time — is read from Secret Manager by cloudbuild.yaml, so
+# this file never has to carry configuration.
+
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [master]
+  # So a failed deploy can be retried without an empty commit.
+  workflow_dispatch:
+
+# Cancel a run that a newer push has already superseded.
+concurrency:
+  group: deploy-cloud-run
+  cancel-in-progress: true
+
+env:
+  PROJECT_ID: iron-haiku-507914-i0
+  REGION: asia-southeast1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required for the OIDC token that Workload Identity Federation exchanges.
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: projects/467325964865/locations/global/workloadIdentityPools/github/providers/github-provider
+          service_account: github-deployer@iron-haiku-507914-i0.iam.gserviceaccount.com
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and deploy
+        run: |
+          gcloud builds submit \
+            --config=cloudbuild.yaml \
+            --project="$PROJECT_ID" \
+            --region="$REGION" \
+            --substitutions=SHORT_SHA="${GITHUB_SHA::7}"
+
+      - name: Report the deployed URL
+        run: |
+          URL=$(gcloud run services describe pp-events \
+            --region="$REGION" --project="$PROJECT_ID" \
+            --format='value(status.url)')
+          echo "Deployed to $URL" >> "$GITHUB_STEP_SUMMARY"

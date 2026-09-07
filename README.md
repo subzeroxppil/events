@@ -1,8 +1,16 @@
 # Events Portal
 
-https://pp-events-609469738206.asia-southeast1.run.app | https://pp-events.vercel.app
+| Deployment | URL |
+| --- | --- |
+| **GCP Cloud Run** *(this repo's own pipeline)* | https://pp-events-alfc5lzdla-as.a.run.app |
+| Cloud Run (older, separate project) | https://pp-events-609469738206.asia-southeast1.run.app |
+| Vercel | https://pp-events.vercel.app |
 
-> **Cloud deployment:** This project is hosted on both GCP & vercel. Changes are deployed automatically whenever there is a commit to main branch. But for changes to be deployed to vercel, the commit has to be made by subzeroxppil github user.
+> **Cloud deployment:** Pushing to `master` deploys to the Cloud Run service at
+> the top of that table — see [Deployment](#deployment). The other two are
+> older pipelines: the Vercel one only deploys when the commit author is the
+> `subzeroxppil` GitHub user, and the second Cloud Run service lives in a
+> project this repo does not control.
 
 ## Lucky draw URLs
 
@@ -26,8 +34,7 @@ The screen the draw is run from.
 | Old design | `/admin/luckydraw/<id>/old-design` |
 
 `?ui=` works on both `/admin/luckydraw/<id>` and `/admin/luckydraw/<id>/pixel`;
-they differ only in which pixel skin a bare URL renders. Each pixel screen has
-a **Classic UI** link back to the classic one.
+they differ only in which pixel skin a bare URL renders.
 
 > ⚠️ **`/old-design` does not drive the view-only pages.** It predates the
 > feature and has no Share toggle and no spin broadcast, so pressing Spin there
@@ -96,3 +103,66 @@ npx prisma migrate diff \
 **Step 3: Remove the irrelevant sql in the new migration file**
 
 **Step 4: Apply the sql file to supabase console**
+
+## Deployment
+
+Pushing to `master` builds and deploys to Cloud Run automatically, via
+`.github/workflows/deploy.yml` and `cloudbuild.yaml`.
+
+```
+push to master
+      │
+      ▼
+GitHub Actions ──OIDC token──▶ Workload Identity Federation
+                                      │  (no stored credentials)
+                                      ▼
+                              Cloud Build (cloudbuild.yaml)
+                                      │  reads every value from Secret Manager
+                                      ▼
+                              Artifact Registry ──▶ Cloud Run
+```
+
+**Project:** `iron-haiku-507914-i0` · **Region:** `asia-southeast1` ·
+**Service:** `pp-events`
+
+### Why it is set up this way
+
+- **No repository secrets.** GitHub authenticates by Workload Identity
+  Federation: it mints a short-lived OIDC token, and GCP is configured to trust
+  tokens from `subzeroxppil/events` only. Nothing long-lived is stored on
+  either side, and no admin rights on the repository were needed to set it up.
+- **Every value lives in Secret Manager**, including the three `NEXT_PUBLIC_*`
+  ones. Those are not secret — Next inlines them into the client bundle — but
+  that inlining happens at *build* time, so they must be build arguments rather
+  than Cloud Run environment variables. Keeping them next to the real secrets
+  means there is one place to change any value.
+
+### Changing a configuration value
+
+```bash
+printf '%s' 'new-value' | gcloud secrets versions add DATABASE_URL \
+  --data-file=- --project=iron-haiku-507914-i0
+```
+
+Then re-run the workflow (or push) so the change is picked up. Changing a
+`NEXT_PUBLIC_*` value requires a rebuild, not just a restart.
+
+### Cost
+
+The service scales to zero, so it costs essentially nothing between events:
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| `min-instances` | 0 | Nothing runs, nothing is billed, when idle |
+| `max-instances` | 5 | Caps what a runaway loop or crawler can spend |
+| `concurrency` | 250 | The live page holds one near-idle SSE connection per viewer, so one instance can serve a whole hall — and `live-hub` runs one DB poller per draw *per instance*, so fewer instances also means less database load |
+| CPU throttling | on | CPU billed only while a request is in flight; an open SSE stream counts as in-flight |
+| `timeout` | 3600s | The SSE stream is long-lived; the 5-minute default would cut viewers off mid-event |
+
+### Deploying by hand
+
+```bash
+gcloud builds submit --config=cloudbuild.yaml \
+  --project=iron-haiku-507914-i0 --region=asia-southeast1 \
+  --substitutions=SHORT_SHA=$(git rev-parse --short HEAD)
+```

@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-09-07
+goal: Host the app on GCP Cloud Run with continuous deployment from the GitHub
+  master branch, using the current .env values with NEXT_PUBLIC_BASE_URL pointed
+  at the Cloud Run URL.

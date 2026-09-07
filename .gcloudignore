@@ -1,0 +1,27 @@
+# What is NOT uploaded as build context to Cloud Build.
+#
+# Without this, gcloud generates one from .gitignore on the fly; being explicit
+# keeps the upload deterministic and keeps local credentials out of it.
+.git
+.gitignore
+node_modules
+.next
+out
+build
+coverage
+
+# Never upload real credentials.
+.env
+.env.*
+
+.vercel
+.vscode
+.claude
+.mcp.json
+.playwright-mcp
+*.tsbuildinfo
+npm-debug.log*
+.DS_Store
+
+# Planning artefacts are not part of the app.
+openspec
