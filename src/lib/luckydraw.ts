@@ -100,7 +100,11 @@ export const triggerFireworks = (
     startVelocity: 30,
     spread: 360,
     ticks: 60,
-    zIndex: 0,
+    // Above the winner overlay (z-50), not behind it. Behind, the overlay's
+    // own backdrop-filter blurred and dimmed the fireworks into invisibility.
+    // The two bursts below originate in the left and right thirds, so raising
+    // them over the overlay still leaves the centred winner name clear.
+    zIndex: 60,
     colors,
     disableForReducedMotion: true,
   };

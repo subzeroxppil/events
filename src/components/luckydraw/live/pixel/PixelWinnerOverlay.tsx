@@ -61,7 +61,7 @@ export default function PixelWinnerOverlay({
               className="pixel-blink font-pixel text-[10px] sm:text-xs tracking-[0.24em]"
               style={{ color: variant.accent }}
             >
-              ★ WINNER ★
+              WINNER
             </div>
 
             <div

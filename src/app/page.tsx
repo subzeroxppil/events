@@ -25,6 +25,27 @@ export default function Page() {
   const [checkinsLoading, setCheckinsLoading] = useState(true);
   const [totalCheckins, setTotalCheckins] = useState(0);
 
+  /**
+   * Glides to the features rather than jumping. Done in JS rather than with
+   * `scroll-behavior: smooth` in CSS so it stays scoped to this one button —
+   * a global smooth scroll would also animate anchor jumps and any
+   * programmatic scrolling elsewhere in the app.
+   *
+   * Honours `prefers-reduced-motion`: for anyone who has asked for less
+   * movement, a long glide is the thing they asked not to have.
+   */
+  const scrollToFeatures = () => {
+    const target = document.getElementById("features");
+    if (!target) return;
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    target.scrollIntoView({
+      behavior: reduced ? "auto" : "smooth",
+      block: "start",
+    });
+  };
+
   useEffect(() => {
     const fetchCheckins = async () => {
       try {
@@ -98,15 +119,14 @@ export default function Page() {
                   <span>Let&apos;s get started</span>
                 </Button>
               </Link>
-              <Link href="#features" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full border-[#0463ce]/25 px-7 text-[#173066] hover:bg-[#eaf2ff] sm:w-auto"
-                >
-                  See what it does
-                </Button>
-              </Link>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={scrollToFeatures}
+                className="w-full border-[#0463ce]/25 px-7 text-[#173066] hover:bg-[#eaf2ff] sm:w-auto"
+              >
+                See what it does
+              </Button>
             </div>
           </BlurFade>
 
