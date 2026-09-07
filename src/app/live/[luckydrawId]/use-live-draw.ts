@@ -319,15 +319,15 @@ export function useLiveDraw(
       setCenterIndex(0);
       setAnimationOffset(0);
 
-      // Loop the bed for the same reason the admin screen does: the clip is
-      // shorter than the spin, and the silence would land on the tensest part
-      // of the reel. Cleared when the fade starts.
       if (soundsOn(payloadSettings)) {
         if (arcadeMode) {
           // The synth ticks in step with the reel, so it needs the duration.
           arcade.current?.startSpin(payload.duration);
         } else if (spinSound.current) {
-          spinSound.current.loop = true;
+          // Matches the admin screen exactly: the same stretch of spin4.mp3,
+          // from 1s in, once, no looping.
+          spinSound.current.pause();
+          spinSound.current.loop = false;
           spinSound.current.currentTime = 1;
           spinSound.current.volume = 1;
           void spinSound.current.play().catch(() => {});
@@ -366,8 +366,6 @@ export function useLiveDraw(
           !soundFading
         ) {
           soundFading = true;
-          // Let the clip run to its end rather than looping into the fade.
-          spinSound.current.loop = false;
           const fadeOutDurationMs =
             payload.duration * payloadSettings.soundFadeDuration;
           const steps = 20;

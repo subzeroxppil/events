@@ -118,12 +118,42 @@ export function useAdminDraw() {
   }, [arcadeMode]);
 
   // Audio refs
+  //
+  // `spinLock` guards the Spin button against being spammed. `isSpinning` is
+  // state, so two clicks in the same tick both read it as false and both start
+  // a spin — which is how the spin sound came to be layered over itself. A ref
+  // updates synchronously, so the second click sees the lock immediately.
+  const spinLock = useRef(false);
+  /** The running spin-sound fade, so a finished spin can cancel it. */
+  const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const spinSound = useRef<HTMLAudioElement | null>(null);
   const celebrateSound = useRef<HTMLAudioElement | null>(null);
   const applauseSound = useRef<HTMLAudioElement | null>(null);
 
   const handleSpin = useCallback(async () => {
-    if (isSpinning || participants.length === 0) return;
+    if (spinLock.current || isSpinning || participants.length === 0) return;
+    spinLock.current = true;
+
+    // Prime the celebration clips inside the click. They are only ever played
+    // ~13s later, from a rAF callback rather than a gesture handler, which is
+    // why the winner sound could silently fail to start — priming them here,
+    // muted, is what guarantees they are allowed to play when the reel lands.
+    for (const ref of [celebrateSound, applauseSound]) {
+      const audio = ref.current;
+      if (!audio) continue;
+      const wasMuted = audio.muted;
+      audio.muted = true;
+      void audio
+        .play()
+        .then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        })
+        .catch(() => {})
+        .finally(() => {
+          audio.muted = wasMuted;
+        });
+    }
 
     // Cancel any existing animations
     if (animationRef.current) {
@@ -166,18 +196,26 @@ export function useAdminDraw() {
 
     const intendedWinner = newSpinnerItems[winnerIndex];
 
-    // Play spin sound. The clip is shorter than the spin (spin4.mp3 runs
-    // 10.9s against a spin of 18s), so it loops rather than leaving the most
-    // tense stretch of the reel in silence. The fade-out below clears `loop`
-    // so the clip cannot restart underneath the fade.
+    // Cancel any fade still running from a previous spin, or it will keep
+    // winding this spin's volume down.
+    if (fadeIntervalRef.current) {
+      clearInterval(fadeIntervalRef.current);
+      fadeIntervalRef.current = null;
+    }
+
     if (animationSettings.enableSounds) {
       if (arcadeMode) {
         // The synth ticks in step with the reel, so it needs the duration.
         arcade.current?.startSpin(animationSettings.duration);
       } else if (spinSound.current) {
-        spinSound.current.loop = true;
+        // Plays the same stretch of spin4.mp3 the draw has always used: from
+        // 1s in, once, no looping. The clip is shorter than the spin and that
+        // is deliberate — only this part of it is wanted.
+        spinSound.current.pause();
+        spinSound.current.loop = false;
         spinSound.current.currentTime = 1;
-        spinSound.current.play();
+        spinSound.current.volume = 1;
+        void spinSound.current.play().catch(() => {});
       }
     }
 
@@ -402,8 +440,6 @@ export function useAdminDraw() {
           !soundFading
         ) {
           soundFading = true;
-          // Let the clip run to its end rather than looping into the fade.
-          spinSound.current.loop = false;
           const fadeOutDurationMs = duration * autoSoundFadeDuration;
           const steps = 20;
           const stepMs = Math.max(16, Math.floor(fadeOutDurationMs / steps));
@@ -419,11 +455,16 @@ export function useAdminDraw() {
                 spinSound.current.currentTime = 0;
                 spinSound.current.volume = 1;
                 clearInterval(fadeInterval);
+                fadeIntervalRef.current = null;
               }
             } else {
               clearInterval(fadeInterval);
+              fadeIntervalRef.current = null;
             }
           }, stepMs);
+          // Held so the end of the spin can cancel a fade still in flight —
+          // otherwise it goes on winding the volume down into the next spin.
+          fadeIntervalRef.current = fadeInterval;
         }
 
         if (progress < 1) {
@@ -448,6 +489,13 @@ export function useAdminDraw() {
     async (winner: string) => {
       setCurrentWinner(winner);
 
+      // A fade may still be mid-flight; it must not survive into the
+      // celebration and mute the next spin.
+      if (fadeIntervalRef.current) {
+        clearInterval(fadeIntervalRef.current);
+        fadeIntervalRef.current = null;
+      }
+
       // Stop spin sound
       if (spinSound.current) {
         spinSound.current.loop = false;
@@ -457,18 +505,21 @@ export function useAdminDraw() {
       }
       arcade.current?.stopSpin();
 
-      // Play celebration sounds
+      // Play celebration sounds. Unmuted explicitly because the priming in
+      // handleSpin leaves them muted for a moment, and a spin can finish
+      // before that has been undone.
       if (arcadeMode) {
         if (animationSettings.enableSounds) arcade.current?.playWin();
-      } else {
-        if (celebrateSound.current && animationSettings.enableSounds) {
-          celebrateSound.current.currentTime = 0;
-          celebrateSound.current.play();
-        }
-
-        if (applauseSound.current && animationSettings.enableSounds) {
-          applauseSound.current.currentTime = 0;
-          applauseSound.current.play();
+      } else if (animationSettings.enableSounds) {
+        for (const ref of [celebrateSound, applauseSound]) {
+          const audio = ref.current;
+          if (!audio) continue;
+          audio.muted = false;
+          audio.volume = 1;
+          audio.currentTime = 0;
+          void audio.play().catch((err) => {
+            console.warn("Winner sound blocked:", err);
+          });
         }
       }
 
@@ -489,12 +540,18 @@ export function useAdminDraw() {
         console.error("Error recording winner:", error);
       }
 
-      // Trigger effects
+      // Trigger effects. Guarded so a confetti failure cannot leave the spin
+      // lock held and the Spin button dead for the rest of the event.
       if (animationSettings.enableFireworks) {
-        triggerFireworks();
+        try {
+          triggerFireworks();
+        } catch (error) {
+          console.error("Fireworks failed:", error);
+        }
       }
       setShowWinner(true);
       setIsSpinning(false);
+      spinLock.current = false;
 
       // Auto-hide winner
       setTimeout(() => {

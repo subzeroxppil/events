@@ -51,10 +51,13 @@ export const DEFAULT_SETTINGS: AnimationSettings = {
   // journey take longer without making any single moment of it slower, so the
   // names blur past just as fast and the spin merely drags.
   //
+  // At 1-2 rotations the reel peaks around 42 rows/s against the original's
+  // 119, so the names are readable rather than a blur.
+  //
   // Only `finalTarget` is broadcast, not these, so the live page inherits the
   // shorter journey automatically.
   minSpins: 1,
-  maxSpins: 3,
+  maxSpins: 2,
   spinnerItemCount: 200,
   idleSpeed: 30,
   enableFireworks: true,
