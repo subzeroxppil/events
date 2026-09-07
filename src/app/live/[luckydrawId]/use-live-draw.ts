@@ -20,6 +20,7 @@ import {
 } from "@/lib/luckydraw-settings";
 import type { SpinPayload, Winner } from "@/lib/luckydraw-live";
 import { playStartChime } from "@/lib/retro-chime";
+import { createArcadeSound, type ArcadeSound } from "@/lib/arcade-sound";
 
 export type LiveStatus = "loading" | "not-live" | "ready" | "error";
 
@@ -70,7 +71,15 @@ function anchorForSpin(spin: {
   };
 }
 
-export function useLiveDraw(luckydrawId: string | undefined) {
+export function useLiveDraw(
+  luckydrawId: string | undefined,
+  /**
+   * `?sound=arcade` swaps the mp3s for the synthesised arcade soundtrack. It is
+   * read from each viewer's own URL rather than broadcast: which sound someone
+   * hears is their choice, not something the admin imposes on the whole room.
+   */
+  arcadeMode = false
+) {
   const [status, setStatus] = useState<LiveStatus>("loading");
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [started, setStarted] = useState(false);
@@ -112,6 +121,7 @@ export function useLiveDraw(luckydrawId: string | undefined) {
   const spinSound = useRef<HTMLAudioElement | null>(null);
   const celebrateSound = useRef<HTMLAudioElement | null>(null);
   const applauseSound = useRef<HTMLAudioElement | null>(null);
+  const arcade = useRef<ArcadeSound | null>(null);
 
   // `muted` and `itemHeight` are read from inside rAF/interval callbacks that
   // outlive the render that created them, so they are mirrored into refs. For
@@ -200,6 +210,20 @@ export function useLiveDraw(luckydrawId: string | undefined) {
   // ------------------------------------------------------------------ audio
 
   useEffect(() => {
+    if (!arcadeMode) return;
+    arcade.current = createArcadeSound();
+    return () => {
+      arcade.current?.dispose();
+      arcade.current = null;
+    };
+  }, [arcadeMode]);
+
+  // The synth has its own master gain, so the mute button has to reach it too.
+  useEffect(() => {
+    arcade.current?.setMuted(muted);
+  }, [muted]);
+
+  useEffect(() => {
     if (typeof Audio === "undefined") return;
 
     spinSound.current = new Audio("/sounds/spin4.mp3");
@@ -240,15 +264,20 @@ export function useLiveDraw(luckydrawId: string | undefined) {
         spinSound.current.currentTime = 0;
         spinSound.current.volume = 1;
       }
+      arcade.current?.stopSpin();
 
       if (soundsOn(payloadSettings)) {
-        if (celebrateSound.current) {
-          celebrateSound.current.currentTime = 0;
-          void celebrateSound.current.play().catch(() => {});
-        }
-        if (applauseSound.current) {
-          applauseSound.current.currentTime = 0;
-          void applauseSound.current.play().catch(() => {});
+        if (arcadeMode) {
+          arcade.current?.playWin();
+        } else {
+          if (celebrateSound.current) {
+            celebrateSound.current.currentTime = 0;
+            void celebrateSound.current.play().catch(() => {});
+          }
+          if (applauseSound.current) {
+            applauseSound.current.currentTime = 0;
+            void applauseSound.current.play().catch(() => {});
+          }
         }
       }
 
@@ -274,7 +303,7 @@ export function useLiveDraw(luckydrawId: string | undefined) {
         payloadSettings.winnerDisplayDuration
       );
     },
-    [soundsOn]
+    [soundsOn, arcadeMode]
   );
 
   const runSpin = useCallback(
@@ -293,11 +322,16 @@ export function useLiveDraw(luckydrawId: string | undefined) {
       // Loop the bed for the same reason the admin screen does: the clip is
       // shorter than the spin, and the silence would land on the tensest part
       // of the reel. Cleared when the fade starts.
-      if (soundsOn(payloadSettings) && spinSound.current) {
-        spinSound.current.loop = true;
-        spinSound.current.currentTime = 1;
-        spinSound.current.volume = 1;
-        void spinSound.current.play().catch(() => {});
+      if (soundsOn(payloadSettings)) {
+        if (arcadeMode) {
+          // The synth ticks in step with the reel, so it needs the duration.
+          arcade.current?.startSpin(payload.duration);
+        } else if (spinSound.current) {
+          spinSound.current.loop = true;
+          spinSound.current.currentTime = 1;
+          spinSound.current.volume = 1;
+          void spinSound.current.play().catch(() => {});
+        }
       }
 
       // Pin the shared timeline to where this spin will come to rest. Every
@@ -325,6 +359,7 @@ export function useLiveDraw(luckydrawId: string | undefined) {
         );
 
         if (
+          !arcadeMode &&
           spinSound.current &&
           soundsOn(payloadSettings) &&
           progress > payloadSettings.soundFadeStartPercent &&
@@ -371,7 +406,7 @@ export function useLiveDraw(luckydrawId: string | undefined) {
 
       animationRef.current = requestAnimationFrame(animate);
     },
-    [handleSpinComplete, soundsOn, stopAnimations]
+    [handleSpinComplete, soundsOn, stopAnimations, arcadeMode]
   );
 
   // Idle drift between spins.
@@ -519,6 +554,11 @@ export function useLiveDraw(luckydrawId: string | undefined) {
         }
       })
     );
+
+    // The synth needs the same gesture: browsers hand back a suspended
+    // AudioContext outside one.
+    await arcade.current?.unlock();
+    arcade.current?.setMuted(muted);
 
     // Now that the clips are unlocked, acknowledge the tap with the arcade
     // chime — the first sound the viewer should hear, and deliberately not

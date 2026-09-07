@@ -12,6 +12,34 @@
 > `subzeroxppil` GitHub user, and the second Cloud Run service lives in a
 > project this repo does not control.
 
+## 🕹️ Try the arcade-sound variant
+
+An opt-in soundtrack that replaces the mp3s with a **synthesised retro arcade**
+one: a reel that *ticks*, and a chiptune fanfare when someone wins. Add
+`?sound=arcade` to either draw screen.
+
+| Screen | URL |
+| --- | --- |
+| Admin draw screen | `/admin/luckydraw/<id>?sound=arcade` |
+| View-only page | `/live/<id>?sound=arcade` |
+
+Combine it with any skin — `?ui=pixel&sound=arcade`, `?ui=midnight&sound=arcade`,
+and so on.
+
+The **default URLs are unchanged** and keep the original mp3s, so nothing about
+this affects a draw you run the normal way. The choice is per screen and read
+from each viewer's own URL, so an admin running the arcade sound does not
+impose it on the audience, and a viewer can pick it for themselves.
+
+Two things it does that a recording cannot:
+
+- **The ticking decelerates with the reel.** The tick rate is driven by the
+  same ease-out curve the animation uses, falling from 24 clicks/sec at the
+  start to 2.5 at the end — so the clicks slow down as the names do.
+- **There is nothing to download.** It is generated in the browser with the Web
+  Audio API, which matters when a hall full of phones opens the page at once on
+  venue wifi.
+
 ## Lucky draw URLs
 
 Replace `<id>` with the lucky draw's id — the number in the address bar on the

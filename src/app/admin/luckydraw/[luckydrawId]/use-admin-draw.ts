@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import LuckyDrawSettings, {
@@ -18,6 +18,11 @@ import {
 } from "@/lib/luckydraw";
 import { toViewSettings } from "@/lib/luckydraw-settings";
 import { useFirstOpenReload } from "@/lib/use-first-open-reload";
+import {
+  createArcadeSound,
+  isArcadeSoundMode,
+  type ArcadeSound,
+} from "@/lib/arcade-sound";
 
 export type Winner = {
   workId: string;
@@ -55,6 +60,14 @@ export function useAdminDraw() {
   useFirstOpenReload("admin-reloaded:", luckydrawId);
 
   const router = useRouter();
+
+  // `?sound=arcade` swaps the mp3s for the synthesised arcade soundtrack. Read
+  // per screen rather than broadcast: which sound a viewer hears is their own
+  // choice of URL, not something the admin imposes on the room.
+  const searchParams = useSearchParams();
+  const arcadeMode = isArcadeSoundMode(searchParams?.get("sound"));
+  const arcade = useRef<ArcadeSound | null>(null);
+
   // Core states
   const [initialLoading, setInitialLoading] = useState(true);
   const [participants, setParticipants] = useState<string[]>([]);
@@ -94,6 +107,15 @@ export function useAdminDraw() {
   const animationRef = useRef<number | null>(null);
   const idleAnimationRef = useRef<number | null>(null);
   const [isIdleAnimating, setIsIdleAnimating] = useState(false);
+
+  useEffect(() => {
+    if (!arcadeMode) return;
+    arcade.current = createArcadeSound();
+    return () => {
+      arcade.current?.dispose();
+      arcade.current = null;
+    };
+  }, [arcadeMode]);
 
   // Audio refs
   const spinSound = useRef<HTMLAudioElement | null>(null);
@@ -148,10 +170,15 @@ export function useAdminDraw() {
     // 10.9s against a spin of 18s), so it loops rather than leaving the most
     // tense stretch of the reel in silence. The fade-out below clears `loop`
     // so the clip cannot restart underneath the fade.
-    if (spinSound.current && animationSettings.enableSounds) {
-      spinSound.current.loop = true;
-      spinSound.current.currentTime = 1;
-      spinSound.current.play();
+    if (animationSettings.enableSounds) {
+      if (arcadeMode) {
+        // The synth ticks in step with the reel, so it needs the duration.
+        arcade.current?.startSpin(animationSettings.duration);
+      } else if (spinSound.current) {
+        spinSound.current.loop = true;
+        spinSound.current.currentTime = 1;
+        spinSound.current.play();
+      }
     }
 
     // Reset to start position
@@ -201,6 +228,7 @@ export function useAdminDraw() {
     animationSettings,
     viewOnlyEnabled,
     luckydrawId,
+    arcadeMode,
   ]);
 
   // Initialize audio. Deliberately kept separate from the F5 handler below:
@@ -367,6 +395,7 @@ export function useAdminDraw() {
         const autoSoundFadeDuration = animationSettings.soundFadeDuration;
 
         if (
+          !arcadeMode &&
           spinSound.current &&
           animationSettings.enableSounds &&
           progress > autoSoundFadeStart &&
@@ -412,7 +441,7 @@ export function useAdminDraw() {
 
       animationRef.current = requestAnimationFrame(animate);
     },
-    [animationSettings, itemHeight]
+    [animationSettings, itemHeight, arcadeMode]
   );
 
   const handleSpinComplete = useCallback(
@@ -426,16 +455,21 @@ export function useAdminDraw() {
         spinSound.current.currentTime = 0;
         spinSound.current.volume = 1;
       }
+      arcade.current?.stopSpin();
 
       // Play celebration sounds
-      if (celebrateSound.current && animationSettings.enableSounds) {
-        celebrateSound.current.currentTime = 0;
-        celebrateSound.current.play();
-      }
+      if (arcadeMode) {
+        if (animationSettings.enableSounds) arcade.current?.playWin();
+      } else {
+        if (celebrateSound.current && animationSettings.enableSounds) {
+          celebrateSound.current.currentTime = 0;
+          celebrateSound.current.play();
+        }
 
-      if (applauseSound.current && animationSettings.enableSounds) {
-        applauseSound.current.currentTime = 0;
-        applauseSound.current.play();
+        if (applauseSound.current && animationSettings.enableSounds) {
+          applauseSound.current.currentTime = 0;
+          applauseSound.current.play();
+        }
       }
 
       // Record winner
@@ -467,7 +501,7 @@ export function useAdminDraw() {
         setShowWinner(false);
       }, animationSettings.winnerDisplayDuration);
     },
-    [animationSettings, luckydrawId]
+    [animationSettings, luckydrawId, arcadeMode]
   );
 
   const handleDeleteWinner = useCallback(
