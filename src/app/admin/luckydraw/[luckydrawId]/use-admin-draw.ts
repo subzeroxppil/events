@@ -137,8 +137,12 @@ export function useAdminDraw() {
 
     const intendedWinner = newSpinnerItems[winnerIndex];
 
-    // Play spin sound
+    // Play spin sound. The clip is shorter than the spin (spin4.mp3 runs
+    // 10.9s against a spin of 18s), so it loops rather than leaving the most
+    // tense stretch of the reel in silence. The fade-out below clears `loop`
+    // so the clip cannot restart underneath the fade.
     if (spinSound.current && animationSettings.enableSounds) {
+      spinSound.current.loop = true;
       spinSound.current.currentTime = 1;
       spinSound.current.play();
     }
@@ -362,6 +366,8 @@ export function useAdminDraw() {
           !soundFading
         ) {
           soundFading = true;
+          // Let the clip run to its end rather than looping into the fade.
+          spinSound.current.loop = false;
           const fadeOutDurationMs = duration * autoSoundFadeDuration;
           const steps = 20;
           const stepMs = Math.max(16, Math.floor(fadeOutDurationMs / steps));
@@ -408,6 +414,7 @@ export function useAdminDraw() {
 
       // Stop spin sound
       if (spinSound.current) {
+        spinSound.current.loop = false;
         spinSound.current.pause();
         spinSound.current.currentTime = 0;
         spinSound.current.volume = 1;

@@ -3,7 +3,6 @@
 import { Volume2, VolumeX } from "lucide-react";
 import SpinnerReel from "@/components/luckydraw/SpinnerReel";
 import type { LiveStageProps } from "@/components/luckydraw/live/types";
-import { formatWonAt } from "@/components/luckydraw/live/format";
 import { useRootBackground } from "@/app/hooks/use-viewport-height";
 import { pixelFontVars } from "@/lib/pixel-font";
 import {
@@ -30,8 +29,6 @@ export default function PixelStage({
   live,
   variant = DEFAULT_PIXEL_VARIANT,
 }: LiveStageProps & { variant?: PixelVariant }) {
-  const latest = live.winners[live.winners.length - 1];
-
   useRootBackground(variant.background, variant.backgroundBase);
 
   return (
@@ -79,12 +76,13 @@ export default function PixelStage({
             style={{ color: variant.dim }}
           >
             <span>PLAYERS {live.snapshot?.participants.length ?? 0}</span>
-            <span>DRAWN {live.winners.length}</span>
           </div>
         </header>
 
-        {/* Reel window */}
-        <main className="flex-1 min-h-0 mt-2 px-3 pb-1">
+        {/* Reel window. Carries the bottom safe-area inset now that the last
+            winner readout that used to hold it is gone — without it the reel
+            runs under the iPhone home indicator. */}
+        <main className="flex-1 min-h-0 mt-2 px-3 pb-[calc(env(safe-area-inset-bottom)+0.6rem)]">
           <div
             className="relative h-full w-full max-w-sm sm:max-w-2xl mx-auto"
             style={pixelFrameStyle(variant)}
@@ -111,39 +109,6 @@ export default function PixelStage({
             />
           </div>
         </main>
-
-        {/* Last winner readout */}
-        <footer className="relative z-20 shrink-0 px-3 pb-[calc(env(safe-area-inset-bottom)+0.6rem)] pt-1 flex justify-center">
-          <div
-            className="flex items-center gap-2 px-3 py-1.5 max-w-full"
-            style={{
-              background: variant.panelFill,
-              border: `2px solid ${variant.accent}`,
-              borderRadius: 0,
-            }}
-          >
-            <span
-              className="font-pixel text-[7px] tracking-[0.14em] shrink-0"
-              style={{ color: variant.dim }}
-            >
-              LAST
-            </span>
-            <span
-              className="font-pixel text-[10px] truncate"
-              style={{ color: variant.text }}
-            >
-              {latest ? latest.workId : "----"}
-            </span>
-            {latest && (
-              <span
-                className="font-pixel-body text-lg leading-none shrink-0"
-                style={{ color: variant.dim }}
-              >
-                {formatWonAt(latest.wonAt)}
-              </span>
-            )}
-          </div>
-        </footer>
       </div>
 
       <PixelWinnerOverlay

@@ -19,6 +19,7 @@ import {
   type ViewSettings,
 } from "@/lib/luckydraw-settings";
 import type { SpinPayload, Winner } from "@/lib/luckydraw-live";
+import { playStartChime } from "@/lib/retro-chime";
 
 export type LiveStatus = "loading" | "not-live" | "ready" | "error";
 
@@ -234,6 +235,7 @@ export function useLiveDraw(luckydrawId: string | undefined) {
       setCurrentWinner(winner);
 
       if (spinSound.current) {
+        spinSound.current.loop = false;
         spinSound.current.pause();
         spinSound.current.currentTime = 0;
         spinSound.current.volume = 1;
@@ -288,7 +290,11 @@ export function useLiveDraw(luckydrawId: string | undefined) {
       setCenterIndex(0);
       setAnimationOffset(0);
 
+      // Loop the bed for the same reason the admin screen does: the clip is
+      // shorter than the spin, and the silence would land on the tensest part
+      // of the reel. Cleared when the fade starts.
       if (soundsOn(payloadSettings) && spinSound.current) {
+        spinSound.current.loop = true;
         spinSound.current.currentTime = 1;
         spinSound.current.volume = 1;
         void spinSound.current.play().catch(() => {});
@@ -325,6 +331,8 @@ export function useLiveDraw(luckydrawId: string | undefined) {
           !soundFading
         ) {
           soundFading = true;
+          // Let the clip run to its end rather than looping into the fade.
+          spinSound.current.loop = false;
           const fadeOutDurationMs =
             payload.duration * payloadSettings.soundFadeDuration;
           const steps = 20;
@@ -487,17 +495,35 @@ export function useLiveDraw(luckydrawId: string | undefined) {
   const enter = useCallback(async () => {
     // Mobile browsers refuse to play audio that wasn't started by a gesture.
     // Play-then-pause inside this handler unlocks the clips for later.
-    for (const ref of [spinSound, celebrateSound, applauseSound]) {
-      const audio = ref.current;
-      if (!audio) continue;
-      try {
-        await audio.play();
-        audio.pause();
-        audio.currentTime = 0;
-      } catch {
-        // Autoplay still blocked; the mute button remains available.
-      }
-    }
+    //
+    // The priming MUST be muted. `play()` resolves only once playback has
+    // actually begun, so an unmuted prime is audible — which is how pressing
+    // Enter came to play a burst of the winning sound. `muted` rather than
+    // `volume = 0` because iOS Safari ignores `volume` on media elements.
+    // Primed together rather than in sequence so the unlock is one moment,
+    // not a chain of three.
+    await Promise.all(
+      [spinSound, celebrateSound, applauseSound].map(async (ref) => {
+        const audio = ref.current;
+        if (!audio) return;
+        const wasMuted = audio.muted;
+        try {
+          audio.muted = true;
+          await audio.play();
+          audio.pause();
+          audio.currentTime = 0;
+        } catch {
+          // Autoplay still blocked; the mute button remains available.
+        } finally {
+          audio.muted = wasMuted;
+        }
+      })
+    );
+
+    // Now that the clips are unlocked, acknowledge the tap with the arcade
+    // chime — the first sound the viewer should hear, and deliberately not
+    // the one that belongs to a win.
+    if (!muted) void playStartChime();
 
     try {
       await (
@@ -510,7 +536,7 @@ export function useLiveDraw(luckydrawId: string | undefined) {
     }
 
     setStarted(true);
-  }, []);
+  }, [muted]);
 
   return {
     status,

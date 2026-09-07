@@ -1,0 +1,6 @@
+schema: spec-driven
+created: 2026-09-07
+goal: Fix the lucky draw sound on both the admin and live screens (silent tail
+  on the spin, winning sound leaking out of the live page's Enter unlock) and
+  slow the spin to a less frantic pace, with a retro arcade start chime on
+  Enter.

@@ -1,13 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { Trophy } from "lucide-react";
 import SpinnerReel from "@/components/luckydraw/SpinnerReel";
 import WinnerOverlay from "@/components/luckydraw/WinnerOverlay";
 import LiveBadge from "@/components/luckydraw/live/LiveBadge";
 import MuteButton from "@/components/luckydraw/live/MuteButton";
 import type { LiveStageProps } from "@/components/luckydraw/live/types";
-import { formatWonAt } from "@/components/luckydraw/live/format";
 import { useRootBackground } from "@/app/hooks/use-viewport-height";
 
 /**
@@ -20,7 +18,6 @@ const ARCADE_BACKGROUND =
 const ARCADE_BASE = "#0b2258";
 
 export default function ArcadeStage({ live }: LiveStageProps) {
-  const latest = live.winners[live.winners.length - 1];
   const accent = live.accentColors[1];
 
   useRootBackground(ARCADE_BACKGROUND, ARCADE_BASE);
@@ -115,23 +112,6 @@ export default function ArcadeStage({ live }: LiveStageProps) {
           </div>
         </main>
 
-        {/* Previous winner ticket */}
-        <footer className="relative z-20 shrink-0 mt-2 flex justify-center">
-          <div className="flex items-center gap-2 rounded-xl px-3 py-1.5 bg-white shadow-[0_8px_0_-2px_rgba(3,14,45,0.35)] max-w-full min-h-[2.25rem]">
-            <Trophy className="w-3.5 h-3.5 shrink-0" style={{ color: accent }} />
-            <span className="text-[10px] uppercase tracking-[0.16em] font-bold text-gray-500 shrink-0">
-              Last
-            </span>
-            <span className="text-sm font-extrabold text-gray-900 truncate">
-              {latest ? latest.workId : "—"}
-            </span>
-            {latest && (
-              <span className="text-xs text-gray-400 shrink-0">
-                {formatWonAt(latest.wonAt)}
-              </span>
-            )}
-          </div>
-        </footer>
       </div>
 
       <WinnerOverlay

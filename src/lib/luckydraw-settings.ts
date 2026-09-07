@@ -36,8 +36,12 @@ export type AnimationSettings = {
 };
 
 export const DEFAULT_SETTINGS: AnimationSettings = {
-  duration: 14500,
-  easeExponent: 4,
+  // 18s over a gentler ease: long enough to read on a phone, and the lower
+  // exponent front-loads less of the travel so the reel opens less frantically
+  // rather than merely running longer. Broadcast in the spin payload, so the
+  // live page inherits both.
+  duration: 18000,
+  easeExponent: 3.2,
   minSpins: 3,
   maxSpins: 4,
   spinnerItemCount: 200,

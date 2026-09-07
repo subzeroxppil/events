@@ -126,13 +126,6 @@ export default function PixelAdminScreen({
               <ArrowLeft className="w-3 h-3" aria-hidden />
               Back
             </Link>
-            <Link
-              href={`/admin/luckydraw/${luckydrawId}/classic`}
-              className={PIXEL_BUTTON}
-              style={buttonStyle}
-            >
-              Classic UI
-            </Link>
           </div>
 
           <h1

@@ -5,7 +5,6 @@ import WinnerOverlay from "@/components/luckydraw/WinnerOverlay";
 import LiveBadge from "@/components/luckydraw/live/LiveBadge";
 import MuteButton from "@/components/luckydraw/live/MuteButton";
 import type { LiveStageProps } from "@/components/luckydraw/live/types";
-import { formatWonAt } from "@/components/luckydraw/live/format";
 import { useRootBackground } from "@/app/hooks/use-viewport-height";
 
 /**
@@ -18,7 +17,6 @@ const MIDNIGHT_BACKGROUND =
 const MIDNIGHT_BASE = "#03081c";
 
 export default function MidnightStage({ live }: LiveStageProps) {
-  const latest = live.winners[live.winners.length - 1];
   const glow = live.accentColors[3];
 
   useRootBackground(MIDNIGHT_BACKGROUND, MIDNIGHT_BASE);
@@ -71,7 +69,9 @@ export default function MidnightStage({ live }: LiveStageProps) {
           </h1>
         </header>
 
-        <main className="flex-1 min-h-0 flex items-center justify-center">
+        {/* Carries the bottom safe-area inset now that the previous-winner
+            readout that used to hold it is gone. */}
+        <main className="flex-1 min-h-0 flex items-center justify-center pb-[calc(env(safe-area-inset-bottom)+0.6rem)]">
           <div className="relative w-full max-w-sm sm:max-w-2xl h-full">
             <SpinnerReel
               spinnerItems={live.spinnerItems}
@@ -100,24 +100,6 @@ export default function MidnightStage({ live }: LiveStageProps) {
           </div>
         </main>
 
-        <footer className="relative z-20 shrink-0 px-4 pb-[calc(env(safe-area-inset-bottom)+0.6rem)] pt-1 flex justify-center">
-          <div className="flex items-center gap-2 rounded-full px-4 py-2 backdrop-blur-md bg-white/10 border border-white/15 shadow-lg max-w-full min-h-[2.25rem]">
-            <span
-              className="text-[10px] uppercase tracking-[0.18em] font-semibold shrink-0"
-              style={{ color: glow }}
-            >
-              Previous
-            </span>
-            <span className="text-sm font-bold text-white truncate">
-              {latest ? latest.workId : "—"}
-            </span>
-            {latest && (
-              <span className="text-xs text-white/50 shrink-0">
-                {formatWonAt(latest.wonAt)}
-              </span>
-            )}
-          </div>
-        </footer>
       </div>
 
       <WinnerOverlay
