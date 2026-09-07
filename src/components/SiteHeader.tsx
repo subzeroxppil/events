@@ -15,21 +15,29 @@ export function SiteHeader() {
   return (
     // The draw screens fill the window and hide this by the attribute — see
     // `.live-page-host` in globals.css.
-    <div data-site-header className="flex-col md:flex">
-      <div className="">
-        <div className="flex items-center pr-4 pl-1">
-          <div className="flex px-1 pt-1 items-center cursor-default">
-            <Image
-              src="/paypal_logo.png"
-              alt="paypal icon"
-              width={90}
-              height={45}
-            />
-          </div>
-          <MainNav className="mx-6" />
-          <div className="ml-auto flex items-center">
-            <UserNav />
-          </div>
+    //
+    // Sticky and translucent rather than a flat white band: content scrolling
+    // under a blurred bar reads as depth, and the hairline border is what
+    // separates the bar from the page instead of leaving them the same slab
+    // of white.
+    <div
+      data-site-header
+      className="sticky top-0 z-50 w-full border-b border-[#0463ce]/10 bg-[#eaf2ff]/85 backdrop-blur-md supports-[backdrop-filter]:bg-[#eaf2ff]/70"
+    >
+      <div className="flex h-14 items-center gap-2 pr-4 pl-3 md:h-16 md:pl-4">
+        <div className="flex cursor-default items-center">
+          <Image
+            src="/paypal_logo.png"
+            alt="PayPal"
+            width={90}
+            height={24}
+            className="h-auto w-[76px] md:w-[90px]"
+            priority
+          />
+        </div>
+        <MainNav className="mx-4 md:mx-6" />
+        <div className="ml-auto flex items-center">
+          <UserNav />
         </div>
       </div>
     </div>

@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-09-07
+goal: Restyle the public landing page to a modern, professional look on the
+  app's PayPal-blue palette, and remove the dead loading guard and unused state
+  it accumulated.
