@@ -1,9 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 interface FeatureProps {
   title: string;
@@ -46,26 +41,26 @@ export const Features = () => {
         {features.map(({ title, description, image }: FeatureProps) => (
           <Card
             key={title}
-            className="flex flex-col overflow-hidden border-slate-200/80 bg-white shadow-sm transition-shadow hover:shadow-md"
+            className="group flex flex-col overflow-hidden border-slate-200/80 bg-white p-0 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#0463ce]/30 hover:shadow-lg"
           >
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-[#173066] md:text-lg">
-                {title}
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="text-sm leading-relaxed text-slate-600">
-              {description}
-            </CardContent>
-
-            {/* Pinned to the bottom of the card so the three images line up
-                across the row even when the copy runs to different lengths. */}
-            <div className="mt-auto flex items-end justify-center bg-[#f4f8ff] px-6 pt-6 pb-4">
+            {/* The panel leads the card and bleeds to its edges. Sitting it at
+                the bottom with padding under it left a white strip below the
+                tint, which read as the image failing to fill the card. */}
+            <div className="relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-b from-[#eaf2ff] to-[#dbe8fb]">
               <img
                 src={image}
                 alt=""
-                className="w-[180px] max-w-full lg:w-[220px]"
+                className="max-h-32 w-auto max-w-[70%] transition-transform duration-300 group-hover:scale-105"
               />
+            </div>
+
+            <div className="flex flex-1 flex-col gap-2 p-6">
+              <h3 className="text-base font-semibold text-[#173066] md:text-lg">
+                {title}
+              </h3>
+              <p className="text-sm leading-relaxed text-slate-600">
+                {description}
+              </p>
             </div>
           </Card>
         ))}
