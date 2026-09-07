@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-09-07
+goal: Refresh the admin lucky draw screen once on first open in a tab, mirroring
+  the live page's existing first-open reload.

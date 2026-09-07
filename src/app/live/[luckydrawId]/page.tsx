@@ -22,7 +22,7 @@ import {
   useFullHeightPage,
   useRootBackground,
 } from "@/app/hooks/use-viewport-height";
-import { useFirstOpenReload } from "./use-first-open-reload";
+import { useFirstOpenReload } from "@/lib/use-first-open-reload";
 import { useLiveDraw } from "./use-live-draw";
 
 /**
@@ -127,7 +127,7 @@ function LiveLuckyDraw() {
 
   // Spend one reload on the first arrival in this tab, before anything else
   // gets attached to a document we didn't load ourselves.
-  useFirstOpenReload(luckydrawId);
+  useFirstOpenReload("live-reloaded:", luckydrawId);
   useFullHeightPage();
 
   if (live.status === "loading") {

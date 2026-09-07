@@ -17,6 +17,7 @@ import {
   triggerFireworks as runFireworks,
 } from "@/lib/luckydraw";
 import { toViewSettings } from "@/lib/luckydraw-settings";
+import { useFirstOpenReload } from "@/lib/use-first-open-reload";
 
 export type Winner = {
   workId: string;
@@ -46,6 +47,12 @@ export function useAdminDraw() {
   const luckydrawId = Array.isArray(params?.luckydrawId)
     ? params.luckydrawId[0]
     : params?.luckydrawId;
+
+  // The draw is run from this screen on the day of an event, usually opened
+  // cold from a bookmark or a pasted link on a presentation machine — the same
+  // kind of arrival the live page already spends one reload on. Placed before
+  // the participants fetch so the discarded first load doesn't pay for a query.
+  useFirstOpenReload("admin-reloaded:", luckydrawId);
 
   const router = useRouter();
   // Core states
