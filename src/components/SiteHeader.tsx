@@ -27,9 +27,9 @@ export function SiteHeader() {
   // bar would eat scarce vertical space there.
   if (pathname.startsWith("/live")) return null;
 
-  // The landing page opens on a blue hero, and a white bar above it reads as a
-  // seam rather than a header, so there the bar is tinted to match. Everywhere
-  // else — the admin portal above all — the bar stays white.
+  // The landing page opens on a blue hero that runs up behind the bar, so the
+  // bar stays transparent there and lets it through. Everywhere else — the
+  // admin portal above all — it is white.
   const onLandingPage = pathname === "/";
 
   return (
@@ -39,8 +39,15 @@ export function SiteHeader() {
       data-site-header
       className={cn(
         "sticky top-0 z-50 w-full backdrop-blur-md transition-[background-color,border-color] duration-200",
+        // On the landing page the bar has no colour of its own: the hero
+        // gradient runs up behind it, so leaving it transparent is what makes
+        // the two read as one surface. A tint only appears once the page has
+        // scrolled, when real content is passing underneath and the bar needs
+        // to stay legible.
         onLandingPage
-          ? "bg-[#eaf2ff]/85 supports-[backdrop-filter]:bg-[#eaf2ff]/70"
+          ? scrolled
+            ? "bg-white/70 supports-[backdrop-filter]:bg-white/55"
+            : "bg-transparent"
           : "bg-white/90 supports-[backdrop-filter]:bg-white/75",
         // Kept as a transparent border rather than toggling `border-b`, so the
         // bar does not change height by a pixel when the line appears.

@@ -70,16 +70,23 @@ export default function Page() {
   }, []);
 
   return (
-    <main className="w-full">
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        {/* A wash of the app's own blue, so the landing page and the product
-            read as one thing rather than two. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-[#eaf2ff] via-[#f6f9ff] to-transparent"
-        />
+    <main className="relative w-full">
+      {/* A wash of the app's own blue, so the landing page and the product read
+          as one thing rather than two.
 
+          It starts above the page, behind the sticky header — the header is
+          transparent on this page, so the single gradient runs from the very
+          top of the window through the hero without a seam. Painting it only
+          below the header, as it was, left the bar reading as a separate band
+          of flat colour sitting on top of a gradient that began again beneath
+          it. The offset matches the header's height (h-14, md:h-16). */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -top-14 -z-10 h-[38rem] bg-gradient-to-b from-[#eaf2ff] via-[#f6f9ff] to-transparent md:-top-16"
+      />
+
+      {/* Hero */}
+      <section className="relative">
         <div className="mx-auto flex w-full max-w-5xl flex-col items-center px-5 pt-14 pb-10 text-center md:px-8 md:pt-20 md:pb-14">
           <BlurFade delay={0.05} inView>
             <span className="inline-flex items-center gap-2 rounded-full border border-[#0463ce]/20 bg-white/70 px-3 py-1 text-xs font-medium text-[#0463ce] backdrop-blur md:text-sm">
