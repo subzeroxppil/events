@@ -1,10 +1,12 @@
 import { LoginForm } from "@/components/LoginForm";
-import { AuthLayout } from "@/components/AuthLayout";
 
+import { PageTransition } from "@/components/PageTransition";
 export default function Page() {
   return (
-    <AuthLayout>
-      <LoginForm />
-    </AuthLayout>
+    <PageTransition className="flex min-h-svh w-full justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm">
+        <LoginForm />
+      </div>
+    </PageTransition>
   );
 }
