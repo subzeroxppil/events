@@ -51,9 +51,18 @@ export const QrDisplayCard = ({
               </span>
             </div>
             <QRCodeSVG value={qrLink} size={300} />
-            <div className="flex items-center gap-1">
-              <div className="bg-muted p-2 rounded-md text-sm">{qrLink}</div>
-              <Button variant="secondary" onClick={handleCopy}>
+            {/* Matches the share sheet: the URL sits on one line at the copy
+                button's height, ellipsised rather than wrapping. Held to the
+                QR code's width so the two line up. */}
+            <div className="flex w-full max-w-[300px] items-center gap-1">
+              <div className="flex h-9 min-w-0 flex-1 items-center rounded-md bg-muted px-3 text-sm">
+                <span className="truncate">{qrLink}</span>
+              </div>
+              <Button
+                variant="secondary"
+                onClick={handleCopy}
+                className="shrink-0"
+              >
                 {copied ? <Check /> : <Copy />}
               </Button>
             </div>

@@ -148,10 +148,18 @@ export default function ViewOnlyShareSheet({
                 </div>
 
                 <div className="flex items-center gap-1 w-full">
-                  <div className="bg-muted p-2 rounded-md text-sm break-all flex-1">
-                    {url}
+                  {/* One line, ellipsised, at the copy button's own height —
+                      `break-all` wrapped the URL onto a second line, which left
+                      the box taller than the button beside it. `min-w-0` is
+                      what lets a flex child shrink far enough to truncate. */}
+                  <div className="flex h-9 min-w-0 flex-1 items-center rounded-md bg-muted px-3 text-sm">
+                    <span className="truncate">{url}</span>
                   </div>
-                  <Button variant="secondary" onClick={handleCopy}>
+                  <Button
+                    variant="secondary"
+                    onClick={handleCopy}
+                    className="shrink-0"
+                  >
                     {copied ? <Check /> : <Copy />}
                   </Button>
                 </div>
