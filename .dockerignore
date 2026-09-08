@@ -23,3 +23,10 @@ openspec
 .mcp.json
 .playwright-mcp
 README.md
+
+# Documentation. The Confluence build is 1.5MB of inlined screenshots and
+# has no business in a runtime image or a build upload.
+guide.md
+guide-for-confluence.html
+docs
+scripts
