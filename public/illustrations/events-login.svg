@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img" aria-label="An audience watching a lucky draw on a big screen">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eaf2ff"/>
+      <stop offset="0.55" stop-color="#dbe8fb"/>
+      <stop offset="1" stop-color="#c5dbf8"/>
+    </linearGradient>
+    <linearGradient id="screenGlass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#eff5ff"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b6d0f4" stop-opacity="0"/>
+      <stop offset="1" stop-color="#9dbff0" stop-opacity="0.75"/>
+    </linearGradient>
+    <clipPath id="screenClip">
+      <rect x="228" y="268" width="344" height="264" rx="10"/>
+    </clipPath>
+  </defs>
+
+  <rect width="800" height="1000" fill="url(#sky)"/>
+
+  <!-- Soft cloud shapes, echoing the pale wash on the landing page -->
+  <g fill="#ffffff" opacity="0.75">
+    <ellipse cx="150" cy="150" rx="120" ry="52"/>
+    <ellipse cx="238" cy="128" rx="78" ry="42"/>
+    <ellipse cx="648" cy="112" rx="112" ry="48"/>
+    <ellipse cx="566" cy="140" rx="70" ry="34"/>
+    <ellipse cx="404" cy="76" rx="96" ry="36"/>
+  </g>
+
+  <!-- Glow so the screen sits forward of the background -->
+  <ellipse cx="400" cy="410" rx="318" ry="238" fill="#ffffff" opacity="0.55"/>
+
+  <!-- The big screen: a lucky draw mid-spin -->
+  <g>
+    <rect x="212" y="252" width="376" height="296" rx="22" fill="#173066"/>
+    <rect x="228" y="268" width="344" height="264" rx="10" fill="url(#screenGlass)"/>
+
+    <g clip-path="url(#screenClip)">
+      <!-- Reel rows, blurred at the edges the way a spinning reel reads -->
+      <g fill="#c9dcf7">
+        <rect x="272" y="276" width="256" height="26" rx="13" opacity="0.45"/>
+        <rect x="272" y="312" width="256" height="28" rx="14" opacity="0.7"/>
+        <rect x="272" y="350" width="256" height="30" rx="15"/>
+      </g>
+
+      <!-- The winning row -->
+      <rect x="252" y="386" width="296" height="46" rx="14" fill="#0463ce"/>
+      <rect x="286" y="402" width="228" height="14" rx="7" fill="#ffffff" opacity="0.92"/>
+
+      <g fill="#c9dcf7">
+        <rect x="272" y="440" width="256" height="30" rx="15"/>
+        <rect x="272" y="480" width="256" height="28" rx="14" opacity="0.7"/>
+        <rect x="272" y="516" width="256" height="26" rx="13" opacity="0.45"/>
+      </g>
+
+      <!-- Selection brackets either side of the winning row -->
+      <g stroke="#63cbfb" stroke-width="5" fill="none" stroke-linecap="round">
+        <path d="M244 392v-8h12"/>
+        <path d="M244 426v8h12"/>
+        <path d="M556 392v-8h-12"/>
+        <path d="M556 426v8h-12"/>
+      </g>
+    </g>
+
+    <!-- Stand -->
+    <rect x="382" y="548" width="36" height="54" rx="8" fill="#173066"/>
+    <rect x="326" y="596" width="148" height="18" rx="9" fill="#173066"/>
+  </g>
+
+  <!-- Floor -->
+  <path d="M0 780c140-38 300-54 400-54s260 16 400 54v274H0z" fill="url(#floor)"/>
+
+  <!-- Confetti -->
+  <g opacity="0.95">
+    <rect x="120" y="300" width="16" height="16" rx="3" fill="#0463ce" transform="rotate(24 128 308)"/>
+    <rect x="668" y="266" width="15" height="15" rx="3" fill="#63cbfb" transform="rotate(-18 675 273)"/>
+    <rect x="92" y="470" width="14" height="14" rx="3" fill="#ffd166" transform="rotate(40 99 477)"/>
+    <rect x="700" y="452" width="16" height="16" rx="3" fill="#0463ce" transform="rotate(12 708 460)"/>
+    <rect x="176" y="212" width="13" height="13" rx="3" fill="#ffd166" transform="rotate(-32 182 218)"/>
+    <rect x="612" y="196" width="14" height="14" rx="3" fill="#509bff" transform="rotate(28 619 203)"/>
+    <rect x="60" y="366" width="12" height="12" rx="3" fill="#ffffff" transform="rotate(16 66 372)"/>
+    <rect x="736" y="356" width="13" height="13" rx="3" fill="#ffffff" transform="rotate(-24 742 362)"/>
+    <rect x="148" y="600" width="14" height="14" rx="3" fill="#63cbfb" transform="rotate(36 155 607)"/>
+    <rect x="654" y="596" width="15" height="15" rx="3" fill="#ffd166" transform="rotate(-14 661 603)"/>
+    <circle cx="228" cy="404" r="7" fill="#63cbfb"/>
+    <circle cx="586" cy="352" r="6" fill="#ffd166"/>
+    <circle cx="118" cy="236" r="6" fill="#509bff"/>
+    <circle cx="690" cy="524" r="7" fill="#509bff"/>
+  </g>
+
+  <!-- Audience, seen from behind, watching the draw.
+       Raised off the canvas floor so that when object-cover crops the
+       artwork vertically it eats empty ground rather than their feet. -->
+  <g transform="translate(0,-76)">
+
+  <!-- Left figure, both arms up -->
+  <g>
+    <ellipse cx="228" cy="906" rx="66" ry="14" fill="#8fb4e8" opacity="0.45"/>
+    <rect x="204" y="828" width="20" height="74" rx="10" fill="#173066"/>
+    <rect x="232" y="828" width="20" height="74" rx="10" fill="#173066"/>
+    <path d="M196 726c0-18 14-32 32-32s32 14 32 32v112H196z" fill="#0463ce"/>
+    <path d="M198 730c-14-26-24-54-28-84" stroke="#0463ce" stroke-width="19" stroke-linecap="round" fill="none"/>
+    <path d="M258 730c14-26 24-54 28-84" stroke="#0463ce" stroke-width="19" stroke-linecap="round" fill="none"/>
+    <circle cx="168" cy="640" r="11" fill="#f3c9a6"/>
+    <circle cx="288" cy="640" r="11" fill="#f3c9a6"/>
+    <circle cx="228" cy="664" r="30" fill="#f3c9a6"/>
+    <path d="M198 660c0-20 13-36 30-36s30 16 30 36c-6-12-18-16-30-16s-24 4-30 16z" fill="#2b2118"/>
+  </g>
+
+  <!-- Centre figure, holding a phone up -->
+  <g>
+    <ellipse cx="400" cy="916" rx="72" ry="15" fill="#8fb4e8" opacity="0.45"/>
+    <rect x="374" y="836" width="21" height="76" rx="10" fill="#173066"/>
+    <rect x="405" y="836" width="21" height="76" rx="10" fill="#173066"/>
+    <path d="M364 724c0-20 16-36 36-36s36 16 36 36v122h-72z" fill="#173066"/>
+    <path d="M370 728c-16 22-24 44-26 68" stroke="#173066" stroke-width="20" stroke-linecap="round" fill="none"/>
+    <path d="M432 726c18-20 30-44 34-70" stroke="#173066" stroke-width="20" stroke-linecap="round" fill="none"/>
+    <circle cx="470" cy="650" r="12" fill="#e8b48c"/>
+    <rect x="452" y="606" width="34" height="52" rx="7" fill="#63cbfb" transform="rotate(14 469 632)"/>
+    <circle cx="400" cy="658" r="31" fill="#e8b48c"/>
+    <path d="M369 656c0-22 14-38 31-38s31 16 31 38c0-14-14-22-31-22s-31 8-31 22z" fill="#4a2f1d"/>
+    <path d="M369 656c-4 14-2 26 4 34-10-6-14-22-4-34z" fill="#4a2f1d"/>
+  </g>
+
+  <!-- Right figure, one arm up -->
+  <g>
+    <ellipse cx="566" cy="904" rx="64" ry="14" fill="#8fb4e8" opacity="0.45"/>
+    <rect x="544" y="826" width="20" height="72" rx="10" fill="#173066"/>
+    <rect x="571" y="826" width="20" height="72" rx="10" fill="#173066"/>
+    <path d="M535 730c0-18 14-32 32-32s32 14 32 32v108h-64z" fill="#509bff"/>
+    <path d="M537 736c-12 20-18 42-18 64" stroke="#509bff" stroke-width="18" stroke-linecap="round" fill="none"/>
+    <path d="M597 734c12-24 20-50 22-78" stroke="#509bff" stroke-width="18" stroke-linecap="round" fill="none"/>
+    <circle cx="621" cy="646" r="10" fill="#c98a5e"/>
+    <circle cx="567" cy="668" r="29" fill="#c98a5e"/>
+    <path d="M538 664c0-20 13-34 29-34s29 14 29 34c-4-14-15-20-29-20s-25 6-29 20z" fill="#1d1410"/>
+  </g>
+  </g>
+</svg>
