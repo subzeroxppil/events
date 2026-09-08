@@ -46,7 +46,7 @@ export default function ArcadeStage({ live }: LiveStageProps) {
         }}
       />
 
-      <div className="relative z-10 h-full w-full flex flex-col px-3 pt-[calc(env(safe-area-inset-top)+0.6rem)] pb-[calc(env(safe-area-inset-bottom)+0.6rem)]">
+      <div className="relative z-10 h-full w-full flex flex-col px-3 pt-[calc(env(safe-area-inset-top)+0.6rem)] pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {/* Header. The name gets its own row in portrait — squeezing it
             beside the badges truncated most real draw names. */}
         <header className="relative z-20 shrink-0">

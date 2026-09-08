@@ -82,7 +82,7 @@ export default function PixelStage({
         {/* Reel window. Carries the bottom safe-area inset now that the last
             winner readout that used to hold it is gone — without it the reel
             runs under the iPhone home indicator. */}
-        <main className="flex-1 min-h-0 mt-2 px-3 pb-[calc(env(safe-area-inset-bottom)+0.6rem)]">
+        <main className="flex-1 min-h-0 mt-2 px-3 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
           <div
             className="relative h-full w-full max-w-sm sm:max-w-2xl mx-auto"
             style={pixelFrameStyle(variant)}

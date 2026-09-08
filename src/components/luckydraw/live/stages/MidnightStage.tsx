@@ -71,7 +71,7 @@ export default function MidnightStage({ live }: LiveStageProps) {
 
         {/* Carries the bottom safe-area inset now that the previous-winner
             readout that used to hold it is gone. */}
-        <main className="flex-1 min-h-0 flex items-center justify-center pb-[calc(env(safe-area-inset-bottom)+0.6rem)]">
+        <main className="flex-1 min-h-0 flex items-center justify-center pb-[calc(env(safe-area-inset-bottom)+2rem)]">
           <div className="relative w-full max-w-sm sm:max-w-2xl h-full">
             <SpinnerReel
               spinnerItems={live.spinnerItems}
