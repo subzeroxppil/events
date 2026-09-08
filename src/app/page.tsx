@@ -189,7 +189,10 @@ export default function Page() {
 
       {/* A closing band rather than letting the last feature card butt against
           the bottom of the window — the page needs somewhere to end. */}
-      <footer className="border-t border-slate-200/80 bg-[#f7faff]">
+      {/* No top border: the tint alone is enough to mark where the page ends,
+          and a rule on top of a colour change reads as two separators doing
+          one job. */}
+      <footer className="bg-[#f7faff]">
         <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-4 px-5 py-12 text-center md:px-8 md:py-16">
           <h2 className="text-xl font-semibold text-[#173066] md:text-2xl">
             Ready to run your next event?
