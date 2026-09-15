@@ -501,35 +501,48 @@ function PixelBat({ scale, fill }: { scale: number; fill: string }) {
  * they bob more slowly — bones are heavier than bedsheets.
  */
 const SKELETONS = [
-  { top: 20, scale: 4, duration: 77, offset: 0.30, restX: 38, bob: 5.2 },
-  { top: 37, scale: 3, duration: 95, offset: 0.62, restX: 70, bob: 6.1 },
-  { top: 54, scale: 4, duration: 66, offset: 0.15, restX: 12, bob: 4.8 },
-  { top: 82, scale: 3, duration: 88, offset: 0.77, restX: 54, bob: 5.6 },
+  { top: 18, scale: 3, duration: 77, offset: 0.30, restX: 38, bob: 5.2 },
+  { top: 36, scale: 2, duration: 95, offset: 0.62, restX: 70, bob: 6.1 },
+  { top: 53, scale: 3, duration: 66, offset: 0.15, restX: 12, bob: 4.8 },
+  { top: 80, scale: 2, duration: 88, offset: 0.77, restX: 54, bob: 5.6 },
 ];
 
 /**
- * A skeleton on a 7x9 grid. The eye sockets are gaps in the skull rather than
- * dark pixels, the same trick the ghost uses, so the whole sprite is one
- * colour and reads against any of the night skies.
+ * A skeleton on a 9x14 grid: skull with hollow sockets and a jaw, a neck, a
+ * clavicle, three ribs either side of a spine, arms hanging past them, a
+ * pelvis and two legs.
+ *
+ * The earlier 7x9 version had a skull sat on a blob, which read as a ghost
+ * with a bad haircut. A skeleton needs the ribcage to be legible, and a
+ * ribcage needs gaps — so the sprite is tall enough to alternate solid rows
+ * with pierced ones and still leave room for limbs.
+ *
+ * The eye sockets are gaps rather than dark pixels, the same trick the ghost
+ * uses, so the whole sprite is one colour and reads against any night sky.
  */
 const SKELETON_ROWS = [
-  "..XXX..",
-  ".XXXXX.",
-  ".X.X.X.",
-  ".XXXXX.",
-  "..XXX..",
-  "XXXXXXX",
-  ".XXXXX.",
-  "..X.X..",
-  "..X.X..",
+  "...XXX...", //  skull crown
+  "..XXXXX..", //  skull
+  "..X.X.X..", //  eye sockets
+  "..XXXXX..", //  cheekbones
+  "...X.X...", //  jaw
+  "....X....", //  neck
+  ".XXXXXXX.", //  clavicle
+  "X.XXXXX.X", //  upper ribs, arms out
+  "X..XXX..X", //  ribs
+  "X.XXXXX.X", //  ribs
+  ".X..X..X.", //  forearms tuck in, spine
+  "...XXX...", //  pelvis
+  "..XX.XX..", //  femurs
+  "..X...X..", //  shins
 ];
 
 function PixelSkeleton({ scale, fill }: { scale: number; fill: string }) {
   return (
     <svg
-      width={7 * scale}
-      height={9 * scale}
-      viewBox="0 0 7 9"
+      width={9 * scale}
+      height={14 * scale}
+      viewBox="0 0 9 14"
       aria-hidden="true"
       shapeRendering="crispEdges"
       className="block opacity-[0.26]"

@@ -14,7 +14,8 @@ export type ReelTheme =
   | "pixel-quest"
   | "pixel-halloween"
   | "pixel-crimson"
-  | "pixel-witching";
+  | "pixel-witching"
+  | "pixel-crypt";
 
 /**
  * Row palettes for the pixel skins. All hard edges — no radius, no blur,
@@ -51,13 +52,24 @@ const PIXEL_PALETTES = {
   },
   // The Halloween skins, the only ones off the PayPal ramp.
   "pixel-halloween": {
-    centerBg: "#e63946",
-    centerBorder: "#ff8a92",
+    centerBg: "#ff7a18",
+    centerBorder: "#ffd08a",
     centerText: "#1a0f30",
     rowBg: "rgba(107, 63, 160, 0.20)",
     rowBorder: "rgba(176, 140, 224, 0.32)",
     rowText: "#c9a9f0",
     shadow: "#3d1f6b",
+  },
+  "pixel-crypt": {
+    centerBg: "#c1121f",
+    centerBorder: "#e85d67",
+    // The one skin whose winning row is light-on-dark: at this depth of red,
+    // bone clears 5.3:1 where the dark purple used elsewhere manages 2.9:1.
+    centerText: "#ffe9c4",
+    rowBg: "rgba(107, 63, 160, 0.20)",
+    rowBorder: "rgba(176, 140, 224, 0.32)",
+    rowText: "#c9a9f0",
+    shadow: "#4a0f16",
   },
   "pixel-crimson": {
     centerBg: "#e01b24",
