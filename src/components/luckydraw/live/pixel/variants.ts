@@ -24,7 +24,7 @@ export type PixelVariant = {
    * tile and show its opening colour again as a band.
    */
   backgroundBase: string;
-  backdrop: "stars" | "dots" | "checker" | "ghosts" | "bats";
+  backdrop: "stars" | "dots" | "checker" | "ghosts" | "bats" | "haunt";
   /** Scanlines and vignette. Off for the handheld skin, which is not a CRT. */
   crt: boolean;
   reelTheme: ReelTheme;
@@ -174,8 +174,13 @@ const QUEST: PixelVariant = {
 };
 
 /**
- * Haunted arcade: pumpkin orange and slime green on a bruised-purple night,
- * with pixel ghosts drifting where the handheld has clouds.
+ * Haunted arcade: crimson and slime green on a bruised-purple night, with
+ * ghosts and skeletons drifting where the handheld has clouds.
+ *
+ * #e63946 rather than a brighter or deeper red: it keeps a slight crimson lean
+ * that sits with the violet background instead of fighting it, and holds 4.4:1
+ * against the dark purple that sits on top of it — comfortably past the 3:1
+ * that the large pixel type on the winner row and the SPIN key needs.
  */
 const HALLOWEEN: PixelVariant = {
   id: "pixel-halloween",
@@ -183,7 +188,7 @@ const HALLOWEEN: PixelVariant = {
   edition: "<HALLOWEEN EDITION>",
   background: "linear-gradient(180deg, #2a1a4a 0%, #1a0f30 55%, #0d0718 100%)",
   backgroundBase: "#0d0718",
-  backdrop: "ghosts",
+  backdrop: "haunt",
   // No scanlines: this is run on a projector in front of a room, and the reel
   // has to stay legible from the back of it.
   crt: false,
@@ -191,28 +196,28 @@ const HALLOWEEN: PixelVariant = {
 
   text: "#ffe9c4",
   dim: "#b08ce0",
-  accent: "#ff7a18",
+  accent: "#e63946",
 
-  frameBorder: "#ff7a18",
+  frameBorder: "#e63946",
   frameFill: "rgba(26, 15, 48, 0.82)",
   frameOutline: "#6b3fa0",
   bracket: "#8bf34a",
 
   panelFill: "#1a0f30",
-  panelBorder: "#ff7a18",
+  panelBorder: "#e63946",
   panelOutline: "#6b3fa0",
   panelShadow: "#3d1f6b",
 
-  buttonBg: "#ff7a18",
+  buttonBg: "#e63946",
   buttonText: "#1a0f30",
-  buttonBorder: "#ffd08a",
+  buttonBorder: "#ff8a92",
   buttonOutline: "#6b3fa0",
-  buttonShadow: "#8a3a00",
+  buttonShadow: "#8c1f27",
 
   titleShadow: "3px 3px 0 #0d0718",
-  confetti: ["#ff7a18", "#8bf34a", "#b08ce0", "#ffe9c4"],
+  confetti: ["#e63946", "#8bf34a", "#b08ce0", "#ffe9c4"],
   // [1] tints the centre band, [3] draws the arrows.
-  reelAccents: ["#1a0f30", "#ff7a18", "#b08ce0", "#ff7a18"],
+  reelAccents: ["#1a0f30", "#e63946", "#b08ce0", "#e63946"],
 };
 
 /** Blood moon: crimson on near-black, scanlines on, bats instead of ghosts. */

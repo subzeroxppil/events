@@ -157,12 +157,13 @@ export function PixelBackdrop({ variant }: { variant: PixelVariant }) {
     );
   }
 
-  if (variant.backdrop === "ghosts") {
+  if (variant.backdrop === "ghosts" || variant.backdrop === "haunt") {
     return (
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Ghosts where the handheld skin has clouds. Same drift, plus a slow
             bob on an inner element so the two motions compose without either
-            fighting the other for the transform. */}
+            fighting the other for the transform. The haunt adds skeletons
+            alongside them, on their own slower, heavier rhythm. */}
         {GHOSTS.map((g, i) => (
           <div
             key={i}
@@ -185,6 +186,33 @@ export function PixelBackdrop({ variant }: { variant: PixelVariant }) {
             </div>
           </div>
         ))}
+
+        {variant.backdrop === "haunt" &&
+          SKELETONS.map((k, i) => (
+            <div
+              key={`bone-${i}`}
+              className="pixel-drift absolute"
+              style={{
+                top: `${k.top}%`,
+                animationDuration: `${k.duration}s`,
+                animationTimingFunction: `steps(${Math.round(
+                  k.duration / CLOUD_HOP_SECONDS
+                )}, end)`,
+                animationDelay: `-${(k.duration * k.offset).toFixed(1)}s`,
+                ["--cloud-x" as string]: `${k.restX}vw`,
+              }}
+            >
+              <div
+                className="pixel-bob"
+                style={{ animationDuration: `${k.bob}s` }}
+              >
+                <PixelSkeleton
+                  scale={k.scale}
+                  fill={variant.backdropTint ?? "#ffffff"}
+                />
+              </div>
+            </div>
+          ))}
       </div>
     );
   }
@@ -457,6 +485,56 @@ function PixelBat({ scale, fill }: { scale: number; fill: string }) {
       className="block opacity-[0.5]"
     >
       {BAT_ROWS.flatMap((row, y) =>
+        row.split("").map((cell, x) =>
+          cell === "X" ? (
+            <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={fill} />
+          ) : null
+        )
+      )}
+    </svg>
+  );
+}
+
+/**
+ * Skeletons for the haunt, drifting between the ghosts. Their tops and speeds
+ * deliberately avoid the ghosts' rows, so the two never travel as a pair, and
+ * they bob more slowly — bones are heavier than bedsheets.
+ */
+const SKELETONS = [
+  { top: 20, scale: 4, duration: 77, offset: 0.30, restX: 38, bob: 5.2 },
+  { top: 37, scale: 3, duration: 95, offset: 0.62, restX: 70, bob: 6.1 },
+  { top: 54, scale: 4, duration: 66, offset: 0.15, restX: 12, bob: 4.8 },
+  { top: 82, scale: 3, duration: 88, offset: 0.77, restX: 54, bob: 5.6 },
+];
+
+/**
+ * A skeleton on a 7x9 grid. The eye sockets are gaps in the skull rather than
+ * dark pixels, the same trick the ghost uses, so the whole sprite is one
+ * colour and reads against any of the night skies.
+ */
+const SKELETON_ROWS = [
+  "..XXX..",
+  ".XXXXX.",
+  ".X.X.X.",
+  ".XXXXX.",
+  "..XXX..",
+  "XXXXXXX",
+  ".XXXXX.",
+  "..X.X..",
+  "..X.X..",
+];
+
+function PixelSkeleton({ scale, fill }: { scale: number; fill: string }) {
+  return (
+    <svg
+      width={7 * scale}
+      height={9 * scale}
+      viewBox="0 0 7 9"
+      aria-hidden="true"
+      shapeRendering="crispEdges"
+      className="block opacity-[0.26]"
+    >
+      {SKELETON_ROWS.flatMap((row, y) =>
         row.split("").map((cell, x) =>
           cell === "X" ? (
             <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={fill} />

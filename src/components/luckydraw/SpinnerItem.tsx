@@ -51,8 +51,8 @@ const PIXEL_PALETTES = {
   },
   // The Halloween skins, the only ones off the PayPal ramp.
   "pixel-halloween": {
-    centerBg: "#ff7a18",
-    centerBorder: "#ffd08a",
+    centerBg: "#e63946",
+    centerBorder: "#ff8a92",
     centerText: "#1a0f30",
     rowBg: "rgba(107, 63, 160, 0.20)",
     rowBorder: "rgba(176, 140, 224, 0.32)",
