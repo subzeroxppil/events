@@ -175,7 +175,7 @@ const QUEST: PixelVariant = {
 
 /**
  * Haunted arcade: pumpkin orange and slime green on a bruised-purple night,
- * with pixel ghosts drifting where the handheld has clouds.
+ * with ghosts and skeletons drifting where the handheld has clouds.
  */
 const HALLOWEEN: PixelVariant = {
   id: "pixel-halloween",
@@ -183,7 +183,7 @@ const HALLOWEEN: PixelVariant = {
   edition: "<HALLOWEEN EDITION>",
   background: "linear-gradient(180deg, #2a1a4a 0%, #1a0f30 55%, #0d0718 100%)",
   backgroundBase: "#0d0718",
-  backdrop: "ghosts",
+  backdrop: "haunt",
   // No scanlines: this is run on a projector in front of a room, and the reel
   // has to stay legible from the back of it.
   crt: false,
