@@ -157,6 +157,38 @@ export function PixelBackdrop({ variant }: { variant: PixelVariant }) {
     );
   }
 
+  if (variant.backdrop === "ghosts") {
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Ghosts where the handheld skin has clouds. Same drift, plus a slow
+            bob on an inner element so the two motions compose without either
+            fighting the other for the transform. */}
+        {GHOSTS.map((g, i) => (
+          <div
+            key={i}
+            className="pixel-drift absolute"
+            style={{
+              top: `${g.top}%`,
+              animationDuration: `${g.duration}s`,
+              animationTimingFunction: `steps(${Math.round(
+                g.duration / CLOUD_HOP_SECONDS
+              )}, end)`,
+              animationDelay: `-${(g.duration * g.offset).toFixed(1)}s`,
+              ["--cloud-x" as string]: `${g.restX}vw`,
+            }}
+          >
+            <div
+              className="pixel-bob"
+              style={{ animationDuration: `${g.bob}s` }}
+            >
+              <PixelGhost scale={g.scale} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   // Tiled floor.
   return (
     <div
@@ -284,6 +316,65 @@ function PixelCloud({ scale }: { scale: number }) {
               width={1}
               height={1}
               fill="#173066"
+            />
+          ) : null
+        )
+      )}
+    </svg>
+  );
+}
+
+/**
+ * Ghosts for the Halloween skin. Same shape of data as the clouds, plus `bob`
+ * — the seconds for one float up and back — kept uneven so they never rise and
+ * fall in unison.
+ */
+const GHOSTS = [
+  { top: 12, scale: 5, duration: 61, offset: 0.08, restX: 18, bob: 3.1 },
+  { top: 29, scale: 4, duration: 84, offset: 0.44, restX: 58, bob: 4.3 },
+  { top: 44, scale: 6, duration: 49, offset: 0.69, restX: 26, bob: 2.6 },
+  { top: 60, scale: 4, duration: 71, offset: 0.21, restX: 78, bob: 3.8 },
+  { top: 75, scale: 5, duration: 93, offset: 0.55, restX: 42, bob: 3.4 },
+  { top: 88, scale: 4, duration: 56, offset: 0.85, restX: 10, bob: 4.7 },
+];
+
+/**
+ * A ghost on an 8x8 grid, one <rect> per lit pixel. The eyes are gaps rather
+ * than dark pixels, so the night sky shows through them and the sprite needs
+ * only one colour.
+ */
+const GHOST_ROWS = [
+  "..XXXX..",
+  ".XXXXXX.",
+  "XXXXXXXX",
+  "XX.XX.XX",
+  "XXXXXXXX",
+  "XXXXXXXX",
+  "XXXXXXXX",
+  "X.XX.XX.",
+];
+
+function PixelGhost({ scale }: { scale: number }) {
+  return (
+    <svg
+      width={8 * scale}
+      height={8 * scale}
+      viewBox="0 0 8 8"
+      aria-hidden="true"
+      shapeRendering="crispEdges"
+      // Pale and faint: a backdrop, not something competing with the reel.
+      className="block opacity-[0.26]"
+    >
+      {GHOST_ROWS.flatMap((row, y) =>
+        row.split("").map((cell, x) =>
+          cell === "X" ? (
+            <rect
+              key={`${x}-${y}`}
+              x={x}
+              y={y}
+              width={1}
+              height={1}
+              fill="#ffffff"
             />
           ) : null
         )

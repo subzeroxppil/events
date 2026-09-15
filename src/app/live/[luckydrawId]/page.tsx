@@ -14,6 +14,7 @@ import PixelStage from "@/components/luckydraw/live/stages/PixelStage";
 import PixelWelcome from "@/components/luckydraw/live/pixel/PixelWelcome";
 import {
   PIXEL_VARIANTS,
+  SEASONAL_PIXEL_VARIANT,
   type PixelVariant,
 } from "@/components/luckydraw/live/pixel/variants";
 import type { LiveStageProps } from "@/components/luckydraw/live/types";
@@ -151,21 +152,13 @@ function pixelSkins(): Record<string, Skin> {
  * which resolves in the same tick that `useSearchParams` does. Matches the
  * default skin so there is no flash between the two.
  */
-const DEFAULT_CHROME: LiveChrome = PIXEL_VARIANTS["pixel-lcd"]
-  ? {
-      background: PIXEL_VARIANTS["pixel-lcd"].background,
-      base: PIXEL_VARIANTS["pixel-lcd"].backgroundBase,
-      block: PIXEL_VARIANTS["pixel-lcd"].panelFill,
-      text: PIXEL_VARIANTS["pixel-lcd"].text,
-      dim: PIXEL_VARIANTS["pixel-lcd"].dim,
-    }
-  : {
-      background: "linear-gradient(180deg, #eaf2ff 0%, #d3e2f8 55%, #b9cdec 100%)",
-      base: "#b9cdec",
-      block: "rgba(255, 255, 255, 0.7)",
-      text: "#173066",
-      dim: "#4e74b8",
-    };
+const DEFAULT_CHROME: LiveChrome = {
+  background: SEASONAL_PIXEL_VARIANT.background,
+  base: SEASONAL_PIXEL_VARIANT.backgroundBase,
+  block: SEASONAL_PIXEL_VARIANT.panelFill,
+  text: SEASONAL_PIXEL_VARIANT.text,
+  dim: SEASONAL_PIXEL_VARIANT.dim,
+};
 
 export default function LiveLuckyDrawPage() {
   return (
@@ -189,7 +182,7 @@ function LiveLuckyDraw() {
     ? params.luckydrawId[0]
     : params?.luckydrawId;
 
-  const skin = SKINS[searchParams.get("ui") ?? ""] ?? SKINS["pixel-lcd"];
+  const skin = SKINS[searchParams.get("ui") ?? ""] ?? SKINS["pixel-halloween"];
   // `?sound=arcade` opts this viewer into the synthesised arcade soundtrack.
   const live = useLiveDraw(luckydrawId, searchParams.get("sound") === "arcade");
 

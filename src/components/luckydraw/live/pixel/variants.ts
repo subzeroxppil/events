@@ -1,14 +1,15 @@
 import type { ReelTheme } from "@/components/luckydraw/SpinnerItem";
 
 /**
- * The three pixel skins.
+ * The pixel skins.
  *
  * They share every component — one welcome screen, one stage, one winner
  * overlay — and differ only through this table, so a change to the layout
- * lands on all three and none of them can quietly rot.
+ * lands on all of them and none can quietly rot.
  *
- * All three stay on the PayPal ramp: navy #173066, blues #0463ce / #509bff /
- * #63cbfb, white. Red appears only on the LIVE dot.
+ * All but one stay on the PayPal ramp: navy #173066, blues #0463ce / #509bff /
+ * #63cbfb, white, with red only on the LIVE dot. The Halloween skin is the
+ * deliberate exception.
  */
 export type PixelVariant = {
   id: string;
@@ -23,7 +24,7 @@ export type PixelVariant = {
    * tile and show its opening colour again as a band.
    */
   backgroundBase: string;
-  backdrop: "stars" | "dots" | "checker";
+  backdrop: "stars" | "dots" | "checker" | "ghosts";
   /** Scanlines and vignette. Off for the handheld skin, which is not a CRT. */
   crt: boolean;
   reelTheme: ReelTheme;
@@ -53,6 +54,13 @@ export type PixelVariant = {
 
   titleShadow: string;
   confetti: string[];
+  /**
+   * Overrides the draw's own accent colours inside the reel — the centre
+   * band's tint and the arrows either side of it. Only set by skins that leave
+   * the PayPal ramp, since those two are otherwise the last blue things on an
+   * entirely repainted screen.
+   */
+  reelAccents?: string[];
 };
 
 /** Deep-space cabinet: starfield, scanlines, cyan on near-black navy. */
@@ -160,10 +168,60 @@ const QUEST: PixelVariant = {
   confetti: ["#ffffff", "#63cbfb", "#509bff", "#0463ce"],
 };
 
+/**
+ * Haunted arcade: pumpkin orange and slime green on a bruised-purple night,
+ * with pixel ghosts drifting where the handheld has clouds.
+ */
+const HALLOWEEN: PixelVariant = {
+  id: "pixel-halloween",
+  tagline: "LUCKY DRAW",
+  edition: "<HALLOWEEN EDITION>",
+  background: "linear-gradient(180deg, #2a1a4a 0%, #1a0f30 55%, #0d0718 100%)",
+  backgroundBase: "#0d0718",
+  backdrop: "ghosts",
+  // No scanlines: this is run on a projector in front of a room, and the reel
+  // has to stay legible from the back of it.
+  crt: false,
+  reelTheme: "pixel-halloween",
+
+  text: "#ffe9c4",
+  dim: "#b08ce0",
+  accent: "#ff7a18",
+
+  frameBorder: "#ff7a18",
+  frameFill: "rgba(26, 15, 48, 0.82)",
+  frameOutline: "#6b3fa0",
+  bracket: "#8bf34a",
+
+  panelFill: "#1a0f30",
+  panelBorder: "#ff7a18",
+  panelOutline: "#6b3fa0",
+  panelShadow: "#3d1f6b",
+
+  buttonBg: "#ff7a18",
+  buttonText: "#1a0f30",
+  buttonBorder: "#ffd08a",
+  buttonOutline: "#6b3fa0",
+  buttonShadow: "#8a3a00",
+
+  titleShadow: "3px 3px 0 #0d0718",
+  confetti: ["#ff7a18", "#8bf34a", "#b08ce0", "#ffe9c4"],
+  // [1] tints the centre band, [3] draws the arrows.
+  reelAccents: ["#1a0f30", "#ff7a18", "#b08ce0", "#ff7a18"],
+};
+
 export const PIXEL_VARIANTS: Record<string, PixelVariant> = {
   pixel: ARCADE_NIGHT,
   "pixel-lcd": HANDHELD,
   "pixel-quest": QUEST,
+  "pixel-halloween": HALLOWEEN,
 };
 
 export const DEFAULT_PIXEL_VARIANT = ARCADE_NIGHT;
+
+/**
+ * What a bare URL gets on both draw screens. Seasonal — swap this back to
+ * HANDHELD once Halloween is over; every other skin stays reachable by its
+ * own `?ui=` value either way.
+ */
+export const SEASONAL_PIXEL_VARIANT = HALLOWEEN;

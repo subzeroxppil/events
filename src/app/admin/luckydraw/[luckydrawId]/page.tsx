@@ -2,10 +2,11 @@
 
 import { Suspense } from "react";
 import PixelAdminScreen from "./PixelAdminScreen";
-import { PIXEL_VARIANTS } from "@/components/luckydraw/live/pixel/variants";
+import { SEASONAL_PIXEL_VARIANT } from "@/components/luckydraw/live/pixel/variants";
 
 /**
- * The default admin draw screen: the handheld-LCD pixel skin.
+ * The default admin draw screen: whichever pixel skin is in season — the
+ * Halloween one at present.
  *
  * The classic screen is still there, at `/admin/luckydraw/[id]/classic`, and
  * `?ui=` picks any other pixel variant from here. Every one of them runs the
@@ -15,7 +16,7 @@ import { PIXEL_VARIANTS } from "@/components/luckydraw/live/pixel/variants";
 export default function AdminLuckyDrawPage() {
   return (
     <Suspense fallback={null}>
-      <PixelAdminScreen defaultVariant={PIXEL_VARIANTS["pixel-lcd"]} />
+      <PixelAdminScreen defaultVariant={SEASONAL_PIXEL_VARIANT} />
     </Suspense>
   );
 }

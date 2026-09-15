@@ -96,7 +96,7 @@ export default function PixelStage({
               centerItemScale={live.settings.centerItemScale}
               nearCenterScale={live.settings.nearCenterScale}
               maxBlur={0}
-              accentColors={live.accentColors}
+              accentColors={variant.reelAccents ?? live.accentColors}
               isAnimating={live.isIdleAnimating || live.isSpinning}
               theme={variant.reelTheme}
               blurEdges={false}

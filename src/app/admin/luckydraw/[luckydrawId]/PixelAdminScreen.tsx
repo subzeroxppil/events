@@ -159,7 +159,7 @@ export default function PixelAdminScreen({
               centerItemScale={draw.animationSettings.centerItemScale}
               nearCenterScale={draw.animationSettings.nearCenterScale}
               maxBlur={0}
-              accentColors={draw.currentColors}
+              accentColors={variant.reelAccents ?? draw.currentColors}
               isAnimating={draw.isIdleAnimating || draw.isSpinning}
               theme={variant.reelTheme}
               blurEdges={false}

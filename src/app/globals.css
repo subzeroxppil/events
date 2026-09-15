@@ -649,3 +649,29 @@ body:has(.live-viewport) [data-site-header] {
     transform: translateX(var(--cloud-x, 40vw));
   }
 }
+
+/* Halloween backdrop — the ghosts drift with `.pixel-drift` and bob with this.
+   Two elements rather than one keyframe doing both, so the horizontal travel
+   and the float stay independent and neither has to know the other's timing.
+   steps() again: a sprite floats in whole pixels or it stops looking like one. */
+@keyframes pixel-bob-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.pixel-bob {
+  animation-name: pixel-bob-y;
+  animation-timing-function: steps(4, end);
+  animation-iteration-count: infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-bob {
+    animation: none;
+  }
+}

@@ -11,10 +11,11 @@ export type ReelTheme =
   | "arcade"
   | "pixel"
   | "pixel-lcd"
-  | "pixel-quest";
+  | "pixel-quest"
+  | "pixel-halloween";
 
 /**
- * Row palettes for the three pixel skins. All hard edges — no radius, no blur,
+ * Row palettes for the pixel skins. All hard edges — no radius, no blur,
  * and a stepped drop shadow rather than a soft one, because anything smooth
  * breaks the illusion. Colours stay on the PayPal ramp throughout.
  */
@@ -45,6 +46,16 @@ const PIXEL_PALETTES = {
     rowBorder: "#2a4a86",
     rowText: "#a9c7f5",
     shadow: "#0463ce",
+  },
+  // The one skin off the PayPal ramp: pumpkin on haunted purple.
+  "pixel-halloween": {
+    centerBg: "#ff7a18",
+    centerBorder: "#ffd08a",
+    centerText: "#1a0f30",
+    rowBg: "rgba(107, 63, 160, 0.20)",
+    rowBorder: "rgba(176, 140, 224, 0.32)",
+    rowText: "#c9a9f0",
+    shadow: "#3d1f6b",
   },
 } as const;
 
