@@ -181,7 +181,42 @@ export function PixelBackdrop({ variant }: { variant: PixelVariant }) {
               className="pixel-bob"
               style={{ animationDuration: `${g.bob}s` }}
             >
-              <PixelGhost scale={g.scale} />
+              <PixelGhost scale={g.scale} fill={variant.backdropTint ?? "#ffffff"} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (variant.backdrop === "bats") {
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Same drift as the ghosts, but the inner element flutters rather than
+            bobs — a quick, uneven flap reads as wings where a slow rise and
+            fall reads as floating. */}
+        {BATS.map((b, i) => (
+          <div
+            key={i}
+            className="pixel-drift absolute"
+            style={{
+              top: `${b.top}%`,
+              animationDuration: `${b.duration}s`,
+              animationTimingFunction: `steps(${Math.round(
+                b.duration / CLOUD_HOP_SECONDS
+              )}, end)`,
+              animationDelay: `-${(b.duration * b.offset).toFixed(1)}s`,
+              ["--cloud-x" as string]: `${b.restX}vw`,
+            }}
+          >
+            <div
+              className="pixel-flap"
+              style={{ animationDuration: `${b.flap}s` }}
+            >
+              <PixelBat
+                scale={b.scale}
+                fill={variant.backdropTint ?? "#ffffff"}
+              />
             </div>
           </div>
         ))}
@@ -354,7 +389,7 @@ const GHOST_ROWS = [
   "X.XX.XX.",
 ];
 
-function PixelGhost({ scale }: { scale: number }) {
+function PixelGhost({ scale, fill }: { scale: number; fill: string }) {
   return (
     <svg
       width={8 * scale}
@@ -374,8 +409,57 @@ function PixelGhost({ scale }: { scale: number }) {
               y={y}
               width={1}
               height={1}
-              fill="#ffffff"
+              fill={fill}
             />
+          ) : null
+        )
+      )}
+    </svg>
+  );
+}
+
+/**
+ * Bats for the blood-moon skin. `flap` is the seconds for one wing beat, kept
+ * short and uneven so a colony never pulses in time.
+ */
+const BATS = [
+  { top: 14, scale: 5, duration: 44, offset: 0.11, restX: 22, flap: 0.5 },
+  { top: 27, scale: 4, duration: 63, offset: 0.48, restX: 64, flap: 0.7 },
+  { top: 46, scale: 6, duration: 38, offset: 0.72, restX: 30, flap: 0.4 },
+  { top: 62, scale: 4, duration: 57, offset: 0.26, restX: 80, flap: 0.6 },
+  { top: 77, scale: 5, duration: 71, offset: 0.61, restX: 46, flap: 0.55 },
+  { top: 90, scale: 4, duration: 49, offset: 0.88, restX: 12, flap: 0.65 },
+];
+
+/**
+ * A bat on an 11x5 grid — wings out, ears up, one <rect> per lit pixel. The
+ * body needs two solid rows: at one it squashed into a dash under the wing
+ * beat and stopped reading as a bat at all.
+ */
+const BAT_ROWS = [
+  "X.........X",
+  "XX.X...X.XX",
+  "XXXXXXXXXXX",
+  "XXXXXXXXXXX",
+  ".XX.XXX.XX.",
+];
+
+function PixelBat({ scale, fill }: { scale: number; fill: string }) {
+  return (
+    <svg
+      width={11 * scale}
+      height={5 * scale}
+      viewBox="0 0 11 5"
+      aria-hidden="true"
+      shapeRendering="crispEdges"
+      // Higher than the ghosts': a dark red on near-black starts faint, and
+      // this skin's scanlines take another bite out of it.
+      className="block opacity-[0.5]"
+    >
+      {BAT_ROWS.flatMap((row, y) =>
+        row.split("").map((cell, x) =>
+          cell === "X" ? (
+            <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={fill} />
           ) : null
         )
       )}

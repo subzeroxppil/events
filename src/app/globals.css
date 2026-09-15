@@ -675,3 +675,30 @@ body:has(.live-viewport) [data-site-header] {
     animation: none;
   }
 }
+
+/* Blood-moon backdrop — bats. The wing beat is a vertical squash rather than a
+   second sprite frame: at two or three pixels per cell it reads the same, and
+   it keeps the colony to one <svg> each. steps() again, for the same reason as
+   everything else on these skins. */
+@keyframes pixel-flap-y {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.72);
+  }
+}
+
+.pixel-flap {
+  animation-name: pixel-flap-y;
+  animation-timing-function: steps(2, end);
+  animation-iteration-count: infinite;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-flap {
+    animation: none;
+  }
+}

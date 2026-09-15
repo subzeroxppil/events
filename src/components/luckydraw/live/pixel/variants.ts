@@ -24,7 +24,7 @@ export type PixelVariant = {
    * tile and show its opening colour again as a band.
    */
   backgroundBase: string;
-  backdrop: "stars" | "dots" | "checker" | "ghosts";
+  backdrop: "stars" | "dots" | "checker" | "ghosts" | "bats";
   /** Scanlines and vignette. Off for the handheld skin, which is not a CRT. */
   crt: boolean;
   reelTheme: ReelTheme;
@@ -61,6 +61,11 @@ export type PixelVariant = {
    * entirely repainted screen.
    */
   reelAccents?: string[];
+  /**
+   * Colour of the drifting backdrop sprites. Defaults to white, which only
+   * suits a ghost on a dark sky — the other Halloween skins tint theirs.
+   */
+  backdropTint?: string;
 };
 
 /** Deep-space cabinet: starfield, scanlines, cyan on near-black navy. */
@@ -210,11 +215,90 @@ const HALLOWEEN: PixelVariant = {
   reelAccents: ["#1a0f30", "#ff7a18", "#b08ce0", "#ff7a18"],
 };
 
+/** Blood moon: crimson on near-black, scanlines on, bats instead of ghosts. */
+const CRIMSON: PixelVariant = {
+  id: "pixel-crimson",
+  tagline: "LUCKY DRAW",
+  edition: "<BLOOD MOON>",
+  background: "linear-gradient(180deg, #2b0709 0%, #170406 55%, #0a0203 100%)",
+  backgroundBase: "#0a0203",
+  backdrop: "bats",
+  // The one Halloween skin with the CRT on: scanlines over near-black read as
+  // menace, and there is little enough colour here for them to muddy.
+  crt: true,
+  reelTheme: "pixel-crimson",
+
+  text: "#ffd9d9",
+  dim: "#a35a5a",
+  accent: "#e01b24",
+
+  frameBorder: "#e01b24",
+  frameFill: "rgba(23, 4, 6, 0.85)",
+  frameOutline: "#6b1015",
+  bracket: "#ff4d4d",
+
+  panelFill: "#170406",
+  panelBorder: "#e01b24",
+  panelOutline: "#6b1015",
+  panelShadow: "#4a0a0d",
+
+  buttonBg: "#e01b24",
+  buttonText: "#170406",
+  buttonBorder: "#ff8080",
+  buttonOutline: "#6b1015",
+  buttonShadow: "#7a0e13",
+
+  titleShadow: "3px 3px 0 #0a0203",
+  confetti: ["#e01b24", "#ff4d4d", "#ffd9d9", "#6b1015"],
+  reelAccents: ["#170406", "#e01b24", "#a35a5a", "#e01b24"],
+  backdropTint: "#e01b24",
+};
+
+/** Witching hour: slime green and a violet bracket over a swamp-dark sky. */
+const WITCHING: PixelVariant = {
+  id: "pixel-witching",
+  tagline: "LUCKY DRAW",
+  edition: "<WITCHING HOUR>",
+  background: "linear-gradient(180deg, #0d2b1f 0%, #071a13 55%, #030d09 100%)",
+  backgroundBase: "#030d09",
+  backdrop: "ghosts",
+  crt: false,
+  reelTheme: "pixel-witching",
+
+  text: "#e8ffd9",
+  dim: "#7fae87",
+  accent: "#8bf34a",
+
+  frameBorder: "#8bf34a",
+  frameFill: "rgba(7, 26, 19, 0.85)",
+  frameOutline: "#2f6b3f",
+  bracket: "#c77dff",
+
+  panelFill: "#071a13",
+  panelBorder: "#8bf34a",
+  panelOutline: "#2f6b3f",
+  panelShadow: "#143d28",
+
+  buttonBg: "#8bf34a",
+  buttonText: "#071a13",
+  buttonBorder: "#d4ffb0",
+  buttonOutline: "#2f6b3f",
+  buttonShadow: "#3f7a2a",
+
+  titleShadow: "3px 3px 0 #030d09",
+  confetti: ["#8bf34a", "#c77dff", "#e8ffd9", "#2f6b3f"],
+  reelAccents: ["#071a13", "#8bf34a", "#7fae87", "#8bf34a"],
+  // Ghosts lit by whatever is in the cauldron.
+  backdropTint: "#c6ffa8",
+};
+
 export const PIXEL_VARIANTS: Record<string, PixelVariant> = {
   pixel: ARCADE_NIGHT,
   "pixel-lcd": HANDHELD,
   "pixel-quest": QUEST,
   "pixel-halloween": HALLOWEEN,
+  "pixel-crimson": CRIMSON,
+  "pixel-witching": WITCHING,
 };
 
 export const DEFAULT_PIXEL_VARIANT = ARCADE_NIGHT;

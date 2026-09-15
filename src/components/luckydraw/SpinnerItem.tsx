@@ -12,7 +12,9 @@ export type ReelTheme =
   | "pixel"
   | "pixel-lcd"
   | "pixel-quest"
-  | "pixel-halloween";
+  | "pixel-halloween"
+  | "pixel-crimson"
+  | "pixel-witching";
 
 /**
  * Row palettes for the pixel skins. All hard edges — no radius, no blur,
@@ -47,7 +49,7 @@ const PIXEL_PALETTES = {
     rowText: "#a9c7f5",
     shadow: "#0463ce",
   },
-  // The one skin off the PayPal ramp: pumpkin on haunted purple.
+  // The Halloween skins, the only ones off the PayPal ramp.
   "pixel-halloween": {
     centerBg: "#ff7a18",
     centerBorder: "#ffd08a",
@@ -56,6 +58,24 @@ const PIXEL_PALETTES = {
     rowBorder: "rgba(176, 140, 224, 0.32)",
     rowText: "#c9a9f0",
     shadow: "#3d1f6b",
+  },
+  "pixel-crimson": {
+    centerBg: "#e01b24",
+    centerBorder: "#ff8080",
+    centerText: "#170406",
+    rowBg: "rgba(224, 27, 36, 0.10)",
+    rowBorder: "rgba(224, 27, 36, 0.30)",
+    rowText: "#c98a8a",
+    shadow: "#4a0a0d",
+  },
+  "pixel-witching": {
+    centerBg: "#8bf34a",
+    centerBorder: "#d4ffb0",
+    centerText: "#071a13",
+    rowBg: "rgba(139, 243, 74, 0.08)",
+    rowBorder: "rgba(139, 243, 74, 0.26)",
+    rowText: "#9ccf8f",
+    shadow: "#2f6b3f",
   },
 } as const;
 

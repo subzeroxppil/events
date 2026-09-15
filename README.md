@@ -55,7 +55,10 @@ The screen the draw is run from.
 
 | Skin | URL |
 | --- | --- |
-| **Pixel — Handheld** *(default)* | `/admin/luckydraw/<id>` |
+| **🎃 Pixel — Halloween** *(default, seasonal)* | `/admin/luckydraw/<id>` &nbsp;·&nbsp; `?ui=pixel-halloween` |
+| 🦇 Pixel — Blood Moon | `/admin/luckydraw/<id>?ui=pixel-crimson` |
+| 🧪 Pixel — Witching Hour | `/admin/luckydraw/<id>?ui=pixel-witching` |
+| Pixel — Handheld | `/admin/luckydraw/<id>?ui=pixel-lcd` |
 | Pixel — Arcade Night | `/admin/luckydraw/<id>/pixel` &nbsp;·&nbsp; `/admin/luckydraw/<id>?ui=pixel` |
 | Pixel — Quest | `/admin/luckydraw/<id>?ui=pixel-quest` |
 | Classic | `/admin/luckydraw/<id>/classic` |
@@ -75,7 +78,10 @@ For the audience to watch on their own phones.
 
 | Skin | URL | Look |
 | --- | --- | --- |
-| **Pixel — Handheld** *(default)* | `/live/<id>` &nbsp;·&nbsp; `?ui=pixel-lcd` | 8-bit portable LCD: navy pixels on a pale screen |
+| **🎃 Pixel — Halloween** *(default, seasonal)* | `/live/<id>` &nbsp;·&nbsp; `?ui=pixel-halloween` | Pumpkin orange on a bruised-purple night, pixel ghosts drifting |
+| 🦇 Pixel — Blood Moon | `/live/<id>?ui=pixel-crimson` | Crimson on near-black, CRT scanlines, bats flapping past |
+| 🧪 Pixel — Witching Hour | `/live/<id>?ui=pixel-witching` | Slime green over a swamp-dark sky, violet brackets, green ghosts |
+| Pixel — Handheld | `/live/<id>?ui=pixel-lcd` | 8-bit portable LCD: navy pixels on a pale screen |
 | Pixel — Arcade Night | `/live/<id>?ui=pixel` | 8-bit deep-space cabinet: starfield, CRT scanlines |
 | Pixel — Quest | `/live/<id>?ui=pixel-quest` | 8-bit quest log: tiled floor, double-ruled frames |
 | Aurora | `/live/<id>?ui=aurora` | Light PayPal gradient, phone-first |
@@ -83,6 +89,12 @@ For the audience to watch on their own phones.
 | Arcade | `/live/<id>?ui=arcade` | Reel inside a machine cabinet on saturated PayPal blue |
 
 An unrecognised `?ui=` value falls back to the default.
+
+> **The default is seasonal.** A bare URL currently opens the Halloween skin on
+> both screens. It is one exported constant — `SEASONAL_PIXEL_VARIANT` in
+> `src/components/luckydraw/live/pixel/variants.ts` — so putting the handheld
+> back after October is a one-line change. Every skin stays reachable by its own
+> `?ui=` value either way.
 
 The page 404s until the draw is shared: open the admin draw screen, press
 **Share**, and turn on the view-only link. Turning it back off drops every open
