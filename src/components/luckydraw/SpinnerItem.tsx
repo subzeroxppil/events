@@ -15,7 +15,8 @@ export type ReelTheme =
   | "pixel-halloween"
   | "pixel-crimson"
   | "pixel-witching"
-  | "pixel-crypt";
+  | "pixel-crypt"
+  | "pixel-slime";
 
 /**
  * Row palettes for the pixel skins. All hard edges — no radius, no blur,
@@ -70,6 +71,15 @@ const PIXEL_PALETTES = {
     rowBorder: "rgba(176, 140, 224, 0.32)",
     rowText: "#c9a9f0",
     shadow: "#4a0f16",
+  },
+  "pixel-slime": {
+    centerBg: "#8bf34a",
+    centerBorder: "#d4ffb0",
+    centerText: "#1a0f30",
+    rowBg: "rgba(107, 63, 160, 0.20)",
+    rowBorder: "rgba(176, 140, 224, 0.32)",
+    rowText: "#c9a9f0",
+    shadow: "#3d1f6b",
   },
   "pixel-crimson": {
     centerBg: "#e01b24",

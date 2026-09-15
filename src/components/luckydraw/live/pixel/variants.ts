@@ -216,6 +216,52 @@ const HALLOWEEN: PixelVariant = {
 };
 
 /**
+ * Slime: the Halloween skin with its two colours swapped — the pumpkin becomes
+ * the accent's green, and the orange drops to the selection bracket.
+ *
+ * Making it green throughout was the obvious reading and the wrong one: the
+ * bracket was green precisely because the frame was orange, and with both
+ * green the winning row stops being marked at all. Swapping keeps the two-hue
+ * contrast the layout depends on, and the green reads 13:1 against the purple.
+ */
+const SLIME: PixelVariant = {
+  id: "pixel-slime",
+  tagline: "LUCKY DRAW",
+  edition: "<SLIME EDITION>",
+  background: "linear-gradient(180deg, #2a1a4a 0%, #1a0f30 55%, #0d0718 100%)",
+  backgroundBase: "#0d0718",
+  backdrop: "haunt",
+  crt: false,
+  reelTheme: "pixel-slime",
+
+  text: "#e8ffd9",
+  dim: "#b08ce0",
+  accent: "#8bf34a",
+
+  frameBorder: "#8bf34a",
+  frameFill: "rgba(26, 15, 48, 0.82)",
+  frameOutline: "#6b3fa0",
+  // The pumpkin, demoted from the frame to the one thing that has to stand
+  // apart from it.
+  bracket: "#ff7a18",
+
+  panelFill: "#1a0f30",
+  panelBorder: "#8bf34a",
+  panelOutline: "#6b3fa0",
+  panelShadow: "#3d1f6b",
+
+  buttonBg: "#8bf34a",
+  buttonText: "#1a0f30",
+  buttonBorder: "#d4ffb0",
+  buttonOutline: "#6b3fa0",
+  buttonShadow: "#3f7a2a",
+
+  titleShadow: "3px 3px 0 #0d0718",
+  confetti: ["#8bf34a", "#ff7a18", "#b08ce0", "#e8ffd9"],
+  reelAccents: ["#1a0f30", "#8bf34a", "#b08ce0", "#8bf34a"],
+};
+
+/**
  * Crypt: the same haunted night gone blood-dark, with skeletons drifting
  * among the ghosts.
  *
@@ -344,6 +390,7 @@ export const PIXEL_VARIANTS: Record<string, PixelVariant> = {
   "pixel-quest": QUEST,
   "pixel-halloween": HALLOWEEN,
   "pixel-crypt": CRYPT,
+  "pixel-slime": SLIME,
   "pixel-crimson": CRIMSON,
   "pixel-witching": WITCHING,
 };

@@ -57,6 +57,7 @@ The screen the draw is run from.
 | --- | --- |
 | **🎃 Pixel — Halloween** *(default, seasonal)* | `/admin/luckydraw/<id>` &nbsp;·&nbsp; `?ui=pixel-halloween` |
 | 💀 Pixel — Crypt | `/admin/luckydraw/<id>?ui=pixel-crypt` |
+| 🧟 Pixel — Slime | `/admin/luckydraw/<id>?ui=pixel-slime` |
 | 🦇 Pixel — Blood Moon | `/admin/luckydraw/<id>?ui=pixel-crimson` |
 | 🧪 Pixel — Witching Hour | `/admin/luckydraw/<id>?ui=pixel-witching` |
 | Pixel — Handheld | `/admin/luckydraw/<id>?ui=pixel-lcd` |
@@ -79,8 +80,9 @@ For the audience to watch on their own phones.
 
 | Skin | URL | Look |
 | --- | --- | --- |
-| **🎃 Pixel — Halloween** *(default, seasonal)* | `/live/<id>` &nbsp;·&nbsp; `?ui=pixel-halloween` | Pumpkin orange on a bruised-purple night, pixel ghosts drifting |
+| **🎃 Pixel — Halloween** *(default, seasonal)* | `/live/<id>` &nbsp;·&nbsp; `?ui=pixel-halloween` | Pumpkin orange on a bruised-purple night, ghosts and skeletons drifting |
 | 💀 Pixel — Crypt | `/live/<id>?ui=pixel-crypt` | Blood-dark red on deep violet, ghosts **and** skeletons drifting |
+| 🧟 Pixel — Slime | `/live/<id>?ui=pixel-slime` | The Halloween skin with its greens and oranges swapped |
 | 🦇 Pixel — Blood Moon | `/live/<id>?ui=pixel-crimson` | Crimson on near-black, CRT scanlines, bats flapping past |
 | 🧪 Pixel — Witching Hour | `/live/<id>?ui=pixel-witching` | Slime green over a swamp-dark sky, violet brackets, green ghosts |
 | Pixel — Handheld | `/live/<id>?ui=pixel-lcd` | 8-bit portable LCD: navy pixels on a pale screen |
