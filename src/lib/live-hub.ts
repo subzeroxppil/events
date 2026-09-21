@@ -18,10 +18,24 @@ import type { SpinPayload, Winner } from "@/lib/luckydraw-live";
 
 type Listener = (event: string, data: unknown) => void;
 
+/**
+ * One attached stream, with its own idea of what it has already seen.
+ *
+ * The seen-marker is per subscriber rather than per room on purpose. It used
+ * to be shared, and a viewer joining in the gap between the spin being written
+ * and the room's next poll would drag the shared marker past that spin — so
+ * the poll then decided it was old news and *every phone already watching*
+ * missed it. Each subscriber now only ever suppresses its own replay.
+ */
+type Subscriber = {
+  listener: Listener;
+  seenSpinId: number;
+};
+
 type Room = {
-  listeners: Set<Listener>;
+  subscribers: Set<Subscriber>;
   timer: ReturnType<typeof setInterval> | null;
-  /** Last spin already delivered to this room. */
+  /** Highest spin seen by the poller; only ever moved forward by a poll. */
   lastSpinId: number;
   /** Serialised winners list, to detect changes without re-sending. */
   lastWinnersKey: string;
@@ -82,7 +96,7 @@ async function poll(luckydrawId: number, room: Room) {
         ...(row.liveSpin as unknown as Omit<SpinPayload, "spinId">),
         spinId,
       };
-      emit(room, "spin", payload);
+      emitSpin(room, payload, spinId);
     }
 
     room.ticks += 1;
@@ -103,9 +117,28 @@ async function poll(luckydrawId: number, room: Room) {
 }
 
 function emit(room: Room, event: string, data: unknown) {
-  for (const listener of room.listeners) {
+  for (const sub of room.subscribers) {
     try {
-      listener(event, data);
+      sub.listener(event, data);
+    } catch {
+      // A dead stream is removed by its own abort handler; ignore it here.
+    }
+  }
+}
+
+/**
+ * Deliver a spin to everyone who has not already been handed it.
+ *
+ * A subscriber that connected after this spin was stamped already learned
+ * about it from its own `init`, so it is skipped — but its arrival can no
+ * longer hide the spin from anyone else.
+ */
+function emitSpin(room: Room, payload: unknown, spinId: number) {
+  for (const sub of room.subscribers) {
+    if (spinId <= sub.seenSpinId) continue;
+    sub.seenSpinId = spinId;
+    try {
+      sub.listener("spin", payload);
     } catch {
       // A dead stream is removed by its own abort handler; ignore it here.
     }
@@ -130,7 +163,7 @@ export function subscribe(
 
   if (!room) {
     room = {
-      listeners: new Set(),
+      subscribers: new Set(),
       timer: null,
       lastSpinId: seedSpinId,
       lastWinnersKey: winnersKey(seedWinners),
@@ -141,10 +174,12 @@ export function subscribe(
     rooms.set(luckydrawId, room);
   }
 
-  // A viewer joining a room that is already ahead must not be sent the spin it
-  // just missed, and a viewer joining a stale room must not rewind it.
-  room.lastSpinId = Math.max(room.lastSpinId, seedSpinId);
-  room.listeners.add(listener);
+  // This viewer must not be replayed the spin its own `init` already carried —
+  // but that is now recorded against this subscriber alone. Deliberately NOT
+  // folded into `room.lastSpinId`: doing so let one late arrival suppress the
+  // spin for every phone already attached to the room.
+  const subscriber: Subscriber = { listener, seenSpinId: seedSpinId };
+  room.subscribers.add(subscriber);
 
   if (!room.timer) {
     const current = room;
@@ -158,8 +193,8 @@ export function subscribe(
   return () => {
     const active = rooms.get(luckydrawId);
     if (!active) return;
-    active.listeners.delete(listener);
-    if (active.listeners.size === 0) {
+    active.subscribers.delete(subscriber);
+    if (active.subscribers.size === 0) {
       if (active.timer) clearInterval(active.timer);
       rooms.delete(luckydrawId);
     }

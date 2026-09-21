@@ -64,6 +64,9 @@ export async function GET(
       lastSpinId && isSpinPayload(spin)
         ? {
             spinId: lastSpinId,
+            // The schedule the spin actually ran to, so a late joiner anchors
+            // its idle drift where the reel really came to rest.
+            startAt: (spin as { startAt?: number }).startAt,
             spinnerItems: spin.spinnerItems,
             finalTarget: spin.finalTarget,
             duration: spin.duration,

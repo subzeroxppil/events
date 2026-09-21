@@ -64,6 +64,9 @@ export default function LuckyDraw() {
     setShowSettings,
     viewOnlyEnabled,
     setViewOnlyEnabled,
+    syncedMode,
+    claimPending,
+    spinBusy,
   } = useAdminDraw();
 
   if (initialLoading) {
@@ -280,7 +283,10 @@ export default function LuckyDraw() {
           >
             <button
               onClick={handleSpin}
-              disabled={isSpinning || participants.length === 0}
+              // `spinBusy` covers the lead window too: in synced mode a spin
+              // is claimed for ~0.7s before the reel moves, and the button
+              // must not invite a press it is certain to refuse.
+              disabled={isSpinning || spinBusy || participants.length === 0}
               className={cn(
                 "backdrop-blur-md bg-white/95 border border-white/70 hover:bg-white text-gray-700 shadow-lg",
                 "px-4 sm:px-8 lg:px-12 py-2 sm:py-3 lg:py-4",
@@ -306,14 +312,14 @@ export default function LuckyDraw() {
                   letterSpacing: isSpinning ? "0.2em" : "0.15em",
                 }}
               >
-                {isSpinning ? (
+                {isSpinning || spinBusy ? (
                   <motion.div
                     className="flex items-center gap-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    Spinning
+                    {claimPending ? "Starting" : "Spinning"}
                     <motion.div
                       className="flex gap-0.5"
                       initial={{ opacity: 0 }}
@@ -369,6 +375,20 @@ export default function LuckyDraw() {
                 />
               )}
             </button>
+
+            {/* Which mode the draw is in. The button behaves differently in
+                each, so the reason for the pause is on screen rather than
+                reading as lag. */}
+            <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-widest text-gray-500">
+              <span
+                aria-hidden
+                className="inline-block h-1.5 w-1.5 rounded-full"
+                style={{
+                  backgroundColor: syncedMode ? currentColors[1] : "#9ca3af",
+                }}
+              />
+              {syncedMode ? "Live · synced" : "Solo"}
+            </div>
           </motion.div>
         </div>
       </div>

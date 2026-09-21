@@ -18,7 +18,16 @@ import {
   DEFAULT_VIEW_SETTINGS,
   type ViewSettings,
 } from "@/lib/luckydraw-settings";
-import type { SpinPayload, Winner } from "@/lib/luckydraw-live";
+import {
+  resolveSpinProgress,
+  type SpinPayload,
+  type Winner,
+} from "@/lib/luckydraw-live";
+import {
+  estimateClockOffset,
+  refineOffset,
+  type ClockOffset,
+} from "@/lib/clock-sync";
 import { playStartChime } from "@/lib/retro-chime";
 import { createArcadeSound, type ArcadeSound } from "@/lib/arcade-sound";
 
@@ -27,6 +36,8 @@ export type LiveStatus = "loading" | "not-live" | "ready" | "error";
 /** The last spin, carried only so a late joiner can line up its idle drift. */
 export type SpinAnchor = {
   spinId: number;
+  /** Absent on a spin written by the previous build; `spinId` stands in. */
+  startAt?: number;
   spinnerItems: string[];
   finalTarget: number;
   duration: number;
@@ -55,17 +66,23 @@ export type Snapshot = {
  * timing, sound or sync behaviour, only in how they look.
  */
 /**
- * The spin's resting row, and the moment it got there in server time. The
- * animation runs for `duration` from the instant the server stamped the spin,
- * so `spinId + duration` is when every viewer's reel settles.
+ * The spin's resting row, and the moment it got there in server time.
+ *
+ * Anchored on the *scheduled start* rather than the stamp: the animation
+ * begins at `startAt`, so that plus `duration` is when the reel settles. It
+ * used to read `spinId + duration` while the animation actually began on
+ * arrival, and the reel jumped by exactly the delivery delay every time the
+ * idle drift took back over. (`spinId` is the fallback for a payload written
+ * by the previous build, which had no schedule on it.)
  */
 function anchorForSpin(spin: {
   spinId: number;
+  startAt?: number;
   finalTarget: number;
   duration: number;
 }): IdleAnchor {
   return {
-    atMs: spin.spinId + spin.duration,
+    atMs: (spin.startAt ?? spin.spinId) + spin.duration,
     // Fractional on purpose — it is the exact resting position, not the row.
     index: spin.finalTarget,
   };
@@ -101,6 +118,8 @@ export function useLiveDraw(
   // phone whose clock is a few seconds out drifts a few rows away from the
   // rest of the room.
   const clockOffsetRef = useRef(0);
+  /** The sample behind `clockOffsetRef`, so only a better one replaces it. */
+  const clockSampleRef = useRef<ClockOffset | null>(null);
 
   // Where the shared idle timeline is pinned. Before any spin every viewer
   // drifts from the epoch, so they agree without having to talk to each other.
@@ -116,6 +135,8 @@ export function useLiveDraw(
   const animationRef = useRef<number | null>(null);
   const idleAnimationRef = useRef<number | null>(null);
   const winnerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** A spin waiting for its scheduled moment, so a newer one can cancel it. */
+  const pendingSpinRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fireworksCleanupRef = useRef<(() => void) | null>(null);
 
   const spinSound = useRef<HTMLAudioElement | null>(null);
@@ -162,12 +183,19 @@ export function useLiveDraw(
         const data: Snapshot = await res.json();
         if (cancelled) return;
 
-        // Half the round trip is the better estimate of when the server's
-        // clock reading was taken.
+        // A first, rough offset so the page is usable immediately. It comes
+        // off a request that also builds the participant list, so its round
+        // trip is long and its midpoint assumption weak — the dedicated probes
+        // below replace it as soon as they land.
         if (typeof data.serverNow === "number") {
           const receivedAt = Date.now();
-          const latency = (receivedAt - sentAt) / 2;
-          clockOffsetRef.current = data.serverNow + latency - receivedAt;
+          const rttMs = receivedAt - sentAt;
+          const sample = {
+            offsetMs: data.serverNow + rttMs / 2 - receivedAt,
+            rttMs,
+          };
+          clockSampleRef.current = refineOffset(clockSampleRef.current, sample);
+          clockOffsetRef.current = clockSampleRef.current.offsetMs;
         }
 
         setSnapshot(data);
@@ -196,6 +224,41 @@ export function useLiveDraw(
     load();
     return () => {
       cancelled = true;
+    };
+  }, [luckydrawId]);
+
+  // Keep the clock estimate honest.
+  //
+  // One sample is a coin toss: if that request happened to be slow one way —
+  // a cold instance, a congested uplink — the error is baked in for the whole
+  // event and this screen spins visibly out of step. Probing a few times and
+  // keeping the tightest round trip, then re-checking periodically, is what
+  // keeps the scheduled start meaning the same instant here as everywhere.
+  useEffect(() => {
+    if (!luckydrawId) return;
+    let cancelled = false;
+
+    const sync = async () => {
+      const sample = await estimateClockOffset(
+        `/api/live/${luckydrawId}/time`
+      );
+      if (cancelled || !sample) return;
+      clockSampleRef.current = refineOffset(clockSampleRef.current, sample);
+      clockOffsetRef.current = clockSampleRef.current.offsetMs;
+    };
+
+    void sync();
+    // Re-probe from scratch now and then: a device that sleeps or switches
+    // network can drift, and the best sample from an hour ago may no longer
+    // describe this connection.
+    const timer = setInterval(() => {
+      clockSampleRef.current = null;
+      void sync();
+    }, 120_000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
     };
   }, [luckydrawId]);
 
@@ -306,7 +369,7 @@ export function useLiveDraw(
     [soundsOn, arcadeMode]
   );
 
-  const runSpin = useCallback(
+  const beginSpin = useCallback(
     (payload: SpinPayload) => {
       stopAnimations();
       setIsIdleAnimating(false);
@@ -340,13 +403,27 @@ export function useLiveDraw(
       // reads the spin back from the snapshot.
       idleAnchorRef.current = anchorForSpin(payload);
 
-      const startTime = Date.now();
       const totalIndices = payload.finalTarget;
       const itemsLength = payload.spinnerItems.length || 1;
       let soundFading = false;
 
+      // Progress comes from the shared schedule on every frame, never from a
+      // locally accumulated clock. A device that arrived late is already part
+      // way in; a tab that was backgrounded and throttled snaps to where the
+      // room is rather than finishing however many frames it owes.
+      const elapsedNow = () =>
+        payload.startAt === undefined
+          ? 0
+          : Date.now() + clockOffsetRef.current - payload.startAt;
+      // Only consulted on the legacy path, where there is no schedule to
+      // measure against and "now" is the best available start.
+      const localStart = Date.now();
+
       const animate = () => {
-        const elapsed = Date.now() - startTime;
+        const elapsed =
+          payload.startAt === undefined
+            ? Date.now() - localStart
+            : Math.max(0, elapsedNow());
         const progress = Math.min(elapsed / payload.duration, 1);
 
         const easeOut = rouletteEasing(progress, payload.easeExponent);
@@ -405,6 +482,77 @@ export function useLiveDraw(
       animationRef.current = requestAnimationFrame(animate);
     },
     [handleSpinComplete, soundsOn, stopAnimations, arcadeMode]
+  );
+
+  /**
+   * Take up a spin whose animation has already run its course — a stream that
+   * reconnected across it, or a delivery so slow the whole reel elapsed in
+   * transit. Put the reel where that spin left it and let the idle drift carry
+   * on from there; replaying the animation would leave this screen a full spin
+   * behind the room.
+   */
+  const settleFinishedSpin = useCallback(
+    (payload: SpinPayload, serverNow: number) => {
+      const payloadSettings = payload.settings ?? DEFAULT_VIEW_SETTINGS;
+      setSettings(payloadSettings);
+      setSpinnerItems(payload.spinnerItems);
+      setIsSpinning(false);
+
+      const itemsLength = payload.spinnerItems.length || 1;
+      const finalWhole = Math.floor(payload.finalTarget);
+      setCenterIndex(finalWhole % itemsLength);
+      setAnimationOffset(
+        (payload.finalTarget - finalWhole) * itemHeightRef.current
+      );
+      idleAnchorRef.current = anchorForSpin(payload);
+
+      // Only celebrate a spin that has just this moment finished. Without the
+      // guard, a reconnect an hour into the event would pop the overlay for a
+      // winner the room applauded long ago.
+      const finishedAt = (payload.startAt ?? payload.spinId) + payload.duration;
+      if (serverNow - finishedAt < payloadSettings.winnerDisplayDuration) {
+        handleSpinComplete(payload.winner, payloadSettings);
+      }
+    },
+    [handleSpinComplete]
+  );
+
+  /**
+   * Place a spin on the shared timeline.
+   *
+   * The payload says *when* it starts, not "start now" — so a screen that got
+   * it early waits, one that got it late joins part way in, and one that got
+   * it too late settles where it would have ended. All three land on the
+   * winner at the same instant, which is the moment the room actually sees.
+   */
+  const runSpin = useCallback(
+    (payload: SpinPayload) => {
+      if (pendingSpinRef.current) {
+        clearTimeout(pendingSpinRef.current);
+        pendingSpinRef.current = null;
+      }
+
+      const serverNow = Date.now() + clockOffsetRef.current;
+      const progress = resolveSpinProgress(payload, serverNow);
+
+      if (progress.phase === "finished") {
+        settleFinishedSpin(payload, serverNow);
+        return;
+      }
+
+      if (progress.phase === "pending") {
+        // Keep drifting idle until the moment arrives — the reel must not sit
+        // frozen for the lead, or the wait reads as a stall.
+        pendingSpinRef.current = setTimeout(() => {
+          pendingSpinRef.current = null;
+          beginSpin(payload);
+        }, progress.waitMs);
+        return;
+      }
+
+      beginSpin(payload);
+    },
+    [beginSpin, settleFinishedSpin]
   );
 
   // Idle drift between spins.
@@ -504,10 +652,25 @@ export function useLiveDraw(
 
     source.addEventListener("offline", () => {
       source.close();
+      // A spin may be sitting on its timer waiting for the appointed moment.
+      // Left alone it would fire the reel and the audio behind the "not live"
+      // screen this is about to show.
+      if (pendingSpinRef.current) {
+        clearTimeout(pendingSpinRef.current);
+        pendingSpinRef.current = null;
+      }
       setStatus("not-live");
     });
 
-    return () => source.close();
+    return () => {
+      source.close();
+      // Same reasoning as the offline handler: nothing scheduled may outlive
+      // the stream that scheduled it.
+      if (pendingSpinRef.current) {
+        clearTimeout(pendingSpinRef.current);
+        pendingSpinRef.current = null;
+      }
+    };
     // `snapshot` is only read for its initial spin id, and `runSpin` is reached
     // through a ref — neither should re-open the stream.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -519,6 +682,7 @@ export function useLiveDraw(
     return () => {
       stopAnimations();
       if (winnerTimeoutRef.current) clearTimeout(winnerTimeoutRef.current);
+      if (pendingSpinRef.current) clearTimeout(pendingSpinRef.current);
       fireworksCleanupRef.current?.();
     };
   }, [stopAnimations]);
