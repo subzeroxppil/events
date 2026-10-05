@@ -145,8 +145,10 @@ export async function POST(
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    // Check if user already won this lucky draw
-    // Note: Commenting out winner check for now since the table might not exist yet
+    // Already a winner of this draw. The draw only repeats someone once
+    // everyone has won (more spins than people), which is expected, so this
+    // is a quiet success rather than an error: no second row, nothing for the
+    // admin screen to complain about.
     const existingWinner =
       await prisma.events_portal_luckydraw_winners.findFirst({
         where: {
@@ -157,8 +159,12 @@ export async function POST(
 
     if (existingWinner) {
       return NextResponse.json(
-        { message: "User has already won this lucky draw" },
-        { status: 400 }
+        {
+          message: "Winner already recorded",
+          winner: { workId, wonAt: existingWinner.createdAt },
+          alreadyRecorded: true,
+        },
+        { status: 200 }
       );
     }
 

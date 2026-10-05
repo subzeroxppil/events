@@ -12,6 +12,7 @@ import { useItemHeight } from "@/app/hooks/use-item-height";
 import {
   backgroundStyleFor,
   createExtendedList,
+  pickWinner,
   resolveColors,
   rouletteEasing,
   triggerFireworks as runFireworks,
@@ -364,26 +365,11 @@ export function useAdminDraw() {
     // Build the reel and pick the winner. In synced mode this is still only a
     // *proposal* — another admin may have claimed the spin first, in which
     // case all of it is thrown away and their winner is the one that runs.
-    const newSpinnerItems = createExtendedList(
+    const { reel: newSpinnerItems, winnerIndex } = pickWinner(
+      createExtendedList(participants, animationSettings.spinnerItemCount),
       participants,
-      animationSettings.spinnerItemCount
+      winners.map((w) => w.workId)
     );
-
-    let winnerIndex = -1;
-    const availableIndices = [];
-
-    for (let i = 0; i < newSpinnerItems.length; i++) {
-      if (!winners.some((w) => w.workId === newSpinnerItems[i])) {
-        availableIndices.push(i);
-      }
-    }
-
-    if (availableIndices.length > 0) {
-      winnerIndex =
-        availableIndices[Math.floor(Math.random() * availableIndices.length)];
-    } else {
-      winnerIndex = Math.floor(newSpinnerItems.length / 2);
-    }
 
     const intendedWinner = newSpinnerItems[winnerIndex];
 

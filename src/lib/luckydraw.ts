@@ -26,6 +26,50 @@ export const createExtendedList = (
   return result.slice(0, targetLength);
 };
 
+/**
+ * Choose where the reel stops, never on someone who has already won while
+ * anyone eligible remains.
+ *
+ * Eligibility is judged against the whole participant pool, not just the
+ * reel: the reel is capped at `spinnerItemCount`, so with a large pool it can
+ * hold only past winners while others have yet to win. When that happens one
+ * eligible participant is written into a random slot of a copy of the reel.
+ *
+ * Once everyone has won, a repeat is expected — more draws than people — and
+ * any slot is fair game.
+ */
+export const pickWinner = (
+  reel: string[],
+  participants: string[],
+  pastWinners: Iterable<string>,
+  random: () => number = Math.random
+): { reel: string[]; winnerIndex: number } => {
+  if (reel.length === 0) return { reel, winnerIndex: -1 };
+
+  const won = new Set(pastWinners);
+  const eligible = participants.filter((p) => !won.has(p));
+  const pickFrom = <T>(list: T[]): T =>
+    list[Math.min(Math.floor(random() * list.length), list.length - 1)];
+
+  if (eligible.length === 0) {
+    return { reel, winnerIndex: pickFrom(reel.map((_, i) => i)) };
+  }
+
+  const eligibleIndices: number[] = [];
+  reel.forEach((name, i) => {
+    if (!won.has(name)) eligibleIndices.push(i);
+  });
+
+  if (eligibleIndices.length > 0) {
+    return { reel, winnerIndex: pickFrom(eligibleIndices) };
+  }
+
+  const winnerIndex = pickFrom(reel.map((_, i) => i));
+  const patched = [...reel];
+  patched[winnerIndex] = pickFrom(eligible);
+  return { reel: patched, winnerIndex };
+};
+
 type ColorSettings = Pick<
   AnimationSettings,
   "useCustomColors" | "customColors"
