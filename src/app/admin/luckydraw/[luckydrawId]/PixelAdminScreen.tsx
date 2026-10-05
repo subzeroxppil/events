@@ -293,6 +293,7 @@ export default function PixelAdminScreen({
               triggerStyle={buttonStyle}
             />
 
+            {/* Settings hidden for now — uncomment to bring the button back.
             <LuckyDrawSettings
               settings={draw.animationSettings}
               onSettingsChange={draw.setAnimationSettings}
@@ -301,7 +302,7 @@ export default function PixelAdminScreen({
               onShowSettingsChange={draw.setShowSettings}
               triggerClassName={PIXEL_BUTTON}
               triggerStyle={buttonStyle}
-            />
+            /> */}
 
             <AlertDialog>
               <AlertDialogTrigger asChild>

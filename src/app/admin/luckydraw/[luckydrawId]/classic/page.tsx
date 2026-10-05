@@ -222,13 +222,14 @@ export default function LuckyDraw() {
             enabled={viewOnlyEnabled}
             onEnabledChange={setViewOnlyEnabled}
           />
+          {/* Settings hidden for now — uncomment to bring the button back.
           <LuckyDrawSettings
             settings={animationSettings}
             onSettingsChange={setAnimationSettings}
             isSpinning={isSpinning}
             showSettings={showSettings}
             onShowSettingsChange={setShowSettings}
-          />
+          /> */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
