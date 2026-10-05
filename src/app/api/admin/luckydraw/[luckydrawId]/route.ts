@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { winnerStanding } from "@/lib/luckydraw-eligibility";
 
 export async function GET(
   req: NextRequest,
@@ -158,6 +159,14 @@ export async function POST(
       });
 
     if (existingWinner) {
+      // Not refused — the room has already watched this name come up, and the
+      // spin route is what keeps it from happening. Logged so it is visible.
+      const standing = await winnerStanding(luckydrawIdNum, workId);
+      if (standing.blocked) {
+        console.warn(
+          `Lucky draw ${luckydrawIdNum}: ${workId} drawn again while others were still eligible`
+        );
+      }
       return NextResponse.json(
         {
           message: "Winner already recorded",

@@ -12,6 +12,7 @@ import "@/app/globals.css";
 import confetti from "canvas-confetti";
 import ghostAnimationData from "@/app/assets/ghost-animation.json";
 import Lottie from "lottie-react";
+import { pickWinner } from "@/lib/luckydraw";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -190,24 +191,31 @@ export default function Page() {
 
   // INIT STUFF
 
-  function getValidPrizeIndex(
-    prizeList: { text: string }[],
+  // The roulette only lands on one of the `maxOffset` slots after
+  // `baseOffset`, so the winner is chosen within that window. `pickWinner`
+  // keeps past winners out while anyone else is still eligible, writing an
+  // eligible participant into the window if it happens to hold none.
+  function pickPrizeIndex<T extends { text: string }>(
+    prizeList: T[],
     winners: { workId: string; wonAt: string }[]
-  ): number {
+  ): { prizeList: T[]; prizeIndex: number } {
     const maxOffset = 10;
-    let attempts = 0;
-
-    while (attempts < 10) {
-      const candidateIndex = baseOffset + Math.floor(Math.random() * maxOffset);
-      const candidate = prizeList[candidateIndex];
-      if (!winners.some((winner) => winner.workId === candidate.text)) {
-        return candidateIndex;
-      }
-      attempts++;
+    const window = prizeList
+      .slice(baseOffset, baseOffset + maxOffset)
+      .map((prize) => prize.text);
+    const { reel, winnerIndex } = pickWinner(
+      window,
+      prizes.map((prize) => prize.text),
+      winners.map((winner) => winner.workId)
+    );
+    if (winnerIndex < 0) return { prizeList, prizeIndex: baseOffset };
+    const prizeIndex = baseOffset + winnerIndex;
+    if (reel[winnerIndex] === prizeList[prizeIndex].text) {
+      return { prizeList, prizeIndex };
     }
-
-    // fallback: allow repeat
-    return baseOffset + Math.floor(Math.random() * maxOffset);
+    const patched = [...prizeList];
+    patched[prizeIndex] = { ...patched[prizeIndex], text: reel[winnerIndex] };
+    return { prizeList: patched, prizeIndex };
   }
 
   const handleStart = () => {
@@ -221,9 +229,12 @@ export default function Page() {
           ? crypto.randomUUID()
           : generateId(),
     }));
-    const prizeIndex = getValidPrizeIndex(newPrizeList, winners);
+    const { prizeList: pickedPrizeList, prizeIndex } = pickPrizeIndex(
+      newPrizeList,
+      winners
+    );
 
-    setPrizeList(newPrizeList);
+    setPrizeList(pickedPrizeList);
     setPrizeIndex(prizeIndex);
 
     if (spinSound) {
@@ -282,11 +293,16 @@ export default function Page() {
         });
 
         if (response.ok) {
-          // Only update UI if the API call was successful
-          setWinners((prev) => [
-            ...prev,
-            { workId: winnerWorkId, wonAt: new Date().toISOString() },
-          ]);
+          // Only update UI if the API call was successful. A repeat winner
+          // (everyone has already won) is already in the list.
+          setWinners((prev) =>
+            prev.some((w) => w.workId === winnerWorkId)
+              ? prev
+              : [
+                  ...prev,
+                  { workId: winnerWorkId, wonAt: new Date().toISOString() },
+                ]
+          );
         } else {
           const errorData = await response.json();
           console.error("Error recording winner:", errorData.message);

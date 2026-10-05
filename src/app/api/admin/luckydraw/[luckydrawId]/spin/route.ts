@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { readWinners } from "@/lib/live-hub";
+import { winnerStanding } from "@/lib/luckydraw-eligibility";
 import {
   MAX_SPIN_DURATION_MS,
   SPIN_LEAD_MS,
@@ -105,8 +107,28 @@ export async function POST(
       }
     }
 
-    const stampedAt = new Date(now);
-    const startAt = now + SPIN_LEAD_MS;
+    // The proposing screen picked from its own copy of the winners list,
+    // which can be behind the database. Refuse a past winner while anyone
+    // else is still eligible, and hand back the real list so that screen can
+    // quietly pick again before anything has moved.
+    const standing = await winnerStanding(luckydrawIdNum, body.winner);
+    if (standing.blocked) {
+      return NextResponse.json(
+        {
+          message: "That participant has already won this lucky draw",
+          inFlightSpinId: 0,
+          reason: "already-won",
+          winners: await readWinners(luckydrawIdNum),
+        },
+        { status: 409 }
+      );
+    }
+
+    // Re-read the clock: the eligibility check above took time, and the lead
+    // has to be measured from the moment of the claim, not before it.
+    const claimedAt = Date.now();
+    const stampedAt = new Date(claimedAt);
+    const startAt = claimedAt + SPIN_LEAD_MS;
     const payload: Omit<SpinPayload, "spinId"> = { ...body, startAt };
 
     // Guarded on the stamp we just read: if another admin claimed in the gap

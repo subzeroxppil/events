@@ -93,6 +93,12 @@ export type SpinClaimRejected = {
   message: string;
   /** The spin already in flight, so the loser can wait for it on the stream. */
   inFlightSpinId: number;
+  /**
+   * `"already-won"`: the proposed winner has already won while others in the
+   * draw have not. `winners` is the server's list, to pick again from.
+   */
+  reason?: "already-won";
+  winners?: Winner[];
 };
 
 export type Winner = {

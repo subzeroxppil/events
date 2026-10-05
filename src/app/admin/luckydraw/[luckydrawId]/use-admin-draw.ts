@@ -67,6 +67,19 @@ type AdminSpin = {
   owned: boolean;
 };
 
+/** How long the pre-spin participants/winners refresh may hold up the spin. */
+const WINNERS_REFRESH_TIMEOUT_MS = 1500;
+/**
+ * See `unconfirmedWinnersRef`. Long enough to cover a slow record write, short
+ * enough that a winner deleted before it was ever confirmed is not excluded
+ * for long.
+ */
+const UNCONFIRMED_TTL_MS = 20_000;
+/** Silent re-picks after the server refuses a past winner, per press. */
+const MAX_SILENT_REDRAWS = 3;
+/** Pause before a silent re-pick, to let an in-flight winner write land. */
+const REDRAW_DELAY_MS = 1000;
+
 export type LuckyDrawRecord = {
   id: number;
   name: string;
@@ -111,6 +124,30 @@ export function useAdminDraw() {
   const [participants, setParticipants] = useState<string[]>([]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [winners, setWinners] = useState<Winner[]>([]);
+  /**
+   * Winners this screen has revealed but not yet seen come back from the
+   * server, with when they were added. A winners list from the stream or the
+   * winners endpoint can predate the write of a winner just revealed, and
+   * replacing the local list with it would drop that winner — leaving them
+   * eligible again for a spin started in that gap. Held until a server list
+   * includes them, or for `UNCONFIRMED_TTL_MS` should the write never land.
+   */
+  const unconfirmedWinnersRef = useRef(new Map<string, Winner & { at: number }>());
+  /** Fold a server winners list together with the still-unconfirmed ones. */
+  const mergeWinners = useCallback((incoming: Winner[]): Winner[] => {
+    const unconfirmed = unconfirmedWinnersRef.current;
+    const now = Date.now();
+    for (const w of incoming) unconfirmed.delete(w.workId);
+    const merged = [...incoming];
+    for (const [workId, w] of unconfirmed) {
+      if (now - w.at > UNCONFIRMED_TTL_MS) {
+        unconfirmed.delete(workId);
+        continue;
+      }
+      merged.push({ workId: w.workId, wonAt: w.wonAt });
+    }
+    return merged;
+  }, []);
   const [luckyDraw, setLuckyDraw] = useState<LuckyDrawRecord | null>(null);
   const [error, setError] = useState("");
   const [currentWinner, setCurrentWinner] = useState<string | null>(null);
@@ -169,6 +206,12 @@ export function useAdminDraw() {
   const pendingSpinRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Spins already run, so this screen ignores the echo of its own claim. */
   const lastSpinIdRef = useRef(0);
+  /** Silent re-picks used by the current press; see `MAX_SILENT_REDRAWS`. */
+  const redrawsRef = useRef(0);
+  /** The latest `handleSpin`, for a silent re-pick from inside the old one. */
+  const handleSpinRef = useRef<((redrawFrom?: unknown) => Promise<void>) | null>(
+    null
+  );
   /** Set while a spin this screen claimed is running. */
   const ownedSpinRef = useRef(false);
   /**
@@ -337,9 +380,23 @@ export function useAdminDraw() {
     [itemHeight, startSpin]
   );
 
-  const handleSpin = useCallback(async () => {
+  /**
+   * A press of Spin, or — with the server's winners list as `redrawFrom` — a
+   * silent re-pick after the server refused a past winner. A click passes its
+   * event here, which is how a fresh press is told apart from a re-pick.
+   */
+  const handleSpin = useCallback(async (redrawFrom?: unknown) => {
     if (spinLock.current || isSpinning || participants.length === 0) return;
     spinLock.current = true;
+    const redrawWinners = Array.isArray(redrawFrom)
+      ? (redrawFrom as Winner[])
+      : null;
+    if (!redrawWinners) redrawsRef.current = 0;
+
+    // Show the button as busy straight away: the winners refresh below can
+    // take a moment before anything else visibly happens.
+    setSpinBusy(true);
+    if (viewOnlyEnabled) setClaimPending(true);
 
     // Prime the celebration clips inside the click. They are only ever played
     // ~13s later, from a rAF callback rather than a gesture handler, which is
@@ -365,10 +422,35 @@ export function useAdminDraw() {
     // Build the reel and pick the winner. In synced mode this is still only a
     // *proposal* — another admin may have claimed the spin first, in which
     // case all of it is thrown away and their winner is the one that runs.
+    // Exclude past winners as the database has them, not just as this screen
+    // last heard: another tab or admin may have banked one this screen never
+    // saw. The participants are reloaded too, so someone who registered after
+    // the page loaded can still win. Falls back to the local lists if the
+    // server is slow or unreachable.
+    let pastWinners = redrawWinners ? mergeWinners(redrawWinners) : winners;
+    let pool = participants;
+    try {
+      const res = await fetch(`/api/admin/luckydraw/${luckydrawId}`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(WINNERS_REFRESH_TIMEOUT_MS),
+      });
+      const data = res.ok ? await res.json() : null;
+      if (Array.isArray(data?.winners)) {
+        pastWinners = mergeWinners(data.winners);
+      }
+      if (Array.isArray(data?.participants) && data.participants.length > 0) {
+        pool = Array.from(new Set<string>(data.participants));
+        setParticipants(pool);
+      }
+    } catch (err) {
+      console.warn("Using local winners list:", err);
+    }
+    setWinners(pastWinners);
+
     const { reel: newSpinnerItems, winnerIndex } = pickWinner(
-      createExtendedList(participants, animationSettings.spinnerItemCount),
-      participants,
-      winners.map((w) => w.workId)
+      createExtendedList(pool, animationSettings.spinnerItemCount),
+      pool,
+      pastWinners.map((w) => w.workId)
     );
 
     const intendedWinner = newSpinnerItems[winnerIndex];
@@ -424,8 +506,23 @@ export function useAdminDraw() {
         const rejection: SpinClaimRejected = await res
           .json()
           .catch(() => ({ message: "Spin rejected", inFlightSpinId: 0 }));
-        if (res.status !== 409) {
+        // The server knows of a winner this screen didn't, and our pick was
+        // one of them. Quietly take its list and pick again — nobody needs
+        // telling, the reel hasn't moved.
+        const redraw =
+          res.status === 409 &&
+          rejection.reason === "already-won" &&
+          redrawsRef.current < MAX_SILENT_REDRAWS;
+        const serverWinners = Array.isArray(rejection.winners)
+          ? rejection.winners
+          : [];
+        if (redraw) {
+          redrawsRef.current += 1;
+        } else if (res.status !== 409) {
           setError(rejection.message || "Could not start the spin");
+        } else if (rejection.reason === "already-won") {
+          // Redraws exhausted — not worth an error; the next press tries again.
+          console.warn("Spin rejected: winner already won");
         } else if (!rejection.inFlightSpinId) {
           // A 409 with nobody named is not a lost race — it is the server
           // saying this draw is not shared. Silence would leave the admin
@@ -442,12 +539,23 @@ export function useAdminDraw() {
         const alreadyMirroring =
           lastSpinIdRef.current !== seenBeforeClaim ||
           pendingSpinRef.current !== null;
-        if (!alreadyMirroring) {
+        if (!alreadyMirroring && redraw) {
+          // Keep the button busy and re-pick after a beat: the usual cause is
+          // the last winner's record still being written, which lands within
+          // a second or two.
+          spinLock.current = false;
+          setTimeout(() => {
+            void handleSpinRef.current?.(serverWinners);
+          }, REDRAW_DELAY_MS);
+        } else if (!alreadyMirroring) {
           setSpinBusy(false);
           spinLock.current = false;
         }
+        if (!redraw) redrawsRef.current = 0;
         return;
       }
+
+      redrawsRef.current = 0;
 
       const granted: SpinClaimGranted = await res.json();
 
@@ -472,6 +580,7 @@ export function useAdminDraw() {
       });
     } catch (err) {
       console.error("Failed to claim spin:", err);
+      redrawsRef.current = 0;
       setError("Could not reach the server to start the spin");
       setClaimPending(false);
       setSpinBusy(false);
@@ -486,7 +595,12 @@ export function useAdminDraw() {
     luckydrawId,
     startSpin,
     scheduleSpin,
+    mergeWinners,
   ]);
+
+  useEffect(() => {
+    handleSpinRef.current = handleSpin;
+  }, [handleSpin]);
 
   // Initialize audio. Deliberately kept separate from the F5 handler below:
   // `handleSpin` changes identity on every winner/settings change, and tying
@@ -539,7 +653,7 @@ export function useAdminDraw() {
     source.addEventListener("init", (e) => {
       try {
         const data = JSON.parse((e as MessageEvent).data);
-        if (Array.isArray(data.winners)) setWinners(data.winners);
+        if (Array.isArray(data.winners)) setWinners(mergeWinners(data.winners));
         if (typeof data.lastSpinId === "number") {
           lastSpinIdRef.current = Math.max(
             lastSpinIdRef.current,
@@ -601,7 +715,7 @@ export function useAdminDraw() {
     source.addEventListener("winners", (e) => {
       try {
         const data = JSON.parse((e as MessageEvent).data);
-        if (Array.isArray(data.winners)) setWinners(data.winners);
+        if (Array.isArray(data.winners)) setWinners(mergeWinners(data.winners));
       } catch (err) {
         console.error("Bad winners event:", err);
       }
@@ -979,11 +1093,16 @@ export function useAdminDraw() {
       // write would be refused with nobody told. The stream remains the source
       // of truth and reconciles this shortly either way.
       // Note: we don't remove the winner from participants - they stay visible but can't win again
-      setWinners((prev) =>
-        prev.some((w) => w.workId === winner)
-          ? prev
-          : [...prev, { workId: winner, wonAt: new Date().toISOString() }]
-      );
+      const wonAt = new Date().toISOString();
+      setWinners((prev) => {
+        if (prev.some((w) => w.workId === winner)) return prev;
+        unconfirmedWinnersRef.current.set(winner, {
+          workId: winner,
+          wonAt,
+          at: Date.now(),
+        });
+        return [...prev, { workId: winner, wonAt }];
+      });
 
       if (owned) {
         void (async () => {
@@ -1005,10 +1124,12 @@ export function useAdminDraw() {
                 .json()
                 .catch(() => null as { message?: string } | null);
               console.error("Failed to record winner:", response.status, detail);
+              unconfirmedWinnersRef.current.delete(winner);
               toast.error(detail?.message || "Could not record that winner");
             }
           } catch (error) {
             console.error("Error recording winner:", error);
+            unconfirmedWinnersRef.current.delete(winner);
             toast.error("Could not record that winner");
           }
         })();
@@ -1036,6 +1157,7 @@ export function useAdminDraw() {
         });
 
         if (response.ok) {
+          unconfirmedWinnersRef.current.delete(winnerWorkId);
           setWinners((prev) => prev.filter((w) => w.workId !== winnerWorkId));
           // Note: We don't need to add back to participants since they were never removed
           toast.success("Winner removed");
