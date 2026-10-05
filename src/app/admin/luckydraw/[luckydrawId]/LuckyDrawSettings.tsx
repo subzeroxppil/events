@@ -276,12 +276,12 @@ const LuckyDrawSettings: React.FC<LuckyDrawSettingsProps> = React.memo(
                         </div>
                         <input
                           type="range"
-                          min="1"
+                          min="0.5"
                           max="5"
-                          step="1"
+                          step="0.1"
                           value={settings.minSpins}
                           onChange={(e) => {
-                            const value = parseInt(e.target.value);
+                            const value = parseFloat(e.target.value);
                             onSettingsChange({
                               ...settings,
                               minSpins: value,
@@ -303,12 +303,12 @@ const LuckyDrawSettings: React.FC<LuckyDrawSettingsProps> = React.memo(
                         </div>
                         <input
                           type="range"
-                          min="2"
+                          min="0.5"
                           max="8"
-                          step="1"
+                          step="0.1"
                           value={settings.maxSpins}
                           onChange={(e) => {
-                            const value = parseInt(e.target.value);
+                            const value = parseFloat(e.target.value);
                             onSettingsChange({
                               ...settings,
                               maxSpins: value,

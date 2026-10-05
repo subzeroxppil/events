@@ -6,7 +6,7 @@ import { useItemHeight } from "@/app/hooks/use-item-height";
 import {
   backgroundStyleFor,
   resolveColors,
-  rouletteEasing,
+  spinPosition,
   triggerFireworks,
 } from "@/lib/luckydraw";
 import {
@@ -403,7 +403,6 @@ export function useLiveDraw(
       // reads the spin back from the snapshot.
       idleAnchorRef.current = anchorForSpin(payload);
 
-      const totalIndices = payload.finalTarget;
       const itemsLength = payload.spinnerItems.length || 1;
       let soundFading = false;
 
@@ -426,8 +425,7 @@ export function useLiveDraw(
             : Math.max(0, elapsedNow());
         const progress = Math.min(elapsed / payload.duration, 1);
 
-        const easeOut = rouletteEasing(progress, payload.easeExponent);
-        const currentProgress = totalIndices * easeOut;
+        const currentProgress = spinPosition(elapsed, payload);
 
         const wholeIndex = Math.floor(currentProgress);
         setCenterIndex(wholeIndex % itemsLength);

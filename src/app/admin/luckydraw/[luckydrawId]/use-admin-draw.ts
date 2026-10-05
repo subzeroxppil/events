@@ -12,9 +12,10 @@ import { useItemHeight } from "@/app/hooks/use-item-height";
 import {
   backgroundStyleFor,
   createExtendedList,
+  moveWinnerTo,
   pickWinner,
   resolveColors,
-  rouletteEasing,
+  spinPosition,
   triggerFireworks as runFireworks,
 } from "@/lib/luckydraw";
 import {
@@ -61,6 +62,8 @@ type AdminSpin = {
   finalTarget: number;
   duration: number;
   easeExponent: number;
+  crawlRows?: number;
+  crawlMs?: number;
   /** The triggering admin's settings, so the spin is identical everywhere. */
   settings: ViewSettings;
   /** Did this screen claim it? Only the claimant records the winner. */
@@ -447,22 +450,41 @@ export function useAdminDraw() {
     }
     setWinners(pastWinners);
 
-    const { reel: newSpinnerItems, winnerIndex } = pickWinner(
+    const picked = pickWinner(
       createExtendedList(pool, animationSettings.spinnerItemCount),
       pool,
       pastWinners.map((w) => w.workId)
     );
 
-    const intendedWinner = newSpinnerItems[winnerIndex];
-
-    const totalItems = newSpinnerItems.length;
-    const spins =
+    // How far the reel travels sets how fast it looks, since the duration is
+    // fixed. Pick the distance first, then swap the winner into the slot at
+    // that distance — rather than letting wherever the winner happened to sit
+    // decide it, which made one spin twice as fast as the next.
+    const totalItems = picked.reel.length;
+    const rotations =
       animationSettings.minSpins +
       Math.random() * (animationSettings.maxSpins - animationSettings.minSpins);
-    const baseTarget = Math.floor(spins) * totalItems + winnerIndex;
+    const travel = Math.max(1, Math.round(rotations * totalItems));
+    const { reel: newSpinnerItems, winnerIndex } = moveWinnerTo(
+      picked.reel,
+      picked.winnerIndex,
+      travel % totalItems
+    );
 
-    const randomOffset = Math.random() * 0.9;
-    const finalTarget = baseTarget + randomOffset;
+    const intendedWinner = newSpinnerItems[winnerIndex];
+
+    // Where in the winner's row the reel comes to rest, as a fraction of a
+    // row past it: from just tipped onto them to nearly tipped onto the next
+    // name. Kept under half a row so the winner is always the name nearest
+    // the centre — with a slow crawl at the end, the room would notice a
+    // reel resting closer to someone else.
+    const randomOffset = 0.03 + Math.random() * 0.42;
+    const finalTarget = travel + randomOffset;
+    // The tease: how many names creep past in the slow final stretch.
+    const crawlRows =
+      animationSettings.minCrawlRows +
+      Math.random() *
+        (animationSettings.maxCrawlRows - animationSettings.minCrawlRows);
 
     const proposal = {
       spinnerItems: newSpinnerItems,
@@ -471,6 +493,8 @@ export function useAdminDraw() {
       finalTarget,
       duration: animationSettings.duration,
       easeExponent: animationSettings.easeExponent,
+      crawlRows,
+      crawlMs: animationSettings.crawlMs,
       settings: toViewSettings(animationSettings),
     };
 
@@ -695,6 +719,8 @@ export function useAdminDraw() {
           finalTarget: payload.finalTarget,
           duration: payload.duration,
           easeExponent: payload.easeExponent,
+          crawlRows: payload.crawlRows,
+          crawlMs: payload.crawlMs,
           // Used to render this spin only. Deliberately NOT written into this
           // admin's own settings: one admin's panel is theirs, and having it
           // rewritten under them by someone else's spin would be its own bug.
@@ -921,7 +947,6 @@ export function useAdminDraw() {
       const itemsArray = spin.spinnerItems;
       const toIndex = spin.finalTarget;
       let soundFading = false;
-      const totalIndices = toIndex;
 
       // Progress is read off the shared schedule every frame, never
       // accumulated locally: a screen that came in late is already part way
@@ -936,8 +961,7 @@ export function useAdminDraw() {
         const elapsed = elapsedNow();
         const progress = Math.min(elapsed / duration, 1);
 
-        const easeOut = rouletteEasing(progress, spin.easeExponent);
-        const currentProgress = totalIndices * easeOut;
+        const currentProgress = spinPosition(elapsed, spin);
 
         const wholeIndex = Math.floor(currentProgress);
         const fractionalPart = currentProgress - wholeIndex;

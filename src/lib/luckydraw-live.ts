@@ -51,6 +51,9 @@ export type SpinPayload = {
   finalTarget: number;
   duration: number;
   easeExponent: number;
+  /** The slow tease at the end; see `spinPosition`. Absent from older builds. */
+  crawlRows?: number;
+  crawlMs?: number;
   settings: ViewSettings;
 };
 
@@ -152,6 +155,14 @@ export function isSpinPayload(value: unknown): value is SpinBroadcastBody {
     Number.isFinite(v.easeExponent) &&
     typeof v.finalTarget === "number" &&
     Number.isFinite(v.finalTarget) &&
+    (v.crawlRows === undefined ||
+      (typeof v.crawlRows === "number" &&
+        Number.isFinite(v.crawlRows) &&
+        v.crawlRows > 0)) &&
+    (v.crawlMs === undefined ||
+      (typeof v.crawlMs === "number" &&
+        Number.isFinite(v.crawlMs) &&
+        v.crawlMs > 0)) &&
     !!v.settings &&
     typeof v.settings === "object"
   );

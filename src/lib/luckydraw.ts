@@ -10,6 +10,70 @@ export const rouletteEasing = (progress: number, exponent: number): number => {
 };
 
 /**
+ * Where the reel is, in rows from the start, `elapsedMs` into a spin.
+ *
+ * With `crawlRows`/`crawlMs` the spin is a tease: a fast run that cruises at
+ * full speed, brakes, and settles without stopping into a slow crawl for the
+ * last `crawlMs`, covering the
+ * final `crawlRows` rows while it eases to a halt. The last few names creep
+ * past the centre one at a time, so the room can't call the winner until the
+ * reel actually stops. The total duration is unchanged.
+ *
+ * Without them — a payload from a build before the crawl — it is the original
+ * `rouletteEasing` curve, so mixed versions mid-rollout still agree.
+ */
+export const spinPosition = (
+  elapsedMs: number,
+  spin: {
+    finalTarget: number;
+    duration: number;
+    easeExponent: number;
+    crawlRows?: number;
+    crawlMs?: number;
+  }
+): number => {
+  const { finalTarget, duration, crawlRows, crawlMs } = spin;
+  const t = Math.min(Math.max(elapsedMs, 0), duration);
+  if (
+    !crawlRows ||
+    !crawlMs ||
+    crawlMs >= duration ||
+    crawlRows >= finalTarget
+  ) {
+    return finalTarget * rouletteEasing(t / duration, spin.easeExponent);
+  }
+
+  // Run: holds its top speed for the first `CRUISE_FRACTION` of the run, then
+  // brakes along a smoothstep down to `crawlSpeed`, arriving with zero slope
+  // so the hand-off has no visible kink. Crawl: speed falls linearly from
+  // `crawlSpeed` to zero, covering `crawlRows`.
+  const runMs = duration - crawlMs;
+  const crawlSpeed = (2 * crawlRows) / crawlMs;
+  const runRows = finalTarget - crawlRows;
+  const CRUISE_FRACTION = 0.45;
+  // Area under the run's speed curve above `crawlSpeed`, per unit of extra
+  // speed and run time: the cruise plus half the braking (smoothstep's mean).
+  const runShape = CRUISE_FRACTION + (1 - CRUISE_FRACTION) / 2;
+  const extraPeak = (runRows - crawlSpeed * runMs) / (runMs * runShape);
+
+  if (t <= runMs) {
+    const u = t / runMs;
+    let covered: number;
+    if (u <= CRUISE_FRACTION) {
+      covered = u;
+    } else {
+      const b = (u - CRUISE_FRACTION) / (1 - CRUISE_FRACTION);
+      covered =
+        CRUISE_FRACTION +
+        (1 - CRUISE_FRACTION) * (b - b * b * b + (b * b * b * b) / 2);
+    }
+    return crawlSpeed * t + extraPeak * runMs * covered;
+  }
+  const w = (t - runMs) / crawlMs;
+  return runRows + crawlSpeed * crawlMs * (w - (w * w) / 2);
+};
+
+/**
  * Build the spinner reel: the participant pool shuffled and repeated until it
  * reaches `targetLength`.
  */
@@ -68,6 +132,21 @@ export const pickWinner = (
   const patched = [...reel];
   patched[winnerIndex] = pickFrom(eligible);
   return { reel: patched, winnerIndex };
+};
+
+/**
+ * Swap the winner into `slot`, so the reel can be made to stop there. A swap
+ * rather than an overwrite keeps the reel's mix of names unchanged.
+ */
+export const moveWinnerTo = (
+  reel: string[],
+  winnerIndex: number,
+  slot: number
+): { reel: string[]; winnerIndex: number } => {
+  if (winnerIndex < 0 || slot === winnerIndex) return { reel, winnerIndex };
+  const moved = [...reel];
+  [moved[slot], moved[winnerIndex]] = [moved[winnerIndex], moved[slot]];
+  return { reel: moved, winnerIndex: slot };
 };
 
 type ColorSettings = Pick<

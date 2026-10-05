@@ -11,6 +11,9 @@ export type AnimationSettings = {
   easeExponent: number;
   minSpins: number;
   maxSpins: number;
+  crawlMs: number;
+  minCrawlRows: number;
+  maxCrawlRows: number;
   spinnerItemCount: number;
   idleSpeed: number;
   enableFireworks: boolean;
@@ -41,23 +44,29 @@ export const DEFAULT_SETTINGS: AnimationSettings = {
   easeExponent: 4,
 
   // How *fast the reel looks* is distance over time, not time. The reel travels
-  // `floor(spins) * spinnerItemCount + winnerIndex` rows in `duration`, so with
-  // the duration fixed at the original 13s the only way to slow the motion down
-  // is to travel fewer rows: cutting the rotations from 3-4 to 1-2 roughly
-  // halves the speed the names fly past at, while the spin still takes exactly
-  // as long as it always did.
+  // `rotations * spinnerItemCount` rows in `duration` — the winner is swapped
+  // into the slot at that distance — so with the duration fixed at 13s the
+  // way to change the speed is to change how many rows it travels.
   //
   // Stretching `duration` instead — which is what 18s did — makes the same
   // journey take longer without making any single moment of it slower, so the
   // names blur past just as fast and the spin merely drags.
   //
-  // At 1-2 rotations the reel peaks around 42 rows/s against the original's
-  // 119, so the names are readable rather than a blur.
+  // The spin is a fast run followed by a slow tease (`spinPosition`): for the
+  // last `crawlMs` the reel crawls through the final `minCrawlRows` to
+  // `maxCrawlRows` names, easing to a halt, so it is never clear who it will
+  // stop on. Over 2.5s, 2-3.5 names means the crawl opens at 1.6-2.8 names/s
+  // and always tips at least two names past the pointer. The run cruises at top speed for nearly half its length before
+  // braking; 0.82-0.86 rotations (164-172 rows) keeps that top speed around
+  // 20-22 rows/s.
   //
-  // Only `finalTarget` is broadcast, not these, so the live page inherits the
-  // shorter journey automatically.
-  minSpins: 1,
-  maxSpins: 2,
+  // Only the resulting `finalTarget` and crawl are broadcast, so the live
+  // page follows automatically.
+  minSpins: 0.82,
+  maxSpins: 0.86,
+  crawlMs: 2500,
+  minCrawlRows: 2,
+  maxCrawlRows: 3.5,
   spinnerItemCount: 200,
   idleSpeed: 30,
   enableFireworks: true,
