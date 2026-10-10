@@ -64,7 +64,6 @@ export default function LuckyDraw() {
     setShowSettings,
     viewOnlyEnabled,
     setViewOnlyEnabled,
-    syncedMode,
     claimPending,
     spinBusy,
   } = useAdminDraw();
@@ -376,20 +375,6 @@ export default function LuckyDraw() {
                 />
               )}
             </button>
-
-            {/* Which mode the draw is in. The button behaves differently in
-                each, so the reason for the pause is on screen rather than
-                reading as lag. */}
-            <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-widest text-gray-500">
-              <span
-                aria-hidden
-                className="inline-block h-1.5 w-1.5 rounded-full"
-                style={{
-                  backgroundColor: syncedMode ? currentColors[1] : "#9ca3af",
-                }}
-              />
-              {syncedMode ? "Live · synced" : "Solo"}
-            </div>
           </motion.div>
         </div>
       </div>

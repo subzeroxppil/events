@@ -207,24 +207,6 @@ export default function PixelAdminScreen({
             </span>
           </button>
 
-          {/* Which mode the draw is in. The button behaves differently in
-              each, so the reason for the pause is on screen rather than
-              reading as lag. */}
-          <div
-            className="mt-2 flex items-center justify-center gap-1.5 font-pixel text-[9px] uppercase tracking-[0.18em]"
-            style={{ color: variant.dim }}
-          >
-            <span
-              aria-hidden
-              className="inline-block h-1.5 w-1.5"
-              style={{
-                background: draw.syncedMode ? variant.accent : "currentColor",
-                opacity: draw.syncedMode ? 1 : 0.5,
-              }}
-            />
-            {draw.syncedMode ? "Live · all screens synced" : "Solo · this screen only"}
-          </div>
-
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
             {/* Winners */}
             <Sheet>
